@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/5fc5ce9e-06ac-4422-8587-99f67c662d52
+**URL**: https://lovable.dev/projects/5ab52bba-a7c3-4e3d-b114-ce2fbbc3c430
 
 ## How can I edit this code?
 
@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5fc5ce9e-06ac-4422-8587-99f67c662d52) and start prompting.
+Simply visit the [Lovable Project](https://lovable.dev/projects/5ab52bba-a7c3-4e3d-b114-ce2fbbc3c430) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
@@ -62,7 +62,7 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/5fc5ce9e-06ac-4422-8587-99f67c662d52) and click on Share -> Publish.
+Simply open [Lovable](https://lovable.dev/projects/5ab52bba-a7c3-4e3d-b114-ce2fbbc3c430) and click on Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
 
