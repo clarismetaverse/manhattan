@@ -358,11 +358,7 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
                   {couponData?._actions_turbo?.Plates || 3}
                 </span>
                 <div className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1" />
-                    <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" strokeWidth="1" />
-                    <circle cx="12" cy="12" r="2" fill="currentColor" />
-                  </svg>
+                  <span className="text-lg">🍽</span>
                 </div>
               </div>
             </div>
@@ -374,11 +370,7 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
                   {couponData?._actions_turbo?.Drinks || 2}
                 </span>
                 <div className="w-7 h-7 bg-neutral-700 rounded-lg flex items-center justify-center">
-                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12V7a1 1 0 011-1h4l2 5h6a1 1 0 011 1v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 6l1.5-1.5" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 6l1-1" />
-                  </svg>
+                  <span className="text-lg">🥂</span>
                 </div>
               </div>
             </div>
