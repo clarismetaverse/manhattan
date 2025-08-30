@@ -117,8 +117,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     console.log('🎯 Check-in button clicked, availability:', currentAvailability);
     if (currentAvailability === 'available') {
       setShowCheckInSlider(true);
-      // Load coupon data immediately when check-in starts
-      await loadCouponData();
+      // Create coupon data from existing booking data instead of API call
+      createCouponFromBooking();
     }
   };
 
@@ -129,27 +129,99 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     // Don't call loadCouponData here - it's already called in handleCheckIn
   };
 
-  const loadCouponData = async () => {
-    console.log('🚀 Starting coupon data load for booking:', booking.id);
+  const createCouponFromBooking = () => {
+    console.log('🎨 Creating coupon from existing booking data');
     setLoadingCoupon(true);
-    try {
-      const data = await fetchCouponData(booking.id);
-      console.log('📋 Setting coupon data:', data);
-      setCouponData(data);
-      toast({
-        title: "Coupon Ready!",
-        description: "Your premium ticket has been activated.",
-      });
-    } catch (error) {
-      console.error('🔥 Failed to load coupon data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load coupon data. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingCoupon(false);
-    }
+    
+    // Transform booking data into coupon format
+    const mockCouponData: CouponResponse = {
+      id: booking.id,
+      BookingTimestamp: Date.now(),
+      user_turbo_id: booking.user_turbo_id,
+      BookingDay: booking.BookingDay,
+      restaurant_id: booking._restaurant_turbo?.Cover ? 1 : booking.id,
+      MinuteStart: booking.MinuteStart,
+      HourStart: formatTime(booking.HourStart, booking.MinuteStart),
+      HourEnd: booking.HourEnd,
+      MinuteEnd: formatTime(booking.HourEnd, booking.MinuteEnd),
+      vanue_images: booking.vanue_images || [],
+      _restaurant_turbo: {
+        id: 1,
+        Name: booking._restaurant_turbo?.Name || 'Restaurant',
+        About: 'Premium dining experience perfect for content creation',
+        Instagram: booking._restaurant_turbo?.Instagram || '@restaurant',
+        Tags: '@venue',
+        Tag2: '@claris.app',
+        Maps_Link: booking._restaurant_turbo?.Maps_Link || '',
+        Adress: booking._restaurant_turbo?.Adress || 'Restaurant Address',
+        Cover: {
+          access: 'public',
+          path: '/covers/restaurant.jpg',
+          url: booking._offers_turbo?.Offer_Cover?.url || booking._restaurant_turbo?.Cover?.url || '',
+          name: 'restaurant-cover.jpg',
+          type: 'image/jpeg',
+          size: 1024000,
+          mime: 'image/jpeg',
+          meta: {
+            width: booking._offers_turbo?.Offer_Cover?.width || booking._restaurant_turbo?.Cover?.width || 800,
+            height: booking._offers_turbo?.Offer_Cover?.height || booking._restaurant_turbo?.Cover?.height || 600
+          }
+        }
+      },
+      _actions_turbo: {
+        id: 1,
+        Descrizione: booking._actions_turbo?.Descrizione || booking._offers_turbo?.Description || 'Create amazing content at this venue',
+        Action_Name: booking._actions_turbo?.Action_Name || booking._offers_turbo?.Offer_Name || 'Instagram Reel',
+        Extra_People: 0,
+        Plates: 3,
+        Drinks: 2,
+        Gym: '',
+        Accomodation: 0,
+        Action_icon: {
+          access: 'public',
+          path: '/icons/action.png',
+          url: booking._actions_turbo?.Action_icon?.url || '',
+          name: 'action-icon.png',
+          type: 'image/png',
+          size: 50000,
+          mime: 'image/png',
+          meta: {
+            width: 64,
+            height: 64
+          }
+        }
+      },
+      _user_turbo: {
+        id: booking.user_turbo.id,
+        name: booking.user_turbo.name || booking.user_turbo.NickName || 'User',
+        IG_account: `@${booking.user_turbo.NickName || 'user'}`,
+        UserStatus: 'Premium',
+        IG: true,
+        TikTok: false,
+        Profile_pic: {
+          access: 'public',
+          path: '/profiles/default.jpg',
+          url: `https://api.dicebear.com/7.x/avataaars/svg?seed=${booking.user_turbo.name || 'user'}`,
+          name: 'profile.jpg',
+          type: 'image/svg+xml',
+          size: 10000,
+          mime: 'image/svg+xml',
+          meta: {
+            width: 200,
+            height: 200
+          }
+        },
+        profile_images: null
+      }
+    };
+
+    setCouponData(mockCouponData);
+    setLoadingCoupon(false);
+    
+    toast({
+      title: "Coupon Ready!",
+      description: "Your premium ticket has been activated.",
+    });
   };
 
   const getCheckInButtonText = () => {
