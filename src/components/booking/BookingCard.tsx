@@ -406,12 +406,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <span className={`${status.text} text-xs font-medium`}>{status.label}</span>
           </div>
 
-          {/* Coupon Badge */}
-          {booking.coupon_status && (
-            <div className="absolute top-4 left-4 bg-green-500/20 border border-green-500/40 rounded-full px-3 py-1 flex items-center gap-1">
-              <span className="text-green-400 text-xs font-medium">🎟️ {booking.coupon_status}</span>
-            </div>
-          )}
         </div>
 
         {/* Card Content */}
