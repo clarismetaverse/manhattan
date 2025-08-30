@@ -87,7 +87,7 @@ export const fetchCouponData = async (bookingId: number): Promise<CouponResponse
   const authToken = localStorage.getItem('authToken');
   
   try {
-    const response = await fetch(`${XANO_BASE_URL}/get_coupon`, {
+    const response = await fetch(`${XANO_BASE_URL}/get_bookings/user/detaiI`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
