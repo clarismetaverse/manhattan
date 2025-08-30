@@ -400,8 +400,8 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-center pt-4 border-t border-white/10 animate-fade-in" style={{ animationDelay: '1.4s' }}>
+        {/* Close Button */}
+        <div className="pt-4 animate-fade-in" style={{ animationDelay: '1.2s' }}>
           <button
             onClick={onReset}
             className="w-full py-3 px-6 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-lg"
