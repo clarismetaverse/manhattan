@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Calendar, Clock, Instagram, Camera, ChevronDown, ExternalLink, ArrowRight } from 'lucide-react';
+import { type CouponResponse } from '@/services/couponApi';
 
 interface TicketProps {
   onReset: () => void;
+  couponData?: CouponResponse | null;
+  loadingCoupon?: boolean;
 }
 
 const THRESHOLD = 0.85;
@@ -160,12 +163,23 @@ const Slider = ({ onComplete }: { onComplete: () => void }) => {
 };
 
 // Premium Ticket component
-const Ticket = ({ onReset }: TicketProps) => {
+const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
   const [addressExpanded, setAddressExpanded] = useState(false);
 
   useEffect(() => {
     vibrate(30);
   }, []);
+
+  if (loadingCoupon) {
+    return (
+      <div className="relative overflow-hidden animate-scale-in">
+        <div className="p-8 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <span className="text-white">Loading coupon...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden animate-scale-in">
@@ -175,8 +189,20 @@ const Ticket = ({ onReset }: TicketProps) => {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative -mt-6 animate-scale-in" style={{ animationDelay: '0.4s' }}>
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 p-1 shadow-2xl">
-              <div className="w-full h-full rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center">
-                <span className="text-white font-bold text-3xl">AI</span>
+              <div className="w-full h-full rounded-full overflow-hidden">
+                {couponData?._user_turbo?.Profile_pic?.url ? (
+                  <img 
+                    src={couponData._user_turbo.Profile_pic.url} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center">
+                    <span className="text-white font-bold text-3xl">
+                      {couponData?._user_turbo?.name?.charAt(0) || 'AI'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
             {/* Verified Badge */}
@@ -189,7 +215,9 @@ const Ticket = ({ onReset }: TicketProps) => {
         {/* Venue Name */}
         <div className="absolute bottom-6 left-0 right-0 text-center">
           <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            <h2 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">Bari Uma</h2>
+            <h2 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">
+              {couponData?._restaurant_turbo?.Name || 'Bari Uma'}
+            </h2>
             <div className="text-white/80 text-sm">Premium Experience</div>
           </div>
         </div>
@@ -205,18 +233,23 @@ const Ticket = ({ onReset }: TicketProps) => {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-semibold text-sm">Via Brera 15, Milano</span>
-                <button className="text-red-500 hover:text-red-400 transition-colors p-1 hover:bg-red-500/10 rounded">
-                  <ExternalLink className="h-3 w-3" />
-                </button>
+                <span className="font-semibold text-sm">
+                  {couponData?._restaurant_turbo?.Adress || 'Via Brera 15, Milano'}
+                </span>
+                {couponData?._restaurant_turbo?.Maps_Link && (
+                  <button 
+                    onClick={() => window.open(couponData._restaurant_turbo.Maps_Link, '_blank')}
+                    className="text-red-500 hover:text-red-400 transition-colors p-1 hover:bg-red-500/10 rounded"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                )}
               </div>
 
               {addressExpanded && (
                 <div className="animate-accordion-down">
                   <div className="text-xs text-white/60 pb-2">
-                    Zona Brera, 20121 Milano MI<br />
-                    Near Pinacoteca di Brera<br />
-                    Metro: Lanza (Green Line)
+                    {couponData?._restaurant_turbo?.About || 'Zona Brera, 20121 Milano MI'}
                   </div>
                 </div>
               )}
@@ -225,7 +258,7 @@ const Ticket = ({ onReset }: TicketProps) => {
                 onClick={() => setAddressExpanded(!addressExpanded)}
                 className="flex items-center gap-1 text-xs text-red-500 hover:text-red-400 transition-colors"
               >
-                <span>{addressExpanded ? 'Hide' : 'Show'} full address</span>
+                <span>{addressExpanded ? 'Hide' : 'Show'} details</span>
                 <ChevronDown className={`h-3 w-3 transition-transform ${addressExpanded ? 'rotate-180' : ''}`} />
               </button>
             </div>
@@ -239,8 +272,16 @@ const Ticket = ({ onReset }: TicketProps) => {
               <Calendar className="h-4 w-4 text-white" />
             </div>
             <div>
-              <div className="font-semibold text-sm">Wednesday, Aug 28</div>
-              <div className="text-xs text-white/60">2024</div>
+              <div className="font-semibold text-sm">
+                {couponData?.BookingDay ? new Date(couponData.BookingDay).toLocaleDateString('en-US', { 
+                  weekday: 'short', 
+                  month: 'short', 
+                  day: 'numeric' 
+                }) : 'Wednesday, Aug 28'}
+              </div>
+              <div className="text-xs text-white/60">
+                {couponData?.BookingDay ? new Date(couponData.BookingDay).getFullYear() : '2024'}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -248,8 +289,10 @@ const Ticket = ({ onReset }: TicketProps) => {
               <Clock className="h-4 w-4 text-white" />
             </div>
             <div className="text-right">
-              <div className="font-semibold text-sm">18:00 – 18:30</div>
-              <div className="text-xs text-white/60">30 minutes</div>
+              <div className="font-semibold text-sm">
+                {couponData?.HourStart || '18:00'} – {couponData?.HourEnd || '18:30'}
+              </div>
+              <div className="text-xs text-white/60">Premium session</div>
             </div>
           </div>
         </div>
@@ -262,8 +305,12 @@ const Ticket = ({ onReset }: TicketProps) => {
             </div>
             <div className="flex-1">
               <div className="font-semibold text-red-500 mb-1 text-sm">Social Action Required</div>
-              <div className="text-white/90 font-medium text-sm">Post Instagram story featuring venue</div>
-              <div className="text-xs text-white/60 mt-1">Tag @bariuma and use #PremiumExperience</div>
+              <div className="text-white/90 font-medium text-sm">
+                {couponData?._actions_turbo?.Action_Name || 'Post Instagram story featuring venue'}
+              </div>
+              <div className="text-xs text-white/60 mt-1">
+                Tag {couponData?._restaurant_turbo?.Tags || '@venue'} and {couponData?._restaurant_turbo?.Tag2 || '@claris.app'}
+              </div>
             </div>
             <Camera className="h-4 w-4 text-red-500/60" />
           </div>
@@ -290,7 +337,9 @@ const Ticket = ({ onReset }: TicketProps) => {
             <div className="flex flex-col gap-2">
               <span className="text-neutral-500 text-xs font-medium uppercase tracking-wider">PLATES</span>
               <div className="flex items-center gap-3">
-                <span className="text-white text-3xl font-light">3</span>
+                <span className="text-white text-3xl font-light">
+                  {couponData?._actions_turbo?.Plates || 3}
+                </span>
                 <div className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="1" />
@@ -304,7 +353,9 @@ const Ticket = ({ onReset }: TicketProps) => {
             <div className="flex flex-col gap-2">
               <span className="text-neutral-500 text-xs font-medium uppercase tracking-wider">DRINKS</span>
               <div className="flex items-center gap-3">
-                <span className="text-white text-3xl font-light">2</span>
+                <span className="text-white text-3xl font-light">
+                  {couponData?._actions_turbo?.Drinks || 2}
+                </span>
                 <div className="w-7 h-7 bg-neutral-700 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12V7a1 1 0 011-1h4l2 5h6a1 1 0 011 1v5a2 2 0 01-2 2H7a2 2 0 01-2-2v-5z" />
@@ -319,7 +370,9 @@ const Ticket = ({ onReset }: TicketProps) => {
           {/* Bottom */}
           <div className="border-t border-neutral-700 pt-5">
             <div className="flex items-center justify-between">
-              <span className="text-white text-base font-medium">Reel</span>
+              <span className="text-white text-base font-medium">
+                {couponData?._actions_turbo?.Action_Name || 'Reel'}
+              </span>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                 <span className="text-red-500 text-xs font-semibold uppercase tracking-wider">SELECTED</span>
@@ -345,9 +398,11 @@ const Ticket = ({ onReset }: TicketProps) => {
 // Main Component
 interface CheckInSliderProps {
   onClose?: () => void;
+  couponData?: CouponResponse | null;
+  loadingCoupon?: boolean;
 }
 
-export default function CheckInSlider({ onClose }: CheckInSliderProps) {
+export default function CheckInSlider({ onClose, couponData, loadingCoupon }: CheckInSliderProps) {
   const [unlocked, setUnlocked] = useState(false);
 
   const handleComplete = () => {
@@ -369,7 +424,7 @@ export default function CheckInSlider({ onClose }: CheckInSliderProps) {
         {!unlocked ? (
           <Slider onComplete={handleComplete} />
         ) : (
-          <Ticket onReset={handleReset} />
+          <Ticket onReset={handleReset} couponData={couponData} loadingCoupon={loadingCoupon} />
         )}
       </div>
     </div>

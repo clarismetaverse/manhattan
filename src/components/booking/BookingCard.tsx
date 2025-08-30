@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Clock, MapPin, MessageCircle, Share, CheckCircle, AlertCircle, XCircle, Instagram, ArrowLeft, RotateCcw, X as Close } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import CheckInSlider from '@/components/CheckInSlider';
+import { fetchCouponData, type CouponResponse } from '@/services/couponApi';
+import { toast } from '@/hooks/use-toast';
 
 // Clean component without Framer Motion dependencies
 
@@ -91,6 +93,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const [checkInStatus, setCheckInStatus] = useState<'not_available' | 'available' | 'checked_in' | 'missed'>(
     booking.check_in_status || 'not_available'
   );
+  const [couponData, setCouponData] = useState<CouponResponse | null>(null);
+  const [loadingCoupon, setLoadingCoupon] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
 
 
@@ -118,6 +122,29 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const handleCheckInComplete = () => {
     setCheckInStatus('checked_in');
     setShowCheckInSlider(false);
+    // Fetch coupon data when check-in is completed
+    loadCouponData();
+  };
+
+  const loadCouponData = async () => {
+    setLoadingCoupon(true);
+    try {
+      const data = await fetchCouponData(booking.id);
+      setCouponData(data);
+      toast({
+        title: "Coupon Ready!",
+        description: "Your premium ticket has been activated.",
+      });
+    } catch (error) {
+      console.error('Failed to load coupon data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load coupon data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingCoupon(false);
+    }
   };
 
   const getCheckInButtonText = () => {
@@ -558,7 +585,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       {showCheckInSlider && (
         <div className="fixed inset-0 z-[150] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
           <div className="w-full max-w-lg">
-            <CheckInSlider onClose={handleCheckInComplete} />
+            <CheckInSlider 
+              onClose={handleCheckInComplete} 
+              couponData={couponData}
+              loadingCoupon={loadingCoupon}
+            />
           </div>
         </div>
       )}
