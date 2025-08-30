@@ -76,6 +76,8 @@ export interface CouponResponse {
 }
 
 export const fetchCouponData = async (bookingId: number): Promise<CouponResponse> => {
+  console.log('🎫 Fetching coupon data for booking ID:', bookingId);
+  
   try {
     const response = await fetch(`${XANO_BASE_URL}/get_coupon`, {
       method: 'POST',
@@ -87,14 +89,19 @@ export const fetchCouponData = async (bookingId: number): Promise<CouponResponse
       })
     });
 
+    console.log('📡 Coupon API Response status:', response.status);
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ Coupon API Error:', response.status, errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('✅ Coupon data received:', data);
     return data;
   } catch (error) {
-    console.error('Error fetching coupon data:', error);
+    console.error('💥 Error fetching coupon data:', error);
     throw error;
   }
 };

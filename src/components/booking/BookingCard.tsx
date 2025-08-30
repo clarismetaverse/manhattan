@@ -127,16 +127,18 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   const loadCouponData = async () => {
+    console.log('🚀 Starting coupon data load for booking:', booking.id);
     setLoadingCoupon(true);
     try {
       const data = await fetchCouponData(booking.id);
+      console.log('📋 Setting coupon data:', data);
       setCouponData(data);
       toast({
         title: "Coupon Ready!",
         description: "Your premium ticket has been activated.",
       });
     } catch (error) {
-      console.error('Failed to load coupon data:', error);
+      console.error('🔥 Failed to load coupon data:', error);
       toast({
         title: "Error",
         description: "Failed to load coupon data. Please try again.",

@@ -170,6 +170,9 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
     vibrate(30);
   }, []);
 
+  console.log('🎪 CheckInSlider - couponData:', couponData);
+  console.log('🎪 CheckInSlider - loadingCoupon:', loadingCoupon);
+  
   if (loadingCoupon) {
     return (
       <div className="relative overflow-hidden animate-scale-in">
