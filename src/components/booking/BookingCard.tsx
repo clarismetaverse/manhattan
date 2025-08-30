@@ -94,39 +94,17 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const detailRef = useRef<HTMLDivElement>(null);
 
 
-  // Check-in availability logic
+  // Check-in availability logic (debugging mode - always allow check-in if approved)
   const getCheckInAvailability = () => {
-    // Check if booking is approved (either ApprovalStatus is true OR coupon_status includes "approved")
-    const isApproved = booking.ApprovalStatus || booking.coupon_status?.toLowerCase().includes('approved');
+    // ApprovalStatus: false means approved (NOT pending)
+    const isApproved = !booking.ApprovalStatus || booking.coupon_status?.toLowerCase().includes('approved');
     
     if (!isApproved || checkInStatus === 'checked_in') {
       return checkInStatus === 'checked_in' ? 'checked_in' : 'not_available';
     }
 
-    try {
-      const bookingDate = parseISO(booking.BookingDay);
-      const bookingHour = booking.HourStart ?? 0;
-      const bookingMinute = booking.MinuteStart ?? 0;
-      
-      // Create booking datetime
-      const bookingDateTime = new Date(bookingDate);
-      bookingDateTime.setHours(bookingHour, bookingMinute, 0, 0);
-      
-      const now = new Date();
-      const timeDifference = bookingDateTime.getTime() - now.getTime();
-      const minutesDifference = timeDifference / (1000 * 60);
-      
-      // Check-in available 60 minutes before to 60 minutes after booking time
-      if (minutesDifference > 60) {
-        return 'not_available'; // Too early
-      } else if (minutesDifference < -60) {
-        return 'missed'; // Too late
-      } else {
-        return 'available'; // Check-in window
-      }
-    } catch {
-      return 'not_available';
-    }
+    // For debugging: always allow check-in if approved
+    return 'available';
   };
 
   const currentAvailability = getCheckInAvailability();
@@ -150,8 +128,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         return 'Check In Now';
       case 'checked_in':
         return 'Checked In';
-      case 'missed':
-        return 'Check-in Missed';
       default:
         return 'Check In';
     }
@@ -163,8 +139,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         return 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white';
       case 'checked_in':
         return 'bg-green-500/20 border border-green-500/40 text-green-400';
-      case 'missed':
-        return 'bg-red-500/20 border border-red-500/40 text-red-400';
       default:
         return 'bg-gray-500/20 border border-gray-500/40 text-gray-400';
     }
@@ -177,7 +151,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   };
 
   const getStatusColor = () => {
-    if (booking.ApprovalStatus) {
+    // ApprovalStatus: false means approved/confirmed, true means pending
+    if (!booking.ApprovalStatus) {
       return {
         bg: 'bg-emerald-400/20',
         border: 'border-emerald-400/40',
@@ -252,7 +227,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   // Mock data for the detail view
   const currentBooking = selected ? {
     id: selected.id,
-    status: selected.ApprovalStatus ? "confirmed" : "pending",
+    status: !selected.ApprovalStatus ? "confirmed" : "pending",
     venue: selected._restaurant_turbo?.Name || selected._offers_turbo?.Offer_Name || 'Restaurant',
     address: selected._restaurant_turbo?.Adress || 'Restaurant Address',
     description: 'A premium dining experience with Instagram-worthy dishes and exceptional service. Perfect for content creation.',
@@ -408,7 +383,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </div>
 
           {/* Check-in Bar */}
-          {(booking.ApprovalStatus || booking.coupon_status?.toLowerCase().includes('approved')) && currentAvailability !== 'not_available' && (
+          {(!booking.ApprovalStatus || booking.coupon_status?.toLowerCase().includes('approved')) && currentAvailability !== 'not_available' && (
             <div className="mt-4 pt-4 border-t border-gray-700/30">
               <button
                 onClick={(e) => {
@@ -541,7 +516,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </section>
 
             {/* Check-in Button in Detail View */}
-            {(booking.ApprovalStatus || booking.coupon_status?.toLowerCase().includes('approved')) && currentAvailability !== 'not_available' && (
+            {(!booking.ApprovalStatus || booking.coupon_status?.toLowerCase().includes('approved')) && currentAvailability !== 'not_available' && (
               <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
                 <button
                   onClick={(e) => {
