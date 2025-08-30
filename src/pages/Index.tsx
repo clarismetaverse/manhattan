@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import AdvancedFilterModal, { getActiveSelectionCount, type AdvancedFilterMap } from "@/components/filters/AdvancedFilterModal";
 import WeekdayFilter from "@/components/filters/WeekdayFilter";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
-import { Calendar, X, SlidersHorizontal } from "lucide-react";
+import { Calendar, X, SlidersHorizontal, LogIn } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW";
 
@@ -16,6 +18,8 @@ const API_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW
 const Index = () => {
   const [page] = useState(1);
   const [cityId] = useState(3);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Advanced filter modal state
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -136,6 +140,20 @@ const Index = () => {
 
 
 <div className="relative mx-auto max-w-5xl px-4 pt-20 mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            {!user && (
+              <Button 
+                onClick={() => navigate('/login')}
+                variant="default"
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Login to View Bookings
+              </Button>
+            )}
+          </div>
+        </div>
         <div className="flex justify-end gap-2">
           <Button
             ref={weekdayBtnRef}
