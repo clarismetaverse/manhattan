@@ -18,7 +18,7 @@ const vibrate = (ms = 10) => {
 };
 
 // Slider component
-const Slider = ({ onComplete }: { onComplete: () => void }) => {
+const Slider = ({ onComplete, couponData }: { onComplete: () => void; couponData?: CouponResponse | null }) => {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [maxX, setMaxX] = useState(300);
@@ -40,6 +40,20 @@ const Slider = ({ onComplete }: { onComplete: () => void }) => {
       window.removeEventListener('resize', updateMaxX);
     };
   }, []);
+
+  const formatSliderDate = (dateStr?: string) => {
+    if (!dateStr) return 'Wednesday, 18:00 – 18:30';
+    
+    try {
+      const date = new Date(dateStr);
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+      const startTime = couponData?.HourStart || '18:00';
+      const endTime = `${couponData?.HourEnd || '18'}:${couponData?.MinuteEnd || '30'}`;
+      return `${weekday}, ${startTime} – ${endTime}`;
+    } catch {
+      return 'Wednesday, 18:00 – 18:30';
+    }
+  };
 
   const progress = Math.min(Math.max(dragX / maxX, 0), 1);
 
@@ -102,11 +116,11 @@ const Slider = ({ onComplete }: { onComplete: () => void }) => {
       <div className="flex items-center justify-between text-sm">
         <div>
           <div className="text-white/60">Selected date</div>
-          <div className="font-semibold">Wednesday, 18:00 – 18:30</div>
+          <div className="font-semibold">{formatSliderDate(couponData?.BookingDay)}</div>
         </div>
         <div className="text-right">
           <div className="text-white/60">Venue</div>
-          <div className="font-semibold">Bari Uma</div>
+          <div className="font-semibold">{couponData?._restaurant_turbo?.Name || 'Bari Uma'}</div>
         </div>
       </div>
 
@@ -431,7 +445,7 @@ export default function CheckInSlider({ onClose, couponData, loadingCoupon }: Ch
         style={{ boxShadow: '0 20px 60px -20px rgba(255,255,255,0.1)' }}
       >
         {!unlocked ? (
-          <Slider onComplete={handleComplete} />
+          <Slider onComplete={handleComplete} couponData={couponData} />
         ) : (
           <Ticket onReset={handleReset} couponData={couponData} loadingCoupon={loadingCoupon} />
         )}
