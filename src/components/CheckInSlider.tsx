@@ -343,6 +343,16 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
           </div>
         </div>
 
+        {/* Close Button - Positioned Higher */}
+        <div className="animate-fade-in">
+          <button
+            onClick={onReset}
+            className="w-full py-4 px-6 rounded-xl bg-white text-black font-bold hover:bg-gray-100 transition-colors shadow-xl border-2 border-white/20 text-lg"
+          >
+            Close Ticket
+          </button>
+        </div>
+
         {/* Benefits */}
         <div
           className="bg-neutral-950 border border-neutral-700 rounded-2xl p-6 animate-fade-in"
@@ -400,15 +410,7 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
           </div>
         </div>
 
-        {/* Close Button */}
-        <div className="pt-4 animate-fade-in" style={{ animationDelay: '1.2s' }}>
-          <button
-            onClick={onReset}
-            className="w-full py-3 px-6 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors shadow-lg"
-          >
-            Close
-          </button>
-        </div>
+        {/* Close Button - Removed from bottom */}
       </div>
     </div>
   );
