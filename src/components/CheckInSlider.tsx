@@ -186,8 +186,22 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
 
   return (
     <div className="relative overflow-hidden animate-scale-in">
-      {/* Header with Profile */}
-      <div className="relative h-56 bg-gradient-to-br from-neutral-800 via-neutral-900 to-black overflow-hidden">
+      {/* Header with Cover Background */}
+      <div className="relative h-56 overflow-hidden">
+        {/* Cover Image Background */}
+        {couponData?._restaurant_turbo?.Cover?.url ? (
+          <div className="absolute inset-0">
+            <img 
+              src={couponData._restaurant_turbo.Cover.url} 
+              alt="Venue Cover" 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-neutral-800 via-neutral-900 to-black" />
+        )}
+        
         {/* Profile Picture - Centered */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative -mt-6 animate-scale-in" style={{ animationDelay: '0.4s' }}>
