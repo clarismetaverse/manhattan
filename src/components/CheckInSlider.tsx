@@ -244,7 +244,7 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
         </div>
 
         {/* Venue Name */}
-        <div className="absolute bottom-6 left-0 right-0 text-center">
+        <div className="absolute bottom-2 left-0 right-0 text-center">
           <div className="animate-fade-in" style={{ animationDelay: '0.6s' }}>
             <h2 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">
               {couponData?._restaurant_turbo?.Name || 'Bari Uma'}
