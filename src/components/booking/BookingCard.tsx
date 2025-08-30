@@ -114,12 +114,14 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const currentAvailability = getCheckInAvailability();
 
   const handleCheckIn = () => {
+    console.log('🎯 Check-in button clicked, availability:', currentAvailability);
     if (currentAvailability === 'available') {
       setShowCheckInSlider(true);
     }
   };
 
   const handleCheckInComplete = () => {
+    console.log('✅ Check-in completed, setting status and loading coupon...');
     setCheckInStatus('checked_in');
     setShowCheckInSlider(false);
     // Fetch coupon data when check-in is completed
