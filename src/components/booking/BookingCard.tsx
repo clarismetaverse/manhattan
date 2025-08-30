@@ -113,19 +113,20 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
   const currentAvailability = getCheckInAvailability();
 
-  const handleCheckIn = () => {
+  const handleCheckIn = async () => {
     console.log('🎯 Check-in button clicked, availability:', currentAvailability);
     if (currentAvailability === 'available') {
       setShowCheckInSlider(true);
+      // Load coupon data immediately when check-in starts
+      await loadCouponData();
     }
   };
 
   const handleCheckInComplete = () => {
-    console.log('✅ Check-in completed, setting status and loading coupon...');
+    console.log('✅ Check-in completed, setting status...');
     setCheckInStatus('checked_in');
     setShowCheckInSlider(false);
-    // Fetch coupon data when check-in is completed
-    loadCouponData();
+    // Don't call loadCouponData here - it's already called in handleCheckIn
   };
 
   const loadCouponData = async () => {

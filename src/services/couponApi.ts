@@ -21,6 +21,8 @@ export interface CouponResponse {
     Maps_Link: string;
     Adress: string;
     Cover: {
+      access: string;
+      path: string;
       url: string;
       name: string;
       type: string;
@@ -42,6 +44,8 @@ export interface CouponResponse {
     Gym: string;
     Accomodation: number;
     Action_icon: {
+      access: string;
+      path: string;
       url: string;
       name: string;
       type: string;
@@ -61,6 +65,8 @@ export interface CouponResponse {
     IG: boolean;
     TikTok: boolean;
     Profile_pic: {
+      access: string;
+      path: string;
       url: string;
       name: string;
       type: string;
@@ -78,25 +84,28 @@ export interface CouponResponse {
 export const fetchCouponData = async (bookingId: number): Promise<CouponResponse> => {
   console.log('🎫 Fetching coupon data for booking ID:', bookingId);
   
+  const authToken = localStorage.getItem('authToken');
+  
   try {
     const response = await fetch(`${XANO_BASE_URL}/get_coupon`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
       },
       body: JSON.stringify({
         booking_id: bookingId.toString()
       })
     });
-
+    
     console.log('📡 Coupon API Response status:', response.status);
-
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Coupon API Error:', response.status, errorText);
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
-
+    
     const data = await response.json();
     console.log('✅ Coupon data received:', data);
     return data;
