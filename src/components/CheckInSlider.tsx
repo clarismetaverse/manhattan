@@ -236,10 +236,6 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
                 )}
               </div>
             </div>
-            {/* Verified Badge */}
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-red-500 rounded-full border-3 border-white flex items-center justify-center shadow-lg">
-              <span className="text-white text-sm font-bold">✓</span>
-            </div>
           </div>
         </div>
 
