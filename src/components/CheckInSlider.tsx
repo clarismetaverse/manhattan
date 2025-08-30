@@ -347,9 +347,9 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
         <div className="animate-fade-in">
           <button
             onClick={onReset}
-            className="w-full py-4 px-6 rounded-xl bg-white text-black font-bold hover:bg-gray-100 transition-colors shadow-xl border-2 border-white/20 text-lg"
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors flex items-center justify-center z-10"
           >
-            Close Ticket
+            ✕
           </button>
         </div>
 
