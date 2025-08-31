@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Calendar, Clock, Instagram, Camera, ChevronDown, ExternalLink, ArrowRight } from 'lucide-react';
-import { type CouponResponse } from '@/services/couponApi';
+import { type CouponResponse, type UserProfileResponse } from '@/services/couponApi';
 
 interface TicketProps {
   onReset: () => void;
   couponData?: CouponResponse | null;
+  userProfile?: UserProfileResponse | null;
   loadingCoupon?: boolean;
 }
 
@@ -18,7 +19,11 @@ const vibrate = (ms = 10) => {
 };
 
 // Slider component
-const Slider = ({ onComplete, couponData }: { onComplete: () => void; couponData?: CouponResponse | null }) => {
+const Slider = ({ onComplete, couponData, userProfile }: { 
+  onComplete: () => void; 
+  couponData?: CouponResponse | null;
+  userProfile?: UserProfileResponse | null;
+}) => {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [maxX, setMaxX] = useState(300);
@@ -177,7 +182,7 @@ const Slider = ({ onComplete, couponData }: { onComplete: () => void; couponData
 };
 
 // Premium Ticket component
-const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
+const Ticket = ({ onReset, couponData, userProfile, loadingCoupon }: TicketProps) => {
   const [addressExpanded, setAddressExpanded] = useState(false);
 
   useEffect(() => {
@@ -221,19 +226,19 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
           <div className="relative -mt-6 animate-scale-in" style={{ animationDelay: '0.4s' }}>
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 p-1 shadow-2xl">
               <div className="w-full h-full rounded-full overflow-hidden">
-                {couponData?._user_turbo?.Profile_pic?.url ? (
-                  <img 
-                    src={couponData._user_turbo.Profile_pic.url} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center">
-                    <span className="text-white font-bold text-3xl">
-                      {couponData?._user_turbo?.name?.charAt(0) || 'AI'}
-                    </span>
-                  </div>
-                )}
+            {(userProfile?.Profile_pic?.url || couponData?._user_turbo?.Profile_pic?.url) ? (
+              <img 
+                src={userProfile?.Profile_pic?.url || couponData?._user_turbo?.Profile_pic?.url} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-neutral-700 to-neutral-800 flex items-center justify-center">
+                <span className="text-white font-bold text-3xl">
+                  {(userProfile?.name || couponData?._user_turbo?.name)?.charAt(0) || 'AI'}
+                </span>
+              </div>
+            )}
               </div>
             </div>
           </div>
@@ -420,10 +425,11 @@ const Ticket = ({ onReset, couponData, loadingCoupon }: TicketProps) => {
 interface CheckInSliderProps {
   onClose?: () => void;
   couponData?: CouponResponse | null;
+  userProfile?: UserProfileResponse | null;
   loadingCoupon?: boolean;
 }
 
-export default function CheckInSlider({ onClose, couponData, loadingCoupon }: CheckInSliderProps) {
+export default function CheckInSlider({ onClose, couponData, userProfile, loadingCoupon }: CheckInSliderProps) {
   const [unlocked, setUnlocked] = useState(false);
 
   const handleComplete = () => {
@@ -443,9 +449,9 @@ export default function CheckInSlider({ onClose, couponData, loadingCoupon }: Ch
         style={{ boxShadow: '0 20px 60px -20px rgba(255,255,255,0.1)' }}
       >
         {!unlocked ? (
-          <Slider onComplete={handleComplete} couponData={couponData} />
+          <Slider onComplete={handleComplete} couponData={couponData} userProfile={userProfile} />
         ) : (
-          <Ticket onReset={handleReset} couponData={couponData} loadingCoupon={loadingCoupon} />
+          <Ticket onReset={handleReset} couponData={couponData} userProfile={userProfile} loadingCoupon={loadingCoupon} />
         )}
       </div>
     </div>

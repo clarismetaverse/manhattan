@@ -1,5 +1,33 @@
 const XANO_BASE_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3";
 
+export interface UserProfileResponse {
+  id: number;
+  name: string;
+  IG_account: string;
+  xp: number;
+  TikTok: boolean;
+  Claris: number;
+  InstagramApprovation: boolean;
+  Tiktokapprovation: boolean;
+  TiktokRejection: boolean;
+  InstagramRejection: boolean;
+  bio: string;
+  promocode: string;
+  Profile_pic: {
+    access: string;
+    path: string;
+    name: string;
+    type: string;
+    size: number;
+    mime: string;
+    meta: {
+      width: number;
+      height: number;
+    };
+    url: string;
+  };
+}
+
 export interface CouponResponse {
   id: number;
   BookingTimestamp: number;
@@ -80,6 +108,37 @@ export interface CouponResponse {
     profile_images: any;
   };
 }
+
+export const fetchUserProfile = async (): Promise<UserProfileResponse> => {
+  console.log('👤 Fetching user profile...');
+  
+  const authToken = localStorage.getItem('authToken');
+  
+  try {
+    const response = await fetch(`${XANO_BASE_URL}/user_turbo`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      }
+    });
+    
+    console.log('📡 User Profile API Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ User Profile API Error:', response.status, errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ User profile data received:', data);
+    return data;
+  } catch (error) {
+    console.error('💥 Error fetching user profile:', error);
+    throw error;
+  }
+};
 
 export const fetchCouponData = async (bookingId: number): Promise<CouponResponse> => {
   console.log('🎫 Fetching coupon data for booking ID:', bookingId);
