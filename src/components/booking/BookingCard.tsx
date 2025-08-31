@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Clock, MapPin, MessageCircle, Share, CheckCircle, AlertCircle, XCircle, Instagram, ArrowLeft, RotateCcw, X as Close } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import CheckInSlider from '@/components/CheckInSlider';
-import { fetchCouponData, fetchUserProfile, type CouponResponse, type UserProfileResponse } from '@/services/couponApi';
+import { fetchCouponData, type CouponResponse } from '@/services/couponApi';
 import { toast } from '@/hooks/use-toast';
 
 // Clean component without Framer Motion dependencies
@@ -95,8 +95,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   );
   const [couponData, setCouponData] = useState<CouponResponse | null>(null);
   const [loadingCoupon, setLoadingCoupon] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfileResponse | null>(null);
-  const [loadingUserProfile, setLoadingUserProfile] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
 
 
@@ -119,43 +117,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     console.log('🎯 Check-in button clicked, availability:', currentAvailability);
     if (currentAvailability === 'available') {
       setShowCheckInSlider(true);
-      // Load both coupon data and user profile
-      await loadCouponData();
-    }
-  };
-
-  const loadCouponData = async () => {
-    console.log('🚀 Starting coupon data load for booking:', booking.id);
-    setLoadingCoupon(true);
-    setLoadingUserProfile(true);
-    
-    try {
-      // Fetch both coupon data and user profile in parallel
-      const [couponResponse, userProfileResponse] = await Promise.all([
-        fetchCouponData(booking.id),
-        fetchUserProfile()
-      ]);
-      
-      console.log('📋 Setting coupon data:', couponResponse);
-      console.log('👤 Setting user profile:', userProfileResponse);
-      
-      setCouponData(couponResponse);
-      setUserProfile(userProfileResponse);
-      
-      toast({
-        title: "Coupon Ready!",
-        description: "Your premium ticket has been activated.",
-      });
-    } catch (error) {
-      console.error('🔥 Failed to load coupon/user data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load coupon data. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoadingCoupon(false);
-      setLoadingUserProfile(false);
+      // Create coupon data from existing booking data instead of API call
+      createCouponFromBooking();
     }
   };
 
@@ -163,6 +126,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     console.log('✅ Check-in completed, setting status...');
     setCheckInStatus('checked_in');
     setShowCheckInSlider(false);
+    // Don't call loadCouponData here - it's already called in handleCheckIn
   };
 
   const createCouponFromBooking = () => {
@@ -695,8 +659,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <CheckInSlider 
               onClose={handleCheckInComplete} 
               couponData={couponData}
-              userProfile={userProfile}
-              loadingCoupon={loadingCoupon || loadingUserProfile}
+              loadingCoupon={loadingCoupon}
             />
           </div>
         </div>
