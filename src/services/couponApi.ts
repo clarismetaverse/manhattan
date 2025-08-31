@@ -112,7 +112,7 @@ export interface UserProfileResponse {
 export const fetchUserProfile = async (): Promise<UserProfileResponse> => {
   console.log('👤 Fetching user profile...');
   
-  const authToken = localStorage.getItem('authToken');
+  const authToken = localStorage.getItem('auth_token');
   
   try {
     const response = await fetch(`${XANO_BASE_URL}/user_turbo`, {
@@ -143,7 +143,7 @@ export const fetchUserProfile = async (): Promise<UserProfileResponse> => {
 export const fetchCouponData = async (bookingId: number): Promise<CouponResponse> => {
   console.log('🎫 Fetching coupon data for booking ID:', bookingId);
   
-  const authToken = localStorage.getItem('authToken');
+  const authToken = localStorage.getItem('auth_token');
   
   try {
     const response = await fetch(`${XANO_BASE_URL}/get_bookings/user/detaiI`, {
