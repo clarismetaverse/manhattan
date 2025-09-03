@@ -12,6 +12,9 @@ import Bookings from "./pages/Bookings";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import UgcTiktokerProfilePinned from "./pages/UgcTiktokerProfilePinned";
+
+
 
 const queryClient = new QueryClient();
 
