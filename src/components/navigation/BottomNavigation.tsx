@@ -12,7 +12,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { id: 'explore', label: 'Explore', icon: Compass, path: '/' },
-  { id: 'collabs', label: 'Collabs', icon: Users, path: '/collabs' },
+  { id: 'showcase', label: 'Showcase', icon: Users, path: '/ugc-tiktoker-profile' },
   { id: 'bookings', label: 'Bookings', icon: Calendar, path: '/bookings' },
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
