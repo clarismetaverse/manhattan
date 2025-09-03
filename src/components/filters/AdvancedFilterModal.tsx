@@ -53,8 +53,11 @@ function useFilterOptions(isOpen: boolean) {
       if (!res.ok) throw new Error(`Failed to load filters: ${res.status}`)
       const json = (await res.json()) as TurboCategory[]
       setData(json)
-    } catch (e: any) {
-      if (e.name !== "AbortError") setError(e?.message ?? "Unknown error")
+    } catch (e: unknown) {
+      if ((e as { name?: string }).name !== "AbortError") {
+        const message = e instanceof Error ? e.message : "Unknown error"
+        setError(message)
+      }
     } finally {
       setLoading(false)
     }
@@ -66,7 +69,6 @@ function useFilterOptions(isOpen: boolean) {
     } else {
       abortRef.current?.abort()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   return { data, loading, error, refetch: fetchData }
@@ -96,8 +98,7 @@ export default function AdvancedFilterModal({ isOpen, onClose, onApply, initialS
         content: initialSelected.content ?? [],
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen])
+  }, [isOpen, initialSelected])
 
   const grouped = useMemo(() => {
     const res: Record<string, TurboCategory[]> = {}

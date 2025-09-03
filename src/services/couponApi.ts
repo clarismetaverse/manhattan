@@ -10,7 +10,7 @@ export interface CouponResponse {
   HourStart: string;
   HourEnd: number | null;
   MinuteEnd: string;
-  vanue_images: any[];
+  vanue_images: unknown[];
   _restaurant_turbo: {
     id: number;
     Name: string;
@@ -77,7 +77,7 @@ export interface CouponResponse {
         height: number;
       };
     };
-    profile_images: any;
+    profile_images: unknown;
   };
 }
 

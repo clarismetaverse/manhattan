@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface NavItem {
   id: string;
   label: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   path: string;
 }
 
