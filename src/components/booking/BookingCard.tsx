@@ -17,7 +17,7 @@ interface BookingData {
   HourEnd: number | null;
   MinuteEnd: number | null;
   coupon_status: string;
-  vanue_images: any[];
+  vanue_images: unknown[];
   check_in_status?: 'not_available' | 'available' | 'checked_in' | 'missed';
   check_in_time?: string;
   _timeframes_turbo?: {

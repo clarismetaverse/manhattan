@@ -84,17 +84,19 @@ const Index = () => {
       
       // Handle new grouped response format
       if (json.filt) {
-        const restaurantMap = new Map();
-        
-        Object.values(json.filt).forEach((group: any) => {
+        type RestaurantRecord = { id: number; [key: string]: unknown };
+        const restaurantMap = new Map<number, RestaurantRecord>();
+
+        Object.values(json.filt).forEach((group: unknown) => {
           if (Array.isArray(group)) {
-            group.forEach((restaurant: any) => {
+            (group as RestaurantRecord[]).forEach((restaurant) => {
               if (restaurant?.id) {
                 restaurantMap.set(restaurant.id, restaurant);
               }
             });
-          } else if (group && typeof group === 'object' && group.id) {
-            restaurantMap.set(group.id, group);
+          } else if (group && typeof group === 'object' && 'id' in group) {
+            const r = group as RestaurantRecord;
+            restaurantMap.set(r.id, r);
           }
         });
         

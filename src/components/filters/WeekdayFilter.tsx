@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 export type WeekdayFilterProps = {
   isOpen: boolean;
@@ -34,12 +34,15 @@ const WeekdayFilter: React.FC<WeekdayFilterProps> = ({ isOpen, selectedDays, onD
     return () => document.removeEventListener("mousedown", handleClick);
   }, [isOpen, onClose, toggleRef]);
 
-  const setToggled = (full: string) => {
-    const set = new Set(selectedDays);
-    if (set.has(full)) set.delete(full);
-    else set.add(full);
-    onDaysChange(Array.from(set));
-  };
+  const setToggled = useCallback(
+    (full: string) => {
+      const set = new Set(selectedDays);
+      if (set.has(full)) set.delete(full);
+      else set.add(full);
+      onDaysChange(Array.from(set));
+    },
+    [selectedDays, onDaysChange]
+  );
 
   const openClasses = isOpen ? "translate-y-0 opacity-100 pointer-events-auto" : "-translate-y-full opacity-0 pointer-events-none";
 
@@ -73,7 +76,7 @@ const WeekdayFilter: React.FC<WeekdayFilterProps> = ({ isOpen, selectedDays, onD
         </button>
       );
     })
-  ), [selectedDays]);
+  ), [selectedDays, setToggled]);
 
   return (
     <div
