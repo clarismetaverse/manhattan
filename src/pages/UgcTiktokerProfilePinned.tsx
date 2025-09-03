@@ -42,7 +42,8 @@ export default function UGCTiktokerProfilePinned() {
   ];
 
   return (
-    <div className="max-w-2xl mx-auto p-4 sm:p-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-2xl mx-auto p-4 sm:p-6">
       {/* Header */}
       <div className="rounded-2xl shadow bg-white overflow-hidden">
         <div className="h-28 sm:h-36 bg-gradient-to-r from-fuchsia-200 to-pink-300" />
@@ -165,6 +166,7 @@ export default function UGCTiktokerProfilePinned() {
         </div>
       )}
     </div>
+  </div>
   );
 }
 
