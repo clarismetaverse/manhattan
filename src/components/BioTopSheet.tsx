@@ -38,7 +38,7 @@ export default function BioTopSheet({
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-end">
+    <div role="dialog" aria-modal="true" aria-label={`${name}'s bio`} className="fixed inset-0 z-50 flex items-end">
       <button aria-label="Close bio" onClick={onClose} className="absolute inset-0 bg-black/50" />
       <div className="relative w-full h-screen bg-white rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-80">
         <div
