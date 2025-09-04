@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import BioTopSheet from "@/components/BioTopSheet";
 import { Share2, BadgeCheck, Pin, Instagram, Music2, Briefcase, Users } from "lucide-react";
 
 /**
@@ -9,6 +10,7 @@ import { Share2, BadgeCheck, Pin, Instagram, Music2, Briefcase, Users } from "lu
  */
 export default function UGCTiktokerProfilePinned() {
   const [openPinned, setOpenPinned] = useState<string | null>(null);
+  const [bioOpen, setBioOpen] = useState(false);
 
   const profile = {
     name: "Nina Rivera",
@@ -61,7 +63,7 @@ export default function UGCTiktokerProfilePinned() {
           </div>
         </div>
         <div className="px-4 pb-3">
-          <p className="text-sm font-medium text-gray-800">“{profile.claim}”</p>
+          <p className="text-sm font-medium text-gray-800 cursor-pointer" onClick={() => setBioOpen(true)}>“{profile.claim}”</p>
           <p className="text-xs text-gray-600 mt-1">{profile.bio}</p>
         </div>
         {/* Claris stats */}
@@ -166,6 +168,16 @@ export default function UGCTiktokerProfilePinned() {
         </div>
       )}
     </div>
+    <BioTopSheet
+      open={bioOpen}
+      onClose={() => setBioOpen(false)}
+      name={profile.name}
+      avatar={profile.avatar}
+      statement={profile.claim || "Helping brands shine with authentic TikToks ✨"}
+      bio={profile.bio}
+      goals={["Collaborate with 5 skincare brands", "Launch a weekly GRWM series", "Reach 50K followers"]}
+      futureProjects={["Behind-the-scenes collab vlog", "Maison Savage launch collab", "Bali wellness x beauty format"]}
+    />
   </div>
   );
 }
