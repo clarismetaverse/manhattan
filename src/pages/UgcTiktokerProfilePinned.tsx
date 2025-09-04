@@ -28,7 +28,12 @@ export default function UGCTiktokerProfilePinned() {
     socials: {
       tiktok: "https://www.tiktok.com/@nina.rvr",
       instagram: "https://www.instagram.com/nina.rvr",
-    }
+    },
+    idols: [
+      { name: "Dua Lipa", img: "https://placehold.co/64x64?text=DL" },
+      { name: "Bella Hadid", img: "https://placehold.co/64x64?text=BH" },
+      { name: "Jennie Kim", img: "https://placehold.co/64x64?text=JK" }
+    ]
   } as const;
 
   const pinned = [
@@ -177,6 +182,7 @@ export default function UGCTiktokerProfilePinned() {
       bio={profile.bio}
       goals={["Collaborate with 5 skincare brands", "Launch a weekly GRWM series", "Reach 50K followers"]}
       futureProjects={["Behind-the-scenes collab vlog", "Maison Savage launch collab", "Bali wellness x beauty format"]}
+
     />
   </div>
   );
