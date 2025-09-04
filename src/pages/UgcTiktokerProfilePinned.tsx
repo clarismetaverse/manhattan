@@ -182,7 +182,7 @@ export default function UGCTiktokerProfilePinned() {
       bio={profile.bio}
       goals={["Collaborate with 5 skincare brands", "Launch a weekly GRWM series", "Reach 50K followers"]}
       futureProjects={["Behind-the-scenes collab vlog", "Maison Savage launch collab", "Bali wellness x beauty format"]}
-
+      idols={profile.idols}
     />
   </div>
   );
