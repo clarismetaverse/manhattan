@@ -1,14 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  // Add other user fields from Xano response
-}
+import { fetchCurrentUser, type XanoUser } from '@/services/auth';
 
 interface AuthContextType {
-  user: User | null;
+  user: XanoUser | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
@@ -29,20 +23,27 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<XanoUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on mount
+    // Check for existing token on mount and fetch user profile
     const token = localStorage.getItem('auth_token');
-    if (token) {
-      // You might want to verify the token with Xano here
-      const userData = localStorage.getItem('user_data');
-      if (userData) {
-        setUser(JSON.parse(userData));
-      }
+    if (!token) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+
+    const loadUser = async () => {
+      const profile = await fetchCurrentUser(token);
+      if (profile) {
+        setUser(profile);
+        localStorage.setItem('user_data', JSON.stringify(profile));
+      }
+      setIsLoading(false);
+    };
+
+    loadUser();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -74,24 +75,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const data = await response.json();
-      
-      // Store auth token and user data (adjust based on Xano response structure)
+
+      // Store auth token and fetch user profile from Xano
       if (data.authToken || data.token || data.access_token) {
-        const token = data.authToken || data.token || data.access_token;
-        localStorage.setItem('auth_token', token);
-        
-        const userData = {
-          id: data.id || data.user_id || data.userId,
-          email: data.email || email,
-          name: data.name || data.username
-        };
-        
-        localStorage.setItem('user_data', JSON.stringify(userData));
-        setUser(userData);
-        
-        return true;
+        const authToken = data.authToken || data.token || data.access_token;
+        localStorage.setItem('auth_token', authToken);
+
+        const profile = await fetchCurrentUser(authToken);
+        if (profile) {
+          localStorage.setItem('user_data', JSON.stringify(profile));
+          setUser(profile);
+          return true;
+        }
+
+        throw new Error('Failed to fetch user profile');
       }
-      
+
       throw new Error('Invalid response from server');
     } catch (error) {
       console.error('Login error:', error);
