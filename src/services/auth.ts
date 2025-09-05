@@ -9,7 +9,7 @@ export interface XanoUser {
 
 export const fetchCurrentUser = async (token: string): Promise<XanoUser | null> => {
   try {
-    const response = await fetch(`${XANO_BASE_URL}/users/me`, {
+    const response = await fetch(`${XANO_BASE_URL}/user_turbo`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
