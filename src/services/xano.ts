@@ -27,14 +27,7 @@ export interface UserTurbo {
 
 const API = import.meta.env.VITE_XANO_API as string;
 const TOKEN = import.meta.env.VITE_XANO_TOKEN as string;
-export class XanoError extends Error {
-  status?: number;
-  constructor(message: string, status?: number) {
-    super(message);
-    this.name = "XanoError";
-    this.status = status;
-  }
-}
+
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API}${path}`, {
@@ -45,26 +38,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...(init.headers || {}),
     },
   });
-  // Handle common failure statuses early
-  if (res.status === 429) {
-    throw new XanoError("Rate limit hit. Please wait a moment and try again.", 429);
-  }
-  if (res.status === 401 || res.status === 403) {
-    throw new XanoError("Unauthorized. Check your API token or session.", res.status);
-  }
-  if (!res.ok) {
-    // Try to read text for diagnostics
-    const txt = await res.text().catch(() => "");
-    throw new XanoError(`Xano ${res.status}: ${txt || res.statusText}`, res.status);
-  }
-  // Some error pages are HTML; only parse JSON when the content-type is json
-  const ctype = res.headers.get("content-type") || "";
-  if (!ctype.toLowerCase().includes("application/json")) {
-    const txt = await res.text().catch(() => "");
-    throw new XanoError(
-      `Unexpected response format (expected JSON). Status ${res.status}.`,
-      res.status
-    );
+
   }
   return (await res.json()) as T;
 }
