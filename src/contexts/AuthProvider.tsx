@@ -1,22 +1,6 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { useEffect, useState, ReactNode } from 'react';
 import { fetchCurrentUser, type XanoUser } from '@/services/auth';
-
-interface AuthContextType {
-  user: XanoUser | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  isLoading: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+import { AuthContext, type AuthContextType } from './AuthContext';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -76,22 +60,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       const data = await response.json();
 
-      // Store auth token and fetch user profile from Xano
-      if (data.authToken || data.token || data.access_token) {
-        const authToken = data.authToken || data.token || data.access_token;
-        localStorage.setItem('auth_token', authToken);
+      // Extract auth token from various possible fields
+      const authToken = data.authToken || data.token || data.access_token;
 
-        const profile = await fetchCurrentUser(authToken);
-        if (profile) {
-          localStorage.setItem('user_data', JSON.stringify(profile));
-          setUser(profile);
-          return true;
-        }
-
-        throw new Error('Failed to fetch user profile');
+      if (!authToken) {
+        throw new Error('Invalid response from server');
       }
 
-      throw new Error('Invalid response from server');
+      // Store auth token locally
+      localStorage.setItem('auth_token', authToken);
+
+      // Try to get user profile from the login response first
+      let profile: XanoUser | null = null;
+      if (data.user) {
+        profile = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name
+        };
+      } else {
+        // Fall back to fetching the profile from Xano
+        profile = await fetchCurrentUser(authToken);
+      }
+
+      if (profile) {
+        localStorage.setItem('user_data', JSON.stringify(profile));
+        setUser(profile);
+        return true;
+      }
+
+      throw new Error('Failed to fetch user profile');
     } catch (error) {
       console.error('Login error:', error);
       return false;

@@ -9,7 +9,7 @@ import AdvancedFilterModal, { getActiveSelectionCount, type AdvancedFilterMap } 
 import WeekdayFilter from "@/components/filters/WeekdayFilter";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { Calendar, X, SlidersHorizontal, LogIn } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 const API_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW";
