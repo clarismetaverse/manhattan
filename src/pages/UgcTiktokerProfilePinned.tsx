@@ -10,7 +10,7 @@ import {
   Briefcase,
   Users,
 } from "lucide-react";
-import { fetchUserTurbo, UserTurbo } from "@/services/xano";
+
 
 /**
  * UGC TikToker Profile — Pinned Trends + Editorial Projects (Revised)
@@ -21,10 +21,7 @@ import { fetchUserTurbo, UserTurbo } from "@/services/xano";
 export default function UGCTiktokerProfilePinned() {
   const [openPinned, setOpenPinned] = useState<string | null>(null);
   const [bioOpen, setBioOpen] = useState(false);
-  const { data: me, isLoading, isError, error } = useQuery<UserTurbo>({
-    queryKey: ["user_turbo"],
-    queryFn: fetchUserTurbo,
-    staleTime: 60_000,
+
   });
 
   const locationStr =
@@ -77,18 +74,13 @@ export default function UGCTiktokerProfilePinned() {
     { id: "e3", title: "Luxury Festival Collaboration", cover: "https://placehold.co/600x400?text=Proj3", brands: ["https://placehold.co/80x80?text=LUX"], pros: ["https://placehold.co/32x32?text=HMU","https://placehold.co/32x32?text=VID","https://placehold.co/32x32?text=DIR"], variant: "brand-banner" },
   ];
 
-  if (isLoading)
+
     return (
       <div className="max-w-2xl mx-auto p-6 text-sm text-gray-600">
         Loading profile…
       </div>
     );
-  if (isError)
-    return (
-      <div className="max-w-2xl mx-auto p-6 text-sm text-red-600">
-        Failed to load profile: {(error as Error).message}
-      </div>
-    );
+
 
   return (
     <div className="min-h-screen bg-white">

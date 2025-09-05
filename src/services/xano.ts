@@ -28,6 +28,7 @@ export interface UserTurbo {
 const API = import.meta.env.VITE_XANO_API as string;
 const TOKEN = import.meta.env.VITE_XANO_TOKEN as string;
 
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     ...init,
@@ -37,9 +38,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
       ...(init.headers || {}),
     },
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Xano ${res.status}: ${text || res.statusText}`);
+
   }
   return (await res.json()) as T;
 }
