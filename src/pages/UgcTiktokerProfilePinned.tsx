@@ -1,6 +1,16 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import BioTopSheet from "@/components/BioTopSheet";
-import { Share2, BadgeCheck, Pin, Instagram, Music2, Briefcase, Users } from "lucide-react";
+import {
+  Share2,
+  BadgeCheck,
+  Pin,
+  Instagram,
+  Music2,
+  Briefcase,
+  Users,
+} from "lucide-react";
+import { fetchUserTurbo, UserTurbo } from "@/services/xano";
 
 /**
  * UGC TikToker Profile — Pinned Trends + Editorial Projects (Revised)
@@ -11,29 +21,48 @@ import { Share2, BadgeCheck, Pin, Instagram, Music2, Briefcase, Users } from "lu
 export default function UGCTiktokerProfilePinned() {
   const [openPinned, setOpenPinned] = useState<string | null>(null);
   const [bioOpen, setBioOpen] = useState(false);
+  const { data: me, isLoading, isError, error } = useQuery<UserTurbo>({
+    queryKey: ["user_turbo"],
+    queryFn: fetchUserTurbo,
+    staleTime: 60_000,
+  });
+
+  const locationStr =
+    [me?.City, me?.countryCode].filter(Boolean).join(", ") || "Bali";
 
   const profile = {
-    name: "Nina Rivera",
-    handle: "@nina.rvr",
-    avatar: "https://placehold.co/120x120?text=N",
+    name: me?.name ?? "Nina Rivera",
+    handle: me?.IG_account
+      ? new URL(me.IG_account).pathname.replace("/", "@")
+      : "@nina.rvr",
+    avatar: me?.Profile_pic?.url ?? "https://placehold.co/600x400?text=Cover",
     role: "UGC Creator",
-    location: "Canggu, Bali",
-    claim: "Helping brands shine with authentic TikToks ✨",
-    bio: "UGC creator focused on beauty, lifestyle and travel content. Based in Bali, open for collabs worldwide.",
+    location: locationStr,
+    // keep your catchy claim if bio is empty
+    claim: me?.bio && me.bio.trim().length > 0
+      ? me.bio
+      : "Helping brands shine with authentic TikToks ✨",
+    bio:
+      me?.bio ??
+      "UGC creator focused on beauty, lifestyle and travel content. Based in Bali, open for collabs worldwide.",
     claris: {
-      collabs: 45,
+      collabs: typeof me?.xp === "number" ? me!.xp : 45, // using xp as a simple proxy
       starred: 12,
       featured: 3,
     },
     socials: {
-      tiktok: "https://www.tiktok.com/@nina.rvr",
-      instagram: "https://www.instagram.com/nina.rvr",
+      tiktok: me?.Tiktok_account || undefined,
+      instagram: me?.IG_account || undefined,
+    },
+    approvals: {
+      tiktokApproved: !!me?.Tiktokapprovation,
+      igApproved: !!me?.InstagramApprovation,
     },
     idols: [
       { name: "Dua Lipa", img: "https://placehold.co/64x64?text=DL" },
       { name: "Bella Hadid", img: "https://placehold.co/64x64?text=BH" },
-      { name: "Jennie Kim", img: "https://placehold.co/64x64?text=JK" }
-    ]
+      { name: "Jennie Kim", img: "https://placehold.co/64x64?text=JK" },
+    ],
   } as const;
 
   const pinned = [
@@ -47,6 +76,19 @@ export default function UGCTiktokerProfilePinned() {
     { id: "e2", title: "Editorial Shoot — Beach Club", cover: "https://placehold.co/600x400?text=Proj2", brands: ["https://placehold.co/80x80?text=F"], pros: ["https://placehold.co/32x32?text=ST","https://placehold.co/32x32?text=PH","https://placehold.co/32x32?text=MD"], variant: "brand-highlight" },
     { id: "e3", title: "Luxury Festival Collaboration", cover: "https://placehold.co/600x400?text=Proj3", brands: ["https://placehold.co/80x80?text=LUX"], pros: ["https://placehold.co/32x32?text=HMU","https://placehold.co/32x32?text=VID","https://placehold.co/32x32?text=DIR"], variant: "brand-banner" },
   ];
+
+  if (isLoading)
+    return (
+      <div className="max-w-2xl mx-auto p-6 text-sm text-gray-600">
+        Loading profile…
+      </div>
+    );
+  if (isError)
+    return (
+      <div className="max-w-2xl mx-auto p-6 text-sm text-red-600">
+        Failed to load profile: {(error as Error).message}
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,12 +119,37 @@ export default function UGCTiktokerProfilePinned() {
           <div>{profile.claris.starred} Starred</div>
           <div>{profile.claris.featured} Featured</div>
         </div>
+
         {/* Socials */}
         <div className="px-4 pb-4 flex gap-3 border-t pt-3">
-          <a href={profile.socials.tiktok} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Music2 className="w-4 h-4"/> TikTok</a>
-          <a href={profile.socials.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Instagram className="w-4 h-4"/> Instagram</a>
+          {profile.socials.tiktok && (
+            <a
+              href={profile.socials.tiktok}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"
+            >
+              <Music2 className="w-4 h-4" /> TikTok
+              {profile.approvals.tiktokApproved && (
+                <BadgeCheck className="w-4 h-4 text-emerald-500" />
+              )}
+            </a>
+          )}
+          {profile.socials.instagram && (
+            <a
+              href={profile.socials.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"
+            >
+              <Instagram className="w-4 h-4" /> Instagram
+              {profile.approvals.igApproved && (
+                <BadgeCheck className="w-4 h-4 text-emerald-500" />
+              )}
+            </a>
+          )}
         </div>
-      </div>
+              </div>
 
       {/* Pinned Collabs (TikTok Trends) */}
       <div className="mt-6">
