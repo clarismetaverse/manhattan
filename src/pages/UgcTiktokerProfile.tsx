@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { getCurrentUser } from '@/api/xano';
 
 interface XanoUser {
@@ -34,8 +35,20 @@ export default function UgcTiktokerProfile() {
   if (!user) return <p>No user data.</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Welcome, {user.name}</h1>
+    <>
+      <Helmet>
+        <title>UGC Creator Profile - {user.name || 'Paradise Pulse'}</title>
+        <meta name="description" content="UGC creator profile showcasing collaborations and content creation." />
+        <meta name="keywords" content="ugc creator, tiktoker, content creator, collaborations" />
+        <link rel="canonical" href={`${window.location.origin}/ugc-tiktoker-profile`} />
+        <meta property="og:title" content={`UGC Creator Profile - ${user.name || 'Paradise Pulse'}`} />
+        <meta property="og:description" content="UGC creator profile showcasing collaborations and content creation." />
+        <meta property="og:url" content={`${window.location.origin}/ugc-tiktoker-profile`} />
+        <meta property="og:type" content="profile" />
+      </Helmet>
+      
+      <div className="p-4">
+        <h1 className="text-xl font-bold">Welcome, {user.name}</h1>
       {user.email && <p>Email: {user.email}</p>}
       {user.Tiktok_account && (
         <p>
@@ -47,6 +60,7 @@ export default function UgcTiktokerProfile() {
           Instagram: <a href={user.IG_account}>{user.IG_account}</a>
         </p>
       )}
-    </div>
+      </div>
+    </>
   );
 }
