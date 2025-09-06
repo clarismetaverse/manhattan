@@ -94,6 +94,9 @@ export interface UserProfileResponse {
   InstagramRejection: boolean;
   bio: string;
   promocode: string;
+  City?: string;
+  countryCode?: string;
+  TikTok_account?: string;
   Profile_pic: {
     access: string;
     path: string;

@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import BioTopSheet from "@/components/BioTopSheet";
 import { Share2, BadgeCheck, Pin, Instagram, Music2, Briefcase, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { fetchUserProfile, type UserProfileResponse } from "@/services/couponApi";
 
 /**
  * UGC TikToker Profile — Pinned Trends + Editorial Projects (Revised)
@@ -11,30 +13,22 @@ import { Share2, BadgeCheck, Pin, Instagram, Music2, Briefcase, Users } from "lu
 export default function UGCTiktokerProfilePinned() {
   const [openPinned, setOpenPinned] = useState<string | null>(null);
   const [bioOpen, setBioOpen] = useState(false);
+  const [profile, setProfile] = useState<UserProfileResponse | null>(null);
+  const navigate = useNavigate();
 
-  const profile = {
-    name: "Nina Rivera",
-    handle: "@nina.rvr",
-    avatar: "https://placehold.co/120x120?text=N",
-    role: "UGC Creator",
-    location: "Canggu, Bali",
-    claim: "Helping brands shine with authentic TikToks ✨",
-    bio: "UGC creator focused on beauty, lifestyle and travel content. Based in Bali, open for collabs worldwide.",
-    claris: {
-      collabs: 45,
-      starred: 12,
-      featured: 3,
-    },
-    socials: {
-      tiktok: "https://www.tiktok.com/@nina.rvr",
-      instagram: "https://www.instagram.com/nina.rvr",
-    },
-    idols: [
-      { name: "Dua Lipa", img: "https://placehold.co/64x64?text=DL" },
-      { name: "Bella Hadid", img: "https://placehold.co/64x64?text=BH" },
-      { name: "Jennie Kim", img: "https://placehold.co/64x64?text=JK" }
-    ]
-  } as const;
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const data = await fetchUserProfile();
+        setProfile(data);
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message?.includes('401')) {
+          navigate('/login');
+        }
+      }
+    };
+    loadProfile();
+  }, [navigate]);
 
   const pinned = [
     { id: "p1", code: "BTS", title: "Festival Prep", cover: "https://placehold.co/300x500?text=BTS", about: "Creators show their makeup & outfits before the festival." },
@@ -48,6 +42,10 @@ export default function UGCTiktokerProfilePinned() {
     { id: "e3", title: "Luxury Festival Collaboration", cover: "https://placehold.co/600x400?text=Proj3", brands: ["https://placehold.co/80x80?text=LUX"], pros: ["https://placehold.co/32x32?text=HMU","https://placehold.co/32x32?text=VID","https://placehold.co/32x32?text=DIR"], variant: "brand-banner" },
   ];
 
+  if (!profile) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
@@ -55,32 +53,35 @@ export default function UGCTiktokerProfilePinned() {
       <div className="rounded-2xl shadow-xl shadow-gray-500/10 bg-white overflow-hidden">
         <div className="h-28 sm:h-36 bg-gradient-to-r from-fuchsia-200 to-pink-300" />
         <div className="flex items-center p-4 -mt-14 sm:-mt-16">
-          <img src={profile.avatar} alt={profile.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow"/>
+          <img src={profile.Profile_pic?.url} alt={profile.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow"/>
           <div className="ml-3 sm:ml-4 min-w-0">
             <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 truncate">
               {profile.name}
               <span className="px-2 py-0.5 text-[10px] sm:text-[11px] rounded bg-gray-200 text-gray-700 inline-flex items-center gap-1"><BadgeCheck className="w-3 h-3"/> UGC</span>
             </h1>
             <div className="text-gray-600 text-sm">
-              <p className="truncate">{profile.role}</p>
-              <p className="truncate">{profile.location}</p>
+              <p className="truncate">{profile.City}</p>
+              <p className="truncate">{profile.countryCode}</p>
             </div>
           </div>
         </div>
         <div className="px-4 pb-3">
-          <p className="text-sm font-medium text-gray-800 cursor-pointer" onClick={() => setBioOpen(true)}>“{profile.claim}”</p>
+          <p className="text-sm font-medium text-gray-800 cursor-pointer" onClick={() => setBioOpen(true)}>“{profile.bio || ""}”</p>
           <p className="text-xs text-gray-600 mt-1">{profile.bio}</p>
         </div>
-        {/* Claris stats */}
+        {/* Promo and XP */}
         <div className="px-4 pb-4 text-xs sm:text-sm text-gray-700 flex gap-4 border-t pt-3">
-          <div>{profile.claris.collabs} Collabs</div>
-          <div>{profile.claris.starred} Starred</div>
-          <div>{profile.claris.featured} Featured</div>
+          {profile.promocode && <div>Promo code: {profile.promocode}</div>}
+          {typeof profile.xp === 'number' && <div>{profile.xp} XP</div>}
         </div>
         {/* Socials */}
         <div className="px-4 pb-4 flex gap-3 border-t pt-3">
-          <a href={profile.socials.tiktok} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Music2 className="w-4 h-4"/> TikTok</a>
-          <a href={profile.socials.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Instagram className="w-4 h-4"/> Instagram</a>
+          {profile.TikTok_account && (
+            <a href={profile.TikTok_account} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Music2 className="w-4 h-4"/> TikTok</a>
+          )}
+          {profile.IG_account && (
+            <a href={profile.IG_account} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Instagram className="w-4 h-4"/> Instagram</a>
+          )}
         </div>
       </div>
 
@@ -173,17 +174,17 @@ export default function UGCTiktokerProfilePinned() {
         </div>
       )}
     </div>
-    <BioTopSheet
-      open={bioOpen}
-      onClose={() => setBioOpen(false)}
-      name={profile.name}
-      avatar={profile.avatar}
-      statement={profile.claim || "Helping brands shine with authentic TikToks ✨"}
-      bio={profile.bio}
-      goals={["Collaborate with 5 skincare brands", "Launch a weekly GRWM series", "Reach 50K followers"]}
-      futureProjects={["Behind-the-scenes collab vlog", "Maison Savage launch collab", "Bali wellness x beauty format"]}
-      idols={profile.idols}
-    />
+      <BioTopSheet
+        open={bioOpen}
+        onClose={() => setBioOpen(false)}
+        name={profile.name}
+        avatar={profile.Profile_pic?.url || ""}
+        statement={profile.bio || "Helping brands shine with authentic TikToks ✨"}
+        bio={profile.bio}
+        goals={["Collaborate with 5 skincare brands", "Launch a weekly GRWM series", "Reach 50K followers"]}
+        futureProjects={["Behind-the-scenes collab vlog", "Maison Savage launch collab", "Bali wellness x beauty format"]}
+        idols={[]}
+      />
   </div>
   );
 }
