@@ -55,7 +55,7 @@ export default function UGCTiktokerProfilePinned() {
         <div className="flex items-center p-4 -mt-14 sm:-mt-16">
           <img src={profile.Profile_pic?.url} alt={profile.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow"/>
           <div className="ml-3 sm:ml-4 min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 truncate">
+            <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 truncate text-foreground">
               {profile.name}
               <span className="px-2 py-0.5 text-[10px] sm:text-[11px] rounded bg-gray-200 text-gray-700 inline-flex items-center gap-1"><BadgeCheck className="w-3 h-3"/> UGC</span>
             </h1>
