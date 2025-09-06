@@ -385,9 +385,9 @@ const RestaurantDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>{restaurant.Name || 'Restaurant'} - Restaurant Details</title>
-        <meta name="description" content={`Discover ${restaurant.Name || 'this restaurant'} - ${restaurant.Description || 'A unique dining experience'}`} />
-        <meta property="og:title" content={`${restaurant.Name || 'Restaurant'} - Restaurant Details`} />
+        <title>{restaurant.Name} - Restaurant Details</title>
+        <meta name="description" content={`Discover ${restaurant.Name} - ${restaurant.Description || 'A unique dining experience'}`} />
+        <meta property="og:title" content={`${restaurant.Name} - Restaurant Details`} />
         <meta property="og:description" content={restaurant.Description || 'A unique dining experience'} />
         {restaurant.Cover && (
           <meta property="og:image" content={restaurant.Cover.url} />
