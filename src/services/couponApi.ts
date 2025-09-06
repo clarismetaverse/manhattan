@@ -110,6 +110,19 @@ export interface UserProfileResponse {
     };
     url: string;
   };
+  back?: {
+    access: string;
+    path: string;
+    name: string;
+    type: string;
+    size: number;
+    mime: string;
+    meta: {
+      width: number;
+      height: number;
+    };
+    url: string;
+  };
 }
 
 export const fetchUserProfile = async (): Promise<UserProfileResponse> => {
