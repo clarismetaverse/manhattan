@@ -96,7 +96,7 @@ export interface UserProfileResponse {
   promocode: string;
   City?: string;
   countryCode?: string;
-  TikTok_account?: string;
+  Tiktok_account?: string;
   Profile_pic: {
     access: string;
     path: string;

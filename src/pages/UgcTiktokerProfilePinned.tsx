@@ -76,8 +76,8 @@ export default function UGCTiktokerProfilePinned() {
         </div>
         {/* Socials */}
         <div className="px-4 pb-4 flex gap-3 border-t pt-3">
-          {profile.TikTok_account && (
-            <a href={profile.TikTok_account} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Music2 className="w-4 h-4"/> TikTok</a>
+          {profile.Tiktok_account && (
+            <a href={profile.Tiktok_account} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Music2 className="w-4 h-4"/> TikTok</a>
           )}
           {profile.IG_account && (
             <a href={profile.IG_account} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-gray-700 hover:text-black"><Instagram className="w-4 h-4"/> Instagram</a>
