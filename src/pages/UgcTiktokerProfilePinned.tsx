@@ -53,7 +53,7 @@ export default function UGCTiktokerProfilePinned() {
       <div className="rounded-2xl shadow-xl shadow-gray-500/10 bg-white overflow-hidden">
         <div className="h-28 sm:h-36 bg-gradient-to-r from-fuchsia-200 to-pink-300" />
         <div className="flex items-center p-4 -mt-14 sm:-mt-16">
-          <img src={profile.Profile_pic?.url} alt={profile.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow"/>
+          <img src={profile.Profile_pic?.url} alt={profile.name} className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow object-cover"/>
           <div className="ml-3 sm:ml-4 min-w-0">
             <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2 truncate text-black">
               {profile.name}
