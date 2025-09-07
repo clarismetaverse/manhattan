@@ -52,16 +52,16 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
         />
       </div>
       <div className="ml-3 sm:ml-4 min-w-0">
-        <h1 className={`text-lg sm:text-xl font-bold flex items-center gap-2 truncate ${isPro ? 'text-white' : 'text-black'}`}>
+        <h1 className={`text-lg sm:text-xl font-bold truncate ${isPro ? 'text-white' : 'text-black'}`}>
           {profile.name}
-          <span
-            className={`px-2 py-0.5 text-[10px] sm:text-[11px] rounded inline-flex items-center gap-1 ${
-              isPro ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            <BadgeCheck className="w-3 h-3" /> {isPro ? 'UGC' : 'PRO'}
-          </span>
         </h1>
+        <span
+          className={`px-2 py-0.5 text-[10px] sm:text-[11px] rounded inline-flex items-center gap-1 w-fit ${
+            isPro ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white' : 'bg-gray-200 text-gray-700'
+          }`}
+        >
+          <BadgeCheck className="w-3 h-3" /> {isPro ? 'UGC' : 'PRO'}
+        </span>
         <div className={`text-sm ${isPro ? 'text-gray-300' : 'text-gray-600'}`}>
           <p className="truncate">{profile.City}</p>
           <p className="truncate">{profile.countryCode}</p>
