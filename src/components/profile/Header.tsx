@@ -10,6 +10,7 @@ interface Profile {
   City?: string;
   countryCode?: string;
   Profile_pic?: { url?: string } | null;
+  Pro_Profile?: { url?: string } | null;
 }
 
 interface HeaderProps {
@@ -46,7 +47,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
     <div className="flex items-center p-4 -mt-14 sm:-mt-16">
       <div className={ringClass(ringState)} aria-label="profile-avatar-ring">
         <img
-          src={profile.Profile_pic?.url || ''}
+          src={isPro ? (profile.Pro_Profile?.url || '') : (profile.Profile_pic?.url || '')}
           alt={profile.name}
           className="w-28 h-28 sm:w-32 sm:h-32 aspect-square rounded-full border-4 border-white shadow object-cover object-center"
         />

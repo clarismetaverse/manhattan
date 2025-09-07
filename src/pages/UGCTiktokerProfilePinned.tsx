@@ -18,6 +18,8 @@ interface Profile {
   xp?: number;
   back?: { url?: string } | null;
   Profile_pic?: { url?: string } | null;
+  UGC_cover?: { url?: string } | null;
+  Pro_Profile?: { url?: string } | null;
   IG_account?: string | null;
   Tiktok_account?: string | null;
 }
@@ -32,6 +34,8 @@ async function mockFetch(): Promise<Profile> {
     xp: 500,
     back: { url: 'https://images.unsplash.com/photo-1552083375-1447ce886485?q=80&w=1200&auto=format&fit=crop' },
     Profile_pic: { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?q=80&w=600&auto=format&fit=crop' },
+    UGC_cover: { url: 'https://images.unsplash.com/photo-1552083375-1447ce886485?q=80&w=1200&auto=format&fit=crop' },
+    Pro_Profile: { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?q=80&w=600&auto=format&fit=crop' },
     IG_account: 'https://instagram.com/',
     Tiktok_account: 'https://tiktok.com/',
   };
@@ -102,7 +106,9 @@ export default function UGCTiktokerProfilePinned() {
               isPro ? 'bg-gradient-to-r from-purple-900 to-pink-900' : 'bg-gradient-to-r from-fuchsia-200 to-pink-300'
             }`}
             style={{
-              backgroundImage: profile.back?.url ? `url(${profile.back.url})` : undefined,
+              backgroundImage: isPro 
+                ? (profile.back?.url ? `url(${profile.back.url})` : undefined)
+                : (profile.UGC_cover?.url ? `url(${profile.UGC_cover.url})` : undefined),
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
