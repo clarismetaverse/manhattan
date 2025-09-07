@@ -60,7 +60,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
             isPro ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white' : 'bg-gray-200 text-gray-700'
           }`}
         >
-          <BadgeCheck className="w-3 h-3" /> {isPro ? 'UGC' : 'PRO'}
+          <BadgeCheck className="w-3 h-3" /> {isPro ? 'PRO' : 'UGC'}
         </span>
         <div className={`text-sm ${isPro ? 'text-gray-300' : 'text-gray-600'}`}>
           <p className="truncate">{profile.City}</p>
