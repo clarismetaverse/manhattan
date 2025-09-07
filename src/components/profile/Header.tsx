@@ -9,6 +9,7 @@ interface Profile {
   name: string;
   City?: string;
   countryCode?: string;
+  Profession?: string;
   Profile_pic?: { url?: string } | null;
   Pro_Profile?: { url?: string } | null;
 }
@@ -61,7 +62,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
             isPro ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white' : 'bg-gray-200 text-gray-700'
           }`}
         >
-          <BadgeCheck className="w-3 h-3" /> {isPro ? 'PRO' : 'UGC'}
+          <BadgeCheck className="w-3 h-3" /> {isPro ? (profile.Profession || 'PRO') : 'UGC'}
         </span>
         <div className={`text-sm ${isPro ? 'text-gray-300' : 'text-gray-600'}`}>
           <p className="truncate">{profile.City}</p>
@@ -79,7 +80,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
         >
           <div className="toggle-thumb" />
           {!isPro && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">{profile.Profession || 'PRO'}</span>
           )}
           {isPro && (
             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
