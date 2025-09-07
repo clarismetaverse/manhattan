@@ -177,7 +177,7 @@ export default function UGCTiktokerProfilePinned() {
               >
           <div className="toggle-thumb" />
           {!isPro && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">{profile.Profession || 'PRO'}</span>
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
           )}
           {isPro && (
             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
