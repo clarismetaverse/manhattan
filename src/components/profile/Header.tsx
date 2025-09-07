@@ -48,7 +48,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
         <img
           src={profile.Profile_pic?.url || ''}
           alt={profile.name}
-          className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow object-cover"
+          className="w-28 h-28 sm:w-32 sm:h-32 aspect-square rounded-full border-4 border-white shadow object-cover object-center"
         />
       </div>
       <div className="ml-3 sm:ml-4 min-w-0">
