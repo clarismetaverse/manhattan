@@ -12,7 +12,7 @@ import Bookings from "./pages/Bookings";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import UgcTiktokerProfilePinned from "./pages/UgcTiktokerProfilePinned";
+import UGCTiktokerProfilePinned from "./pages/UGCTiktokerProfilePinned";
 
 
 
@@ -46,7 +46,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route path="/ugc-tiktoker-profile" element={<UgcTiktokerProfilePinned />} />
+              <Route path="/ugc-tiktoker-profile" element={<UGCTiktokerProfilePinned />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

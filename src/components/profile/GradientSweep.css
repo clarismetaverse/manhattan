@@ -1,0 +1,61 @@
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes paintRing {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+.sweep-ring {
+  position: relative;
+  padding: 4px;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, #ec4899 0deg, transparent 0deg 360deg);
+}
+
+.sweep-ring.pro-animating {
+  animation: paintRing 1.2s linear forwards;
+  background: conic-gradient(from var(--angle), #ec4899 0deg, #8b5cf6 var(--angle), transparent var(--angle));
+}
+
+.sweep-ring.pro-complete {
+  background: conic-gradient(#8b5cf6, #ec4899, #8b5cf6);
+}
+
+.sweep-ring img {
+  position: relative;
+  z-index: 10;
+}
+
+.toggle-track {
+  position: relative;
+  width: 60px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(to right, #9ca3af, #6b7280);
+  transition: background 0.3s;
+  overflow: hidden;
+}
+
+.toggle-track.active {
+  background: linear-gradient(to right, #8b5cf6, #ec4899);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 4px;
+  transition: transform 0.3s;
+}
+
+.toggle-track.active .toggle-thumb {
+  transform: translateX(32px);
+}
+
