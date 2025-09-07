@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import UGCTiktokerProfilePinned from './UGCTiktokerProfilePinned';
 import { describe, test, expect, vi } from 'vitest';
+import '@testing-library/jest-dom';
 
 vi.mock('@/services/couponApi', () => ({
   fetchUserProfile: vi.fn().mockResolvedValue({

@@ -73,6 +73,19 @@ export default function UGCTiktokerProfilePinned() {
 
   const isPro = mode === 'PRO';
 
+  const toggle = () => {
+    const nextMode: Mode = isPro ? 'UGC' : 'PRO';
+    setMode(nextMode);
+    setRingState(nextMode === 'PRO' ? 'sweeping' : 'idle');
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggle();
+    }
+  };
+
   return (
     <div
       data-testid="profile-page"
@@ -117,32 +130,52 @@ export default function UGCTiktokerProfilePinned() {
             )}
           </div>
           <div
-            className={`px-4 pb-4 flex gap-3 border-t pt-3 ${isPro ? 'border-white/10' : 'border-gray-100'}`}
+            className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 ${isPro ? 'border-white/10' : 'border-gray-100'}`}
           >
-            {profile.Tiktok_account && (
-              <a
-                href={profile.Tiktok_account}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center gap-1 text-sm ${
-                  isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
-                }`}
+            <div className="flex gap-3">
+              {profile.Tiktok_account && (
+                <a
+                  href={profile.Tiktok_account}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`flex items-center gap-1 text-sm ${
+                    isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
+                  }`}
+                >
+                  <Music2 className="w-4 h-4" /> TikTok
+                </a>
+              )}
+              {profile.IG_account && (
+                <a
+                  href={profile.IG_account}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`flex items-center gap-1 text-sm ${
+                    isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
+                  }`}
+                >
+                  <Instagram className="w-4 h-4" /> Instagram
+                </a>
+              )}
+            </div>
+            <div className="block sm:hidden">
+              <div
+                tabIndex={0}
+                role="switch"
+                aria-checked={isPro}
+                onClick={toggle}
+                onKeyDown={onKeyDown}
+                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
               >
-                <Music2 className="w-4 h-4" /> TikTok
-              </a>
-            )}
-            {profile.IG_account && (
-              <a
-                href={profile.IG_account}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center gap-1 text-sm ${
-                  isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
-                }`}
-              >
-                <Instagram className="w-4 h-4" /> Instagram
-              </a>
-            )}
+                <div className="toggle-thumb" />
+                {!isPro && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
+                )}
+                {isPro && (
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 

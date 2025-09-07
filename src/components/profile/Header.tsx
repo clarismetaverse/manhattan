@@ -67,7 +67,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
           <p className="truncate">{profile.countryCode}</p>
         </div>
       </div>
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2 sm:block hidden">
         <div
           tabIndex={0}
           role="switch"
