@@ -16,6 +16,7 @@ interface Profile {
   bio?: string;
   promocode?: string;
   xp?: number;
+  Profession?: string;
   back?: { url?: string } | null;
   Profile_pic?: { url?: string } | null;
   UGC_cover?: { url?: string } | null;
@@ -32,6 +33,7 @@ async function mockFetch(): Promise<Profile> {
     bio: 'UX UI designer & SMM',
     promocode: '9K5C1',
     xp: 500,
+    Profession: 'Photographer',
     back: { url: 'https://images.unsplash.com/photo-1552083375-1447ce886485?q=80&w=1200&auto=format&fit=crop' },
     Profile_pic: { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?q=80&w=600&auto=format&fit=crop' },
     UGC_cover: { url: 'https://images.unsplash.com/photo-1552083375-1447ce886485?q=80&w=1200&auto=format&fit=crop' },
@@ -173,13 +175,13 @@ export default function UGCTiktokerProfilePinned() {
                 onKeyDown={onKeyDown}
                 className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
               >
-                <div className="toggle-thumb" />
-                {!isPro && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
-                )}
-                {isPro && (
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
-                )}
+          <div className="toggle-thumb" />
+          {!isPro && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">{profile.Profession || 'PRO'}</span>
+          )}
+          {isPro && (
+            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
+          )}
               </div>
             </div>
           </div>
