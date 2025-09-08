@@ -70,6 +70,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
         </div>
       </div>
       <div className="ml-auto flex items-center gap-2 sm:block hidden">
+        <span className="text-sm font-medium mr-2">PRO</span>
         <div
           tabIndex={0}
           role="switch"
