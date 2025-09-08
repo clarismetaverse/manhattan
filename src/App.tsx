@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import UGCTiktokerProfilePinned from "./pages/UGCTiktokerProfilePinned";
+import CaseShowcasePage from "./pages/CaseShowcasePage";
 
 
 
@@ -47,6 +48,7 @@ const App = () => (
                 }
               />
               <Route path="/ugc-tiktoker-profile" element={<UGCTiktokerProfilePinned />} />
+              <Route path="/case/:id" element={<CaseShowcasePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
