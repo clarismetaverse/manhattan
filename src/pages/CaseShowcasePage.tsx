@@ -69,17 +69,50 @@ const CaseShowcasePage: React.FC = () => {
   const [project, setProject] = useState<CaseProject | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch(`/api/cases/${requestedId}`);
-        if (!res.ok) throw new Error('Failed to load project');
-        const data: CaseProject = await res.json();
-        setProject(data);
-      } catch (e) {
-        console.error(e);
-      }
+    // Mock data for demo purposes
+    const mockProject: CaseProject = {
+      id: requestedId,
+      title: "Summer Beauty Campaign",
+      coverUrl: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop",
+      brands: [
+        { name: "Beauty Co", logoUrl: "https://images.unsplash.com/photo-1611462985358-60d3498e0364?w=80&h=80&fit=crop" }
+      ],
+      role: "Content Creator",
+      location: "Los Angeles, CA",
+      moodboardNote: "Bright, natural lighting with a focus on fresh, dewy skin and vibrant colors.",
+      collaborators: [
+        { role: "Photographer", handle: "@johnsmith" },
+        { role: "Makeup Artist", handle: "@makeupbypro" }
+      ],
+      deliverables: ["5 Feed Posts", "10 Stories", "2 Reels"],
+      rights: {
+        usage: "Social Media Only",
+        duration: "6 months",
+        whitelisting: true
+      },
+      kpis: [
+        { key: "reach", label: "Reach", value: "2.5M" },
+        { key: "engagement", label: "Engagement", value: "8.5%" },
+        { key: "clicks", label: "Link Clicks", value: "15K" },
+        { key: "conversions", label: "Conversions", isPrivate: true }
+      ],
+      summary: "A vibrant summer campaign focusing on natural beauty and fresh, dewy makeup looks.",
+      tier: "Gold",
+      shootHighlights: [
+        {
+          type: "image",
+          url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600&h=400&fit=crop",
+          caption: "Natural lighting setup"
+        },
+        {
+          type: "image", 
+          url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&h=400&fit=crop",
+          caption: "Final beauty shots"
+        }
+      ]
     };
-    load();
+    
+    setProject(mockProject);
   }, [requestedId]);
 
   if (!project) return null;
