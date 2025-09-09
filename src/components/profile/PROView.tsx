@@ -10,9 +10,18 @@ export default function PROView() {
     const loadProjects = async () => {
       try {
         const portfolioProjects = await fetchPortfolioProjects();
-        setProjects(portfolioProjects);
+        console.log('Portfolio API response:', portfolioProjects);
+        
+        // Ensure we have an array
+        if (Array.isArray(portfolioProjects)) {
+          setProjects(portfolioProjects);
+        } else {
+          console.warn('Portfolio API returned non-array data:', portfolioProjects);
+          setProjects([]);
+        }
       } catch (error) {
         console.error('Failed to load portfolio projects:', error);
+        setProjects([]);
       } finally {
         setLoading(false);
       }
@@ -21,8 +30,10 @@ export default function PROView() {
     loadProjects();
   }, []);
 
-  const pinnedProjects = projects.slice(0, 2);
-  const editorialProjects = projects.slice(2);
+  // Ensure projects is always an array before slicing
+  const safeProjects = Array.isArray(projects) ? projects : [];
+  const pinnedProjects = safeProjects.slice(0, 2);
+  const editorialProjects = safeProjects.slice(2);
 
   if (loading) {
     return (
