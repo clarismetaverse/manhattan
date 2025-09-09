@@ -52,7 +52,7 @@ interface PortfolioProject {
 }
 
 export const fetchPortfolioProjects = async (): Promise<PortfolioProject[]> => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('auth_token');
   
   if (!token) {
     throw new Error('No authentication token found');
