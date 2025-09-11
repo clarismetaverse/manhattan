@@ -44,34 +44,54 @@ export interface UserTurbo {
 
 export interface XanoError {
   message?: string;
+  status?: number;
   [key: string]: unknown;
 }
 
-const API = import.meta.env.VITE_XANO_API as string;
+const API = (import.meta.env.VITE_XANO_API || '').replace(/\/$/, '');
 const TOKEN = import.meta.env.VITE_XANO_TOKEN as string;
 
-export async function request<T>(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API}${path}`, {
+export async function request<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  if (!API) {
+    const err = new Error(
+      'Xano API base URL is not set (VITE_XANO_API).'
+    ) as XanoError;
+    err.status = 0;
+    throw err;
+  }
+
+  const p = path.startsWith('/') ? path : `/${path}`;
+  const url = `${API}${p}`;
+  const res = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${TOKEN}`,
       ...(options.headers || {}),
+      Authorization: `Bearer ${TOKEN}`,
+      Accept: 'application/json',
     },
   });
 
   if (!res.ok) {
-    let msg = res.statusText;
-    try {
-      const data = (await res.json()) as XanoError;
-      msg = data?.message || msg;
-    } catch {
-      // ignore json parse errors
-    }
-    throw new Error(msg);
+    const err = new Error(res.statusText) as XanoError;
+    err.status = res.status;
+    throw err;
   }
 
-  return res.json() as Promise<T>;
+  const ct = res.headers.get('content-type') || '';
+  const text = await res.text();
+
+  if (!ct.includes('application/json')) {
+    const err = new Error(
+      `Expected JSON from ${url}. Status ${res.status}. Content-Type: ${ct}. Body: ${text.slice(0,100)}…`
+    ) as XanoError;
+    err.status = res.status;
+    throw err;
+  }
+
+  return JSON.parse(text) as T;
 }
 
 export function fetchUserTurbo() {
