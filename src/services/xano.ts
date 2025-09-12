@@ -53,14 +53,12 @@ export interface XanoError {
   [key: string]: unknown;
 }
 
-const API = (import.meta.env.VITE_XANO_API || "").replace(/\/$/, "");
+const API = (import.meta.env.VITE_XANO_API || "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3").replace(/\/$/, "");
 const TOKEN = import.meta.env.VITE_XANO_TOKEN || "";
 
-if (!API || !TOKEN) {
-  console.error(
-    "⚠️ Xano config missing: please set VITE_XANO_API and VITE_XANO_TOKEN",
-  );
-  throw new Error("Missing Xano configuration");
+if (!API) {
+  console.error("⚠️ Xano API URL missing");
+  throw new Error("Missing Xano API URL");
 }
 
 export async function request<T>(path: string, options: RequestInit = {}) {
