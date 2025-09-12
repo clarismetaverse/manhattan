@@ -55,7 +55,7 @@ export default function PROView() {
         )}
         {!pfLoading && !pfErr && (
           <div className="grid gap-4">
-            {(portfolio ?? []).map((p) => {
+            {Array.isArray(portfolio) && portfolio.map((p) => {
               const cover =
                 p.Cover?.url ||
                 p.Hero?.url ||
@@ -126,7 +126,7 @@ export default function PROView() {
                 </div>
               );
             })}
-            {!portfolio?.length && (
+            {(!Array.isArray(portfolio) || !portfolio.length) && (
               <div className="rounded-xl border border-gray-200 p-4 text-sm text-gray-600">
                 No projects yet. Add your first editorial/marketing project from the studio.
               </div>
