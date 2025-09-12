@@ -1,3 +1,9 @@
+/**
+ * Configure VITE_XANO_API and VITE_XANO_TOKEN in:
+ * - Local: .env.local
+ * - Lovable: Publish → Build Settings → Environment Variables
+ */
+
 export interface XanoImage {
   url?: string;
   name?: string;
@@ -47,31 +53,42 @@ export interface XanoError {
   [key: string]: unknown;
 }
 
-const API = import.meta.env.VITE_XANO_API as string;
-const TOKEN = import.meta.env.VITE_XANO_TOKEN as string;
+const API = (import.meta.env.VITE_XANO_API || "").replace(/\/$/, "");
+const TOKEN = import.meta.env.VITE_XANO_TOKEN || "";
+
+if (!API || !TOKEN) {
+  console.error(
+    "⚠️ Xano config missing: please set VITE_XANO_API and VITE_XANO_TOKEN",
+  );
+  throw new Error("Missing Xano configuration");
+}
 
 export async function request<T>(path: string, options: RequestInit = {}) {
   const res = await fetch(`${API}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      Accept: "application/json",
+      "Content-Type": "application/json",
       Authorization: `Bearer ${TOKEN}`,
       ...(options.headers || {}),
     },
   });
 
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = await res.text();
+    console.error(text.slice(0, 100));
+    throw new Error("Invalid response from Xano, expected JSON");
+  }
+
+  const data = (await res.json()) as unknown;
+
   if (!res.ok) {
-    let msg = res.statusText;
-    try {
-      const data = (await res.json()) as XanoError;
-      msg = data?.message || msg;
-    } catch {
-      // ignore json parse errors
-    }
+    const msg = (data as XanoError)?.message || res.statusText;
     throw new Error(msg);
   }
 
-  return res.json() as Promise<T>;
+  return data as T;
 }
 
 export function fetchUserTurbo() {
