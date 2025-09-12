@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ChevronLeft, BadgeCheck, MapPin, BarChart2, LinkIcon } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { useQuery } from '@tanstack/react-query';
+import { request, type PortfolioItem as XanoPortfolio } from '@/services/xano';
 
 // ---- Data Models ----
 export interface KPI { key: string; label: string; value?: string; isPrivate?: boolean }
@@ -25,6 +27,39 @@ export interface CaseProject {
   tier?: 'Bronze' | 'Silver' | 'Gold';
   shootHighlights?: CaseMedia[];
   campaignAssets?: CaseMedia[];
+}
+
+// Map Xano portfolio item to internal CaseProject model
+function mapPortfolioToCaseProject(p: XanoPortfolio): CaseProject {
+  return {
+    id: p.id ? String(p.id) : "",
+    title: (p as any).title || `Project ${p.id}`,
+    coverUrl: p.Hero?.url || p.Cover?.url || "",
+    brands: (p.Brand || []).map((b) => ({
+      name: b.BrandName || "",
+      logoUrl: b.LogoBrand?.url || "",
+    })),
+    role: "Content Creator",
+    location: typeof p.Shooting_Location === "string" ? p.Shooting_Location : undefined,
+    moodboardNote: undefined,
+    collaborators: (p.Team || []).map((t) => ({ role: t.NickName || "" })),
+    deliverables: p.Deliverables ? [p.Deliverables] : [],
+    rights: undefined,
+    kpis: [],
+    summary: undefined,
+    tier: undefined,
+    shootHighlights: (p.Work_Body || []).map((img) => ({
+      type: "image",
+      url: img.url || "",
+      caption: img.name,
+    })),
+    campaignAssets: [],
+  };
+}
+
+async function fetchPortfolioCase(portfolioId: string) {
+  const data = await request<XanoPortfolio>(`/portfolio/${encodeURIComponent(portfolioId)}`);
+  return mapPortfolioToCaseProject(data);
 }
 
 // ---- Small UI helpers ----
@@ -66,56 +101,45 @@ const CaseShowcasePage: React.FC = () => {
   const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const requestedId = search?.get('id') ?? 'p1';
 
-  const [project, setProject] = useState<CaseProject | null>(null);
+  const {
+    data: project,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery<CaseProject>({
+    queryKey: ['portfolio-case', requestedId],
+    queryFn: () => fetchPortfolioCase(requestedId),
+    enabled: !!requestedId,
+    staleTime: 5 * 60_000, // 5 minuti
+    retry: (count, err) => {
+      const st = (err as any)?.status as number | undefined;
+      if (st === 401 || st === 403 || st === 429) return false;
+      return count < 2;
+    },
+  });
 
-  useEffect(() => {
-    // Mock data for demo purposes
-    const mockProject: CaseProject = {
-      id: requestedId,
-      title: "Summer Beauty Campaign",
-      coverUrl: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop",
-      brands: [
-        { name: "Beauty Co", logoUrl: "https://images.unsplash.com/photo-1611462985358-60d3498e0364?w=80&h=80&fit=crop" }
-      ],
-      role: "Content Creator",
-      location: "Los Angeles, CA",
-      moodboardNote: "Bright, natural lighting with a focus on fresh, dewy skin and vibrant colors.",
-      collaborators: [
-        { role: "Photographer", handle: "@johnsmith" },
-        { role: "Makeup Artist", handle: "@makeupbypro" }
-      ],
-      deliverables: ["5 Feed Posts", "10 Stories", "2 Reels"],
-      rights: {
-        usage: "Social Media Only",
-        duration: "6 months",
-        whitelisting: true
-      },
-      kpis: [
-        { key: "reach", label: "Reach", value: "2.5M" },
-        { key: "engagement", label: "Engagement", value: "8.5%" },
-        { key: "clicks", label: "Link Clicks", value: "15K" },
-        { key: "conversions", label: "Conversions", isPrivate: true }
-      ],
-      summary: "A vibrant summer campaign focusing on natural beauty and fresh, dewy makeup looks.",
-      tier: "Gold",
-      shootHighlights: [
-        {
-          type: "image",
-          url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=600&h=400&fit=crop",
-          caption: "Natural lighting setup"
-        },
-        {
-          type: "image", 
-          url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&h=400&fit=crop",
-          caption: "Final beauty shots"
-        }
-      ]
-    };
-    
-    setProject(mockProject);
-  }, [requestedId]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+        <div className="p-4 rounded-lg border bg-white dark:bg-neutral-900">
+          <div className="text-sm">Caricamento in corso…</div>
+        </div>
+      </div>
+    );
+  }
 
-  if (!project) return null;
+  if (isError || !project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
+        <div className="p-4 rounded-lg border bg-white dark:bg-neutral-900">
+          <div className="text-sm">Errore nel caricamento del case.  
+            <button onClick={() => refetch()} className="ml-2 underline">Riprova</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100">
