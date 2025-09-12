@@ -1,9 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { fetchPortfolio, type PortfolioItem, XanoError } from '@/services/xano';
 import { Pin, Users, Briefcase } from 'lucide-react';
 
 export default function PROView() {
+  const navigate = useNavigate();
+  
   const {
     data: portfolio,
     isLoading: pfLoading,
@@ -74,7 +77,8 @@ export default function PROView() {
               return (
                 <div
                   key={p.id}
-                  className="relative rounded-2xl overflow-hidden shadow bg-white"
+                  onClick={() => navigate(`/case/${p.id}`)}
+                  className="relative rounded-2xl overflow-hidden shadow bg-white cursor-pointer hover:shadow-lg transition-shadow"
                 >
                   <div className="relative">
                     <img
