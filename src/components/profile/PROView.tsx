@@ -16,7 +16,7 @@ export default function PROView() {
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: false,
     retry: (count, err) => {
-      const st = (err as XanoError)?.status as number | undefined;
+      const st = (err as unknown as XanoError)?.status as number | undefined;
       if (st === 401 || st === 403 || st === 429) return false;
       return count < 2;
     },

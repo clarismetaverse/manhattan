@@ -62,14 +62,32 @@ if (!API) {
 }
 
 export async function request<T>(path: string, options: RequestInit = {}) {
+  // Build headers dynamically so we attach the logged-in auth token when available
+  const headers = new Headers({
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  });
+  if (options.headers) {
+    const opt = new Headers(options.headers as HeadersInit);
+    opt.forEach((value, key) => headers.set(key, value));
+  }
+
+  // If caller didn't provide Authorization, try localStorage token first, then env token
+  if (!headers.has("Authorization")) {
+    try {
+      const lsToken = typeof window !== "undefined" ? localStorage.getItem("auth_token") || "" : "";
+      const envToken = import.meta.env.VITE_XANO_TOKEN || "";
+      const token = lsToken || envToken;
+      if (token) headers.set("Authorization", `Bearer ${token}`);
+    } catch {
+      const envToken = import.meta.env.VITE_XANO_TOKEN || "";
+      if (envToken) headers.set("Authorization", `Bearer ${envToken}`);
+    }
+  }
+
   const res = await fetch(`${API}${path}`, {
     ...options,
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${TOKEN}`,
-      ...(options.headers || {}),
-    },
+    headers,
   });
 
   const contentType = res.headers.get("content-type") || "";
