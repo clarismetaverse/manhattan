@@ -11,6 +11,9 @@ const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Debug logging
+  console.log('Profile component - user:', user);
+
   const handleLogout = () => {
     logout();
     toast({
