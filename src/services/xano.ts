@@ -116,6 +116,7 @@ export function fetchUserTurbo() {
 }
 
 // Returns a list of portfolio items for the authenticated user
-export function fetchPortfolio() {
-  return request<PortfolioItem[]>("/portfolio");
+export async function fetchPortfolio() {
+  const data = await request<PortfolioItem[] | PortfolioItem>("/portfolio");
+  return Array.isArray(data) ? data : data ? [data as PortfolioItem] : [];
 }
