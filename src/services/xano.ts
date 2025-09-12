@@ -54,7 +54,6 @@ export interface XanoError {
 }
 
 const API = (import.meta.env.VITE_XANO_API || "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3").replace(/\/$/, "");
-const TOKEN = import.meta.env.VITE_XANO_TOKEN || "";
 
 if (!API) {
   console.error("⚠️ Xano API URL missing");
@@ -74,14 +73,19 @@ export async function request<T>(path: string, options: RequestInit = {}) {
 
   // If caller didn't provide Authorization, try localStorage token first, then env token
   if (!headers.has("Authorization")) {
+    let token = "";
     try {
-      const lsToken = typeof window !== "undefined" ? localStorage.getItem("auth_token") || "" : "";
-      const envToken = import.meta.env.VITE_XANO_TOKEN || "";
-      const token = lsToken || envToken;
-      if (token) headers.set("Authorization", `Bearer ${token}`);
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("auth_token") || "";
+      }
     } catch {
-      const envToken = import.meta.env.VITE_XANO_TOKEN || "";
-      if (envToken) headers.set("Authorization", `Bearer ${envToken}`);
+      // ignore errors accessing localStorage
+    }
+    if (!token) {
+      token = import.meta.env.VITE_XANO_TOKEN || "";
+    }
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
     }
   }
 
