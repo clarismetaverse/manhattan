@@ -2,8 +2,8 @@ import React from 'react';
 import { ChevronLeft, BadgeCheck, MapPin, BarChart2, LinkIcon } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
 import { request, type PortfolioItem as XanoPortfolio } from '@/services/xano';
-
 // ---- Data Models ----
 export interface KPI { key: string; label: string; value?: string; isPrivate?: boolean }
 export interface Brand { name: string; logoUrl: string }
@@ -98,8 +98,8 @@ const KpiCell: React.FC<{ kpi: KPI }> = ({ kpi }) => (
 
 // ---- Page component ----
 const CaseShowcasePage: React.FC = () => {
-  const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const requestedId = search?.get('id') ?? 'p1';
+  const { id: routeId } = useParams<{ id: string }>();
+  const requestedId = routeId && /^\d+$/.test(routeId) ? routeId : undefined;
 
   const {
     data: project,
