@@ -106,7 +106,7 @@ export default function PROView() {
                       {/* Titolo compatto, tronco se lungo */}
                       <div className="min-w-0">
                         <div className="text-white text-sm font-semibold truncate">
-                          {brandName}
+                          {p.Name || "Untitled Project"}
                         </div>
                       </div>
                     </div>
