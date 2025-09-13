@@ -66,14 +66,9 @@ export default function UGCView() {
               const extra = Math.max(0, team.length - preview.length);
               return (
                 <div key={p.id} className="relative rounded-2xl overflow-hidden shadow bg-white">
-                  <div className="relative">
-                    <img
-                      src={cover}
-                      alt={title}
-                      className="w-full h-40 sm:h-56 object-cover"
-                    />
+                  <div className="relative p-3">
                     {!!brands.length && (
-                      <div className="absolute top-3 right-3 flex gap-2">
+                      <div className="flex gap-2 mb-3">
                         {brands.slice(0, 3).map((b, i) => (
                           <img
                             key={i}
