@@ -21,6 +21,7 @@ export interface PortfolioBrand {
 export interface PortfolioTeamMember {
   id: number;
   NickName?: string;
+  Profession?: string;
   Profile_pic?: XanoImage | null;
 }
 
@@ -37,6 +38,8 @@ export interface PortfolioItem {
   Work_Body?: XanoImage[];
   KPI?: Record<string, unknown>[];
   created_at?: number;
+  Name?: string;
+  About?: string;
 }
 
 export interface UserTurbo {

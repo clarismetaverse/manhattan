@@ -33,7 +33,7 @@ export interface CaseProject {
 function mapPortfolioToCaseProject(p: XanoPortfolio): CaseProject {
   return {
     id: p.id ? String(p.id) : "",
-    title: (p as any).title || `Project ${p.id}`,
+    title: p.Name || `Project ${p.id}`,
     coverUrl: p.Hero?.url || p.Cover?.url || "",
     brands: (p.Brand || []).map((b) => ({
       name: b.BrandName || "",
@@ -50,7 +50,7 @@ function mapPortfolioToCaseProject(p: XanoPortfolio): CaseProject {
     deliverables: p.Deliverables ? [p.Deliverables] : [],
     rights: undefined,
     kpis: [],
-    summary: (p as any).About,
+    summary: p.About,
     tier: undefined,
     shootHighlights: (p.Work_Body || []).map((img) => ({
       type: "image",
