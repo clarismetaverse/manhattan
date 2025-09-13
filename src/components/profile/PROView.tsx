@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { fetchPortfolio, type PortfolioItem, XanoError } from '@/services/xano';
-import { Pin, Users, Briefcase } from 'lucide-react';
+import { Pin, Briefcase } from 'lucide-react';
 
 export default function PROView() {
   const navigate = useNavigate();
@@ -43,9 +43,11 @@ export default function PROView() {
         {pfLoading && (
           <div className="grid gap-4">
             {[1, 2].map((i) => (
-              <div key={i} className="rounded-2xl bg-white shadow overflow-hidden">
+              <div
+                key={i}
+                className="relative rounded-lg overflow-hidden shadow bg-white"
+              >
                 <div className="w-full h-40 sm:h-56 bg-gray-200 animate-pulse" />
-                <div className="p-3 h-16 bg-gray-50" />
               </div>
             ))}
           </div>
@@ -70,61 +72,43 @@ export default function PROView() {
               const brandName =
                 (p.Brand && p.Brand[0]?.BrandName) || "Untitled Project";
               const title = `${brandName}${p.Deliverables ? " — " + p.Deliverables : ""}`;
-              const team = p.Team || [];
-              const preview = team.slice(0, 3);
-              const extra = Math.max(0, team.length - preview.length);
 
               return (
                 <div
                   key={p.id}
                   onClick={() => navigate(`/case/${p.id}`)}
-                  className="relative rounded-2xl overflow-hidden shadow bg-white cursor-pointer hover:shadow-lg transition-shadow"
+                  className="relative rounded-lg overflow-hidden shadow bg-white cursor-pointer hover:shadow-lg transition-shadow"
                 >
+                  {/* Cover full-bleed */}
                   <div className="relative">
                     <img
                       src={cover}
                       alt={title}
                       className="w-full h-40 sm:h-56 object-cover"
+                      loading="lazy"
                     />
-                    {!!brands.length && (
-                      <div className="absolute top-3 right-3 flex gap-2">
-                        {brands.slice(0, 3).map((b, i) => (
-                          <img
-                            key={i}
-                            src={b}
-                            alt="brand"
-                            className="w-16 h-16 rounded-md border-4 border-white shadow object-cover"
-                          />
-                        ))}
+
+                    {/* Overlay pill stretta e centrata */}
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full flex items-center gap-2 max-w-[60%]">
+                      {/* Brand tondo: usa il primo logo disponibile se c'è */}
+                      {brands.length > 0 ? (
+                        <img
+                          src={brands[0] as string}
+                          alt={`${brandName} logo`}
+                          className="w-9 h-9 rounded-full border border-white/60 object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-white/80 border border-white/60 flex items-center justify-center text-[10px] text-gray-600 flex-shrink-0">
+                          LOGO
+                        </div>
+                      )}
+
+                      {/* Titolo compatto, tronco se lungo */}
+                      <div className="min-w-0">
+                        <div className="text-white text-sm font-semibold truncate">
+                          {title}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                  <div className="p-3 text-sm relative z-10 bg-white/80 backdrop-blur-sm">
-                    <div className="font-semibold text-base">{title}</div>
-                    <div className="mt-2 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-gray-500" />
-                      <div className="flex -space-x-2">
-                        {preview.map((m, i) => (
-                          <img
-                            key={i}
-                            src={
-                              m.Profile_pic?.url ||
-                              "https://placehold.co/48x48?text=PRO"
-                            }
-                            alt={m.NickName || "pro"}
-                            title={m.NickName || "pro"}
-                            className="w-7 h-7 rounded-full border object-cover"
-                          />
-                        ))}
-                        {extra > 0 && (
-                          <div className="w-7 h-7 rounded-full border bg-gray-100 text-[10px] flex items-center justify-center">
-                            +{extra}
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-500">
-                        {team.length} collaborators
-                      </span>
                     </div>
                   </div>
                 </div>
