@@ -89,7 +89,7 @@ export default function PROView() {
                     />
 
                     {/* Overlay pill stretta e centrata */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full flex items-center gap-2 max-w-[60%]">
+                    <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-full flex items-center gap-2 max-w-[60%]">
                       {/* Brand tondo: usa il primo logo disponibile se c'è */}
                       {brands.length > 0 ? (
                         <img
