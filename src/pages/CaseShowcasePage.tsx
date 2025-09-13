@@ -182,12 +182,13 @@ const CaseShowcasePage: React.FC = () => {
         
         {/* Brand Logo */}
         {project.brands[0] && (
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex items-center gap-3">
             <img 
               src={project.brands[0].logoUrl} 
               alt={project.brands[0].name} 
               className="w-16 h-16 rounded-full border-2 border-white shadow-lg object-cover" 
             />
+            <div className="text-lg font-semibold">{project.brands[0].name}</div>
           </div>
         )}
         {project.moodboardNote && (
