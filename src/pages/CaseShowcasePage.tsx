@@ -179,6 +179,17 @@ const CaseShowcasePage: React.FC = () => {
         <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-3">
           Official Campaign
         </div>
+        
+        {/* Brand Logo */}
+        {project.brands[0] && (
+          <div className="mt-4 flex justify-center">
+            <img 
+              src={project.brands[0].logoUrl} 
+              alt={project.brands[0].name} 
+              className="w-16 h-16 rounded-full border-2 border-white shadow-lg object-cover" 
+            />
+          </div>
+        )}
         {project.moodboardNote && (
           <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{project.moodboardNote}</p>
         )}
