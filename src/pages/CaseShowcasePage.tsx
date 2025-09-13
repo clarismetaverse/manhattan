@@ -164,9 +164,6 @@ const CaseShowcasePage: React.FC = () => {
 
       <section className="relative">
         <img src={project.coverUrl} alt={project.title} className="w-full max-h-[60vh] object-cover" />
-        <div className="absolute top-3 right-3 bg-black/70 text-white text-[11px] px-2 py-1 rounded-md uppercase tracking-wide">
-          Sponsored Campaign
-        </div>
       </section>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
