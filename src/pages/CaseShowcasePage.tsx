@@ -182,7 +182,7 @@ const CaseShowcasePage: React.FC = () => {
             <img 
               src={project.brands[0].logoUrl} 
               alt={project.brands[0].name} 
-              className="w-16 h-16 rounded-full border-2 border-white shadow-lg object-cover" 
+              className="w-11 h-11 rounded-md border-2 border-white shadow-lg object-cover" 
             />
             <div className="text-lg font-semibold">{project.brands[0].name}</div>
           </div>
