@@ -227,16 +227,11 @@ const CaseShowcasePage: React.FC = () => {
             {/* Mobile vertical scroll */}
             <div className="sm:hidden space-y-4 px-4">
               {project.shootHighlights.map((m, i) => (
-                <figure key={i} className="relative w-full h-72 overflow-hidden rounded-md">
+                 <figure key={i} className="relative w-full h-72 overflow-hidden rounded-md">
                   {m.type === 'image' ? (
                     <img src={m.url} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
                     <video src={m.url} className="absolute inset-0 w-full h-full object-cover" controls />
-                  )}
-                  {m.caption && (
-                    <figcaption className="absolute bottom-4 left-4 right-4 text-xs bg-black/40 text-white px-3 py-2 rounded-md">
-                      {m.caption}
-                    </figcaption>
                   )}
                 </figure>
               ))}
@@ -249,11 +244,6 @@ const CaseShowcasePage: React.FC = () => {
                     <img src={m.url} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
                     <video src={m.url} className="absolute inset-0 w-full h-full object-cover" controls />
-                  )}
-                  {m.caption && (
-                    <figcaption className="absolute bottom-2 left-2 right-2 text-xs bg-black/40 text-white px-2 py-1 rounded-md">
-                      {m.caption}
-                    </figcaption>
                   )}
                 </figure>
               ))}
