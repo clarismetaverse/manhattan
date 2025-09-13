@@ -166,36 +166,34 @@ export default function UGCTiktokerProfilePinned() {
                 </a>
               )}
             </div>
-            <div className="block sm:hidden">
-              <div
-                tabIndex={0}
-                role="switch"
-                aria-checked={isPro}
-                onClick={toggle}
-                onKeyDown={onKeyDown}
-                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
-              >
-          <div className="toggle-thumb" />
-          {!isPro && (
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
-          )}
-          {isPro && (
-            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
-          )}
+            <div className="flex items-center gap-3">
+              <button className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                isPro 
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700' 
+                  : 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white hover:from-pink-600 hover:to-fuchsia-700'
+              } hover:scale-105`}>
+                Hire Me
+              </button>
+              <div className="block sm:hidden">
+                <div
+                  tabIndex={0}
+                  role="switch"
+                  aria-checked={isPro}
+                  onClick={toggle}
+                  onKeyDown={onKeyDown}
+                  className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
+                >
+            <div className="toggle-thumb" />
+            {!isPro && (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
+            )}
+            {isPro && (
+              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
+            )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Hire Button */}
-        <div className="mt-6 text-center">
-          <button className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
-            isPro 
-              ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40' 
-              : 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40'
-          } hover:scale-105`}>
-            Hire Me
-          </button>
         </div>
 
         {isPro ? <PROView /> : <UGCView />}
