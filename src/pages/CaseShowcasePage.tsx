@@ -156,9 +156,6 @@ const CaseShowcasePage: React.FC = () => {
             <ChevronLeft className="w-4 h-4" /> Back
           </button>
           <div className="flex items-center gap-2 ml-auto">
-            {project.brands[0] && (
-              <img src={project.brands[0].logoUrl} alt={project.brands[0].name} className="w-7 h-7 rounded-md border" />
-            )}
             <div className="text-sm font-medium truncate max-w-[40ch]">{project.title}</div>
             <TierBadge tier={project.tier} />
           </div>
