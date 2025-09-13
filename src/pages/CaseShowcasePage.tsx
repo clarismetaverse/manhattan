@@ -7,7 +7,7 @@ import { request, type PortfolioItem as XanoPortfolio } from '@/services/xano';
 // ---- Data Models ----
 export interface KPI { key: string; label: string; value?: string; isPrivate?: boolean }
 export interface Brand { name: string; logoUrl: string }
-export interface Collaborator { role: string; handle?: string }
+export interface Collaborator { role: string; handle?: string; avatar?: string }
 export interface Rights { usage: string; duration?: string; whitelisting?: boolean }
 export interface CaseMedia { type: 'image' | 'video'; url: string; caption?: string }
 
@@ -42,11 +42,15 @@ function mapPortfolioToCaseProject(p: XanoPortfolio): CaseProject {
     role: "Content Creator",
     location: typeof p.Shooting_Location === "string" ? p.Shooting_Location : undefined,
     moodboardNote: undefined,
-    collaborators: (p.Team || []).map((t) => ({ role: t.NickName || "" })),
+    collaborators: (p.Team || []).map((t: any) => ({ 
+      role: t.Profession || "Collaborator",
+      handle: t.NickName || "",
+      avatar: t.Profile_pic?.url || ""
+    })),
     deliverables: p.Deliverables ? [p.Deliverables] : [],
     rights: undefined,
     kpis: [],
-    summary: undefined,
+    summary: (p as any).About,
     tier: undefined,
     shootHighlights: (p.Work_Body || []).map((img) => ({
       type: "image",
@@ -186,15 +190,35 @@ const CaseShowcasePage: React.FC = () => {
 
         {/* Collaborators */}
         <section className="mt-6">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Collaborators</h2>
-          <div className="flex flex-wrap gap-2">
+          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Collaborators</h2>
+          <div className="flex flex-wrap gap-4">
             {project.collaborators.map((c, i) => (
-              <Chip key={i}>
-                {c.role} {c.handle && `• ${c.handle}`}
-              </Chip>
+              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-neutral-800 rounded-lg border">
+                {c.avatar && (
+                  <img 
+                    src={c.avatar} 
+                    alt={c.handle} 
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                )}
+                <div>
+                  <div className="text-sm font-medium">{c.handle}</div>
+                  {c.role && (
+                    <div className="text-xs text-gray-600 dark:text-gray-400">{c.role}</div>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         </section>
+
+        {/* About */}
+        {project.summary && (
+          <section className="mt-6">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">About</h2>
+            <p className="text-sm leading-6 text-gray-800 dark:text-gray-200">{project.summary}</p>
+          </section>
+        )}
 
         {/* Pictures */}
         {project.shootHighlights && project.shootHighlights.length > 0 && (
