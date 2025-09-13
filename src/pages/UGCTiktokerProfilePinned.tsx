@@ -187,6 +187,17 @@ export default function UGCTiktokerProfilePinned() {
           </div>
         </div>
 
+        {/* Hire Button */}
+        <div className="mt-6 text-center">
+          <button className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 ${
+            isPro 
+              ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40' 
+              : 'bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40'
+          } hover:scale-105`}>
+            Hire Me
+          </button>
+        </div>
+
         {isPro ? <PROView /> : <UGCView />}
 
         <div className="mt-8 text-center">
