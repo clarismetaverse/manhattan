@@ -224,26 +224,22 @@ const CaseShowcasePage: React.FC = () => {
         {project.shootHighlights && project.shootHighlights.length > 0 && (
           <section className="mt-6 -mx-4 sm:mx-0">
             <h2 className="px-4 text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Pictures</h2>
-            {/* Mobile carousel */}
-            <div className="sm:hidden">
-              <Carousel className="w-full">
-                <CarouselContent>
-                  {project.shootHighlights.map((m, i) => (
-                    <CarouselItem key={i} className="relative w-full h-72">
-                      {m.type === 'image' ? (
-                        <img src={m.url} className="absolute inset-0 w-full h-full object-cover" />
-                      ) : (
-                        <video src={m.url} className="absolute inset-0 w-full h-full object-cover" controls />
-                      )}
-                      {m.caption && (
-                        <figcaption className="absolute bottom-4 left-4 right-4 text-xs bg-black/40 text-white px-3 py-2 rounded-md">
-                          {m.caption}
-                        </figcaption>
-                      )}
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
+            {/* Mobile vertical scroll */}
+            <div className="sm:hidden space-y-4 px-4">
+              {project.shootHighlights.map((m, i) => (
+                <figure key={i} className="relative w-full h-72 overflow-hidden rounded-md">
+                  {m.type === 'image' ? (
+                    <img src={m.url} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <video src={m.url} className="absolute inset-0 w-full h-full object-cover" controls />
+                  )}
+                  {m.caption && (
+                    <figcaption className="absolute bottom-4 left-4 right-4 text-xs bg-black/40 text-white px-3 py-2 rounded-md">
+                      {m.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
             </div>
             {/* Desktop grid */}
             <div className="hidden sm:grid sm:grid-cols-2 sm:gap-4">
