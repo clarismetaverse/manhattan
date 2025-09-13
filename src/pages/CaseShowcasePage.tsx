@@ -177,12 +177,7 @@ const CaseShowcasePage: React.FC = () => {
         {/* Title + meta */}
         <h1 className="text-2xl font-bold">{project.title}</h1>
         <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-3">
-          <BadgeCheck className="w-3 h-3" /> {project.role}
-          {project.location && (
-            <>
-              <MapPin className="w-3 h-3" /> {project.location}
-            </>
-          )}
+          Official Campaign
         </div>
         {project.moodboardNote && (
           <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{project.moodboardNote}</p>
