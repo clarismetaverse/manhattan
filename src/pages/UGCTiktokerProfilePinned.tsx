@@ -191,8 +191,11 @@ export default function UGCTiktokerProfilePinned() {
 
         {isPro && (
           <div className="mt-6 flex justify-start px-4">
-            <button className="px-8 py-3 rounded-xl text-base font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105 shadow-lg">
-              Hire
+            <button className="relative px-6 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105">
+              <span className="relative z-10">Hire</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity duration-300 animate-pulse"></div>
+              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
             </button>
           </div>
         )}
