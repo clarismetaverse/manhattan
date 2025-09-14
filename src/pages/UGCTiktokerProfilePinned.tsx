@@ -167,11 +167,6 @@ export default function UGCTiktokerProfilePinned() {
               )}
             </div>
             <div className="flex items-center gap-3">
-              {isPro && (
-                <button className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
-                  Hire Me
-                </button>
-              )}
               <div className="block sm:hidden">
               <div
                 tabIndex={0}
@@ -193,6 +188,14 @@ export default function UGCTiktokerProfilePinned() {
            </div>
          </div>
         </div>
+
+        {isPro && (
+          <div className="mt-6 flex justify-start px-4">
+            <button className="px-8 py-3 rounded-xl text-base font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105 shadow-lg">
+              Hire
+            </button>
+          </div>
+        )}
 
         {isPro ? <PROView /> : <UGCView />}
 
