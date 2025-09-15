@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Header from '@/components/profile/Header';
 import UGCView from '@/components/profile/UGCView';
 import PROView from '@/components/profile/PROView';
+import { CardNotchButton } from '@/components/profile/CardNotchButton';
 import { Share2, Instagram, Music2 } from 'lucide-react';
 import { fetchUserProfile, type UserProfileResponse } from '@/services/couponApi';
 import { useNavigate } from 'react-router-dom';
@@ -98,9 +99,12 @@ export default function UGCTiktokerProfilePinned() {
       className={`min-h-screen transition-colors duration-700 ${isPro ? 'bg-black' : 'bg-white'}`}
     >
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
-        <div
-          className={`rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 ${
-            isPro ? 'bg-zinc-900' : 'bg-white'
+        <CardNotchButton
+          notch="left"
+          label="Hire"
+          fill={isPro ? 'fill-zinc-900' : 'fill-white'}
+          className={`w-full max-w-[720px] mx-auto shadow-xl transition-colors duration-700 ${
+            isPro ? 'bg-zinc-900 text-white' : 'bg-white text-black'
           }`}
         >
           <div
@@ -108,7 +112,7 @@ export default function UGCTiktokerProfilePinned() {
               isPro ? 'bg-gradient-to-r from-purple-900 to-pink-900' : 'bg-gradient-to-r from-fuchsia-200 to-pink-300'
             }`}
             style={{
-              backgroundImage: isPro 
+              backgroundImage: isPro
                 ? (profile.back?.url ? `url(${profile.back.url})` : undefined)
                 : (profile.UGC_cover?.url ? `url(${profile.UGC_cover.url})` : undefined),
               backgroundSize: 'cover',
@@ -168,37 +172,26 @@ export default function UGCTiktokerProfilePinned() {
             </div>
             <div className="flex items-center gap-3">
               <div className="block sm:hidden">
-              <div
-                tabIndex={0}
-                role="switch"
-                aria-checked={isPro}
-                onClick={toggle}
-                onKeyDown={onKeyDown}
-                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
-              >
-                <div className="toggle-thumb" />
-                {!isPro && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
-                )}
-                {isPro && (
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
-                )}
-               </div>
-             </div>
-           </div>
-         </div>
-        </div>
-
-        {isPro && (
-          <div className="mt-6 flex justify-start px-4">
-            <button className="relative px-6 py-2 text-sm font-medium rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg shadow-purple-500/30 overflow-hidden group transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/40 hover:scale-105">
-              <span className="relative z-10">Hire</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg blur opacity-30 group-hover:opacity-50 transition-opacity duration-300 animate-pulse"></div>
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out"></div>
-            </button>
+                <div
+                  tabIndex={0}
+                  role="switch"
+                  aria-checked={isPro}
+                  onClick={toggle}
+                  onKeyDown={onKeyDown}
+                  className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
+                >
+                  <div className="toggle-thumb" />
+                  {!isPro && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
+                  )}
+                  {isPro && (
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </CardNotchButton>
 
         {isPro ? <PROView /> : <UGCView />}
 
