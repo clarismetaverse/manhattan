@@ -1,6 +1,7 @@
 import React from 'react';
 import { BadgeCheck } from 'lucide-react';
 import './GradientSweep.css';
+import { cn } from '@/lib/utils';
 
 type Mode = 'UGC' | 'PRO';
 type RingState = 'idle' | 'sweeping' | 'lit';
@@ -20,6 +21,7 @@ interface HeaderProps {
   ringState: RingState;
   setMode: (mode: Mode) => void;
   setRingState: (state: RingState) => void;
+  className?: string;
 }
 
 const ringClass = (rs: RingState) => {
@@ -28,7 +30,7 @@ const ringClass = (rs: RingState) => {
   return 'sweep-ring bg-white rounded-full';
 };
 
-export default function Header({ profile, mode, setMode, ringState, setRingState }: HeaderProps) {
+export default function Header({ profile, mode, setMode, ringState, setRingState, className }: HeaderProps) {
   const isPro = mode === 'PRO';
 
   const toggle = () => {
@@ -45,7 +47,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
   };
 
   return (
-    <div className="flex items-center p-4 -mt-14 sm:-mt-16">
+    <div className={cn('flex w-full items-center gap-4', className)}>
       <div className={ringClass(ringState)} aria-label="profile-avatar-ring">
         <img
           src={isPro ? (profile.Pro_Profile?.url || '') : (profile.Profile_pic?.url || '')}
@@ -53,23 +55,25 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
           className="w-28 h-28 sm:w-32 sm:h-32 aspect-square rounded-full border-4 border-white shadow object-cover object-center"
         />
       </div>
-      <div className="ml-3 sm:ml-4 min-w-0">
-        <h1 className={`text-lg sm:text-xl font-bold truncate ${isPro ? 'text-white' : 'text-black'}`}>
+      <div className="ml-2 sm:ml-4 min-w-0">
+        <h1 className="truncate text-lg font-bold text-white sm:text-xl">
           {profile.name}
         </h1>
         <span
-          className={`px-2 py-0.5 text-[10px] sm:text-[11px] rounded inline-flex items-center gap-1 w-fit ${
-            isPro ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white' : 'bg-gray-200 text-gray-700'
+          className={`inline-flex w-fit items-center gap-1 rounded px-2 py-0.5 text-[10px] sm:text-[11px] ${
+            isPro
+              ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white'
+              : 'bg-white/30 text-white shadow-sm backdrop-blur'
           }`}
         >
           <BadgeCheck className="w-3 h-3" /> {isPro ? (profile.Profession || 'PRO') : 'UGC'}
         </span>
-        <div className={`text-sm ${isPro ? 'text-gray-300' : 'text-gray-600'}`}>
+        <div className={`text-sm ${isPro ? 'text-gray-300' : 'text-gray-200'}`}>
           <p className="truncate">{profile.City}</p>
           <p className="truncate">{profile.countryCode}</p>
         </div>
       </div>
-      <div className="ml-auto flex items-center gap-2 sm:block hidden">
+      <div className="ml-auto hidden items-center gap-2 sm:flex">
         <div
           tabIndex={0}
           role="switch"
