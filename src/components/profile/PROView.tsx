@@ -48,8 +48,8 @@ export default function PROView() {
                 key={i}
                 innerClassName="aspect-[16/10]"
                 tabWidth={180}
-                tabDepth={44}
-                tabRoundness={0.7}
+                tabDepth={48}
+                tabRoundness={0.8}
                 tabSlot={null}
                 className="rounded-xl"
               >
@@ -86,8 +86,8 @@ export default function PROView() {
                       key={p.id}
                       tabPosition={insetTabPresets.left.tabPosition}
                       tabWidth={insetTabPresets.left.tabWidth}
-                      tabDepth={insetTabPresets.left.tabDepth}
-                      tabRoundness={insetTabPresets.left.tabRoundness}
+                      tabDepth={48}
+                      tabRoundness={0.8}
                       className="relative cursor-pointer rounded-xl shadow transition-shadow hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
                       innerClassName="aspect-[16/10]"
                       onClick={() => navigate(`/case/${p.id}`)}
