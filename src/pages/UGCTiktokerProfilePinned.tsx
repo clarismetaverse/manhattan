@@ -82,9 +82,9 @@ export default function UGCTiktokerProfilePinned() {
 
   const isPro = mode === 'PRO';
 
-  const tabWidth = isMobile ? 180 : 220;
-  const tabDepth = isMobile ? 52 : 56;
-  const tabRoundness = 0.8;
+  const tabWidth = isMobile ? 188 : 220;
+  const tabDepth = isMobile ? 60 : 64;
+  const tabRoundness = 0.85;
 
   const coverImage =
     (isPro ? profile.back?.url : profile.UGC_cover?.url) ??
@@ -92,7 +92,7 @@ export default function UGCTiktokerProfilePinned() {
     profile.Profile_pic?.url ??
     undefined;
 
-  const overlayClass = isPro ? 'bg-black/50' : 'bg-black/35';
+  const overlayClass = isPro ? 'bg-black/55' : 'bg-black/35';
   const borderMuted = isPro ? 'border-white/15' : 'border-white/20';
   const secondaryText = isPro ? 'text-gray-300' : 'text-gray-100';
   const linkClass = isPro ? 'text-gray-300 hover:text-white' : 'text-gray-100 hover:text-white';
@@ -125,20 +125,34 @@ export default function UGCTiktokerProfilePinned() {
           tabDepth={tabDepth}
           tabRoundness={tabRoundness}
           className="rounded-2xl shadow-xl transition-colors duration-700"
-          innerClassName="h-64 sm:h-72 md:h-80"
+          innerClassName="h-72 sm:h-80 md:h-88"
           backgroundClassName={cardBackground}
           tabSlot={
             isPro ? (
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  // open hire flow/modal
-                }}
-                className="rounded-full bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-2 font-semibold text-white shadow-inner hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
-                aria-label="Hire this creator"
-              >
-                Hire
-              </button>
+              <div className="relative">
+                <button
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    // open hire flow/modal
+                  }}
+                  className="rounded-full bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-2 font-semibold text-white shadow-inner hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+                  aria-label="Hire this creator"
+                >
+                  Hire
+                </button>
+
+                {/* subtle “drop” inside the notch */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute left-1/2 top-full h-3 w-40 -translate-x-1/2 -translate-y-1 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(70px 10px at 50% 50%, rgba(36,36,46,.55), transparent 60%)',
+                    filter: 'blur(1px)',
+                    opacity: 0.7,
+                  }}
+                />
+              </div>
             ) : null
           }
         >
@@ -152,7 +166,7 @@ export default function UGCTiktokerProfilePinned() {
               />
             ) : null}
             <div className={`absolute inset-0 ${overlayClass}`} />
-            <div className="relative z-10 flex h-full flex-col px-4 py-5 text-white sm:px-6">
+            <div className="relative z-10 flex h-full flex-col px-4 py-5 pb-24 text-white sm:px-6">
               <Header
                 profile={profile}
                 mode={mode}
