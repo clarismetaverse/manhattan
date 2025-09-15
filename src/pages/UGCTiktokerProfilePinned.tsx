@@ -82,9 +82,9 @@ export default function UGCTiktokerProfilePinned() {
 
   const isPro = mode === 'PRO';
 
-  const tabWidth = isMobile ? 188 : 220;
-  const tabDepth = isMobile ? 60 : 64;
-  const tabRoundness = 0.85;
+  const tabWidth = isMobile ? 180 : 210;
+  const tabDepth = isMobile ? 64 : 68;
+  const tabRoundness = 0.88;
 
   const coverImage =
     (isPro ? profile.back?.url : profile.UGC_cover?.url) ??
@@ -131,17 +131,15 @@ export default function UGCTiktokerProfilePinned() {
             isPro ? (
               <div className="relative">
                 <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    // open hire flow/modal
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    /* open hire flow */
                   }}
-                  className="rounded-full bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-2 font-semibold text-white shadow-inner hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
-                  aria-label="Hire this creator"
+                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-600 text-white font-semibold rounded-full shadow-inner hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+                  aria-label="Hire"
                 >
                   Hire
                 </button>
-
-                {/* subtle “drop” inside the notch */}
                 <div
                   aria-hidden
                   className="pointer-events-none absolute left-1/2 top-full h-3 w-40 -translate-x-1/2 -translate-y-1 rounded-full"
@@ -166,7 +164,7 @@ export default function UGCTiktokerProfilePinned() {
               />
             ) : null}
             <div className={`absolute inset-0 ${overlayClass}`} />
-            <div className="relative z-10 flex h-full flex-col px-4 py-5 pb-24 text-white sm:px-6">
+            <div className="relative z-10 flex h-full flex-col px-4 py-5 pb-28 text-white sm:px-6">
               <Header
                 profile={profile}
                 mode={mode}
@@ -180,6 +178,12 @@ export default function UGCTiktokerProfilePinned() {
               </p>
               <div
                 className={`mt-4 flex flex-wrap items-center gap-4 border-t pt-4 text-xs sm:text-sm ${borderMuted} ${secondaryText}`}
+                style={{
+                  WebkitMaskImage:
+                    'radial-gradient(120px 60px at var(--tab-start) calc(100% + 14px), transparent 62%, black 64%)',
+                  maskImage:
+                    'radial-gradient(120px 60px at var(--tab-start) calc(100% + 14px), transparent 62%, black 64%)',
+                }}
               >
                 {profile.promocode && (
                   <div>
@@ -194,6 +198,12 @@ export default function UGCTiktokerProfilePinned() {
               </div>
               <div
                 className={`mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between ${borderMuted}`}
+                style={{
+                  WebkitMaskImage:
+                    'radial-gradient(120px 60px at var(--tab-start) calc(100% + 14px), transparent 62%, black 64%)',
+                  maskImage:
+                    'radial-gradient(120px 60px at var(--tab-start) calc(100% + 14px), transparent 62%, black 64%)',
+                }}
               >
                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-100">
                   {profile.Tiktok_account && (
