@@ -244,7 +244,14 @@ export const CardShellWithInsetTab = React.forwardRef<HTMLDivElement, CardShellW
       <div
         ref={setRefs}
         className={cn('relative', className)}
-        style={{ ...style, '--inset-tab-path': clipPath } as React.CSSProperties}
+        style={{
+          ...style,
+          '--inset-tab-path': clipPath,
+          '--tab-start': `${metrics.tabStartX}px`,
+          '--tab-end': `${metrics.tabEndX}px`,
+          '--tab-apex': `${metrics.apexX}px`,
+          '--tab-depth': `${tabDepth}px`,
+        } as React.CSSProperties}
         {...rest}
       >
         <div
