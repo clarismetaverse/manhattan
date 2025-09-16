@@ -176,17 +176,9 @@ export default function UGCTiktokerProfilePinned() {
                 aria-checked={isPro}
                 onClick={toggle}
                 onKeyDown={onKeyDown}
-                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 ${
-                  isPro 
-                    ? 'shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),inset_-4px_-4px_8px_rgba(255,255,255,0.02)]' 
-                    : 'shadow-[inset_4px_4px_8px_rgba(0,0,0,0.2),inset_-4px_-4px_8px_rgba(255,255,255,0.8)]'
-                }`}
+                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
               >
-                <div className={`toggle-thumb ${
-                  isPro 
-                    ? 'shadow-[3px_3px_6px_rgba(0,0,0,0.5),-2px_-2px_4px_rgba(255,255,255,0.05)]' 
-                    : 'shadow-[3px_3px_6px_rgba(0,0,0,0.3),-2px_-2px_4px_rgba(255,255,255,0.9)]'
-                }`} />
+                <div className="toggle-thumb" />
                 {!isPro && (
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
                 )}
