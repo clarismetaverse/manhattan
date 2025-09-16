@@ -99,7 +99,7 @@ export default function UGCTiktokerProfilePinned() {
     >
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
         <div
-          className={`rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 ${
+          className={`rounded-t-2xl rounded-br-2xl shadow-xl overflow-hidden transition-colors duration-700 ${
             isPro ? 'bg-zinc-900' : 'bg-white'
           }`}
         >
