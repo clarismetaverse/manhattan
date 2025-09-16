@@ -140,7 +140,7 @@ export default function UGCTiktokerProfilePinned() {
             )}
           </div>
           <div
-            className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 ${isPro ? 'border-white/10' : 'border-gray-100'}`}
+            className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 rounded-bl-2xl ${isPro ? 'border-white/10' : 'border-gray-100'}`}
           >
             <div className="flex gap-3">
               {profile.Tiktok_account && (
