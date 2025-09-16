@@ -190,9 +190,14 @@ export default function UGCTiktokerProfilePinned() {
          </div>
 
         {isPro && (
-          <div className={`rounded-b-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
-            isPro ? 'bg-zinc-900' : 'bg-white'
-          }`}>
+          <div 
+            className={`rounded-b-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
+              isPro ? 'bg-zinc-900' : 'bg-white'
+            }`}
+            style={{
+              clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%)'
+            }}
+          >
             <div className="px-1 py-0.5 ml-4 w-fit inline-block">
               <button className="px-3 py-1 rounded-md text-xs font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
                 Hire
