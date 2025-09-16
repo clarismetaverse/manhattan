@@ -125,7 +125,7 @@ export default function UGCTiktokerProfilePinned() {
             setRingState={setRingState}
           />
           <div className="px-4 pb-3">
-            <p className={`text-sm font-medium ${isPro ? 'text-gray-200' : 'text-gray-800'}`}>{profile.bio || ''}</p>
+            <p className={`text-sm font-medium ${isPro ? 'text-gray-200' : 'text-gray-800'}`}>{isPro ? (profile.bio || '') : 'UGC creator'}</p>
           </div>
           <div
             className={`px-4 pb-4 text-xs sm:text-sm flex items-center gap-4 border-t pt-3 ${
