@@ -33,8 +33,32 @@ export default function PROView() {
           <Pin className="w-3 h-3" /> Pinned Brands
         </div>
         <div className="flex gap-3">
-          <div className="h-16 w-16 rounded-full bg-white shadow" />
-          <div className="h-16 w-16 rounded-full bg-white shadow" />
+          {!pfLoading && !pfErr && Array.isArray(portfolio) && portfolio.length > 0 && (() => {
+            // Extract unique brands from portfolio
+            const uniqueBrands = portfolio
+              .flatMap(p => p.Brand || [])
+              .filter(brand => brand?.LogoBrand?.url)
+              .slice(0, 6) // Limit to 6 brands max
+              .map((brand, index) => ({ ...brand, uniqueKey: `${brand.id}-${index}` }));
+            
+            return uniqueBrands.length > 0 ? (
+              uniqueBrands.map((brand) => (
+                <div key={brand.uniqueKey} className="h-16 w-16 rounded-full bg-white shadow overflow-hidden">
+                  <img 
+                    src={brand.LogoBrand?.url} 
+                    alt={`${brand.BrandName} logo`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="h-16 w-16 rounded-full bg-white shadow" />
+                <div className="h-16 w-16 rounded-full bg-white shadow" />
+              </>
+            );
+          })()}
         </div>
       </div>
       <div className="mt-6">
