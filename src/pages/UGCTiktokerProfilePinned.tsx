@@ -194,8 +194,8 @@ export default function UGCTiktokerProfilePinned() {
             isPro ? 'bg-zinc-900' : 'bg-white'
           }`}>
             <div className="px-2 py-1 ml-4">
-              <button className="px-3 py-1 rounded-md text-xs font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
-                Hire Me
+              <button className="px-3 py-1 rounded-2xl text-xs font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
+                Hire
               </button>
             </div>
           </div>
