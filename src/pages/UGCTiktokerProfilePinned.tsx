@@ -133,11 +133,11 @@ export default function UGCTiktokerProfilePinned() {
             }`}
           >
             <div className={`flex items-center gap-2 ${isPro ? 'text-gray-300' : 'text-gray-700'}`}>
-              <span>95 jobs</span>
+              <span><span className="text-electro-blue font-bold">95</span> <span className="font-bold">jobs</span></span>
               <span className="text-gray-400">|</span>
-              <span>500 XP</span>
+              <span><span className="font-bold">500</span> <span className="font-bold">XP</span></span>
               <span className="text-gray-400">|</span>
-              <span>4 collaborators</span>
+              <span><span className="text-electro-blue font-bold">4</span> <span className="font-bold">collaborators</span></span>
             </div>
           </div>
           <div

@@ -29,6 +29,8 @@ All colors MUST be HSL.
     --accent: 348 100% 56%; /* #ff1744 */
     --accent-foreground: 0 0% 100%; /* #ffffff */
 
+    --electro-blue: 198 100% 50%; /* #00bfff */
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
