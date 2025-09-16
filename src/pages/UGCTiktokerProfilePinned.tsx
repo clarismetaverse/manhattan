@@ -132,8 +132,12 @@ export default function UGCTiktokerProfilePinned() {
               isPro ? 'border-white/10' : 'border-gray-100'
             }`}
           >
-            {profile.promocode && (
-              <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>Promo code: {profile.promocode}</div>
+            {isPro ? (
+              <div className="text-gray-300">151 Jobs</div>
+            ) : (
+              profile.promocode && (
+                <div className="text-gray-700">Promo code: {profile.promocode}</div>
+              )
             )}
             {typeof profile.xp === 'number' && (
               <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>{profile.xp} XP</div>
