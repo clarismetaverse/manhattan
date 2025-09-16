@@ -79,7 +79,7 @@ export default function PROView() {
                     .filter(Boolean) as string[];
                   const brandName =
                     (p.Brand && p.Brand[0]?.BrandName) || 'Untitled Project';
-                  const title = `${brandName}${p.Deliverables ? ' — ' + p.Deliverables : ''}`;
+                  const title = brandName;
 
                   return (
                     <CardShellWithInsetTab
