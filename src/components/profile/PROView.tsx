@@ -30,7 +30,7 @@ export default function PROView() {
     <>
       <div className="mt-6">
         <div className="text-xs mb-2 flex items-center gap-1 text-gray-400">
-          <Pin className="w-3 h-3" /> Pinned Collabs
+          <Pin className="w-3 h-3" /> Pinned Brands
         </div>
         <div className="flex gap-3">
           <div className="h-16 w-16 rounded-full bg-white shadow" />
