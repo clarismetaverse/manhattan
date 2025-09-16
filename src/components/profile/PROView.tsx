@@ -100,7 +100,18 @@ export default function PROView() {
                       role="button"
                       tabIndex={0}
                       aria-label={`View project ${p.Name || brandName}`}
-                      tabSlot={null}
+                      tabSlot={
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            /* open hire flow */
+                          }}
+                          className="rounded-full bg-gradient-to-r from-purple-500 to-blue-600 px-5 py-2 font-semibold text-white shadow-inner hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
+                          aria-label={`Hire for ${brandName}`}
+                        >
+                          Hire
+                        </button>
+                      }
                     >
                       <div className="relative h-full w-full">
                         <img
