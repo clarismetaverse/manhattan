@@ -122,13 +122,6 @@ export default function UGCTiktokerProfilePinned() {
             ringState={ringState}
             setRingState={setRingState}
           />
-          {isPro && (
-            <div className="px-4 pt-3">
-              <button className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
-                Hire Me
-              </button>
-            </div>
-          )}
           <div className="px-4 pb-3">
             <p className={`text-sm font-medium ${isPro ? 'text-gray-200' : 'text-gray-800'}`}>“{profile.bio || ''}”</p>
           </div>
@@ -194,7 +187,19 @@ export default function UGCTiktokerProfilePinned() {
              </div>
            </div>
          </div>
-        </div>
+         </div>
+
+        {isPro && (
+          <div className={`mt-2 rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 ${
+            isPro ? 'bg-zinc-900' : 'bg-white'
+          }`}>
+            <div className="px-4 py-3">
+              <button className="w-full px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
+                Hire Me
+              </button>
+            </div>
+          </div>
+        )}
 
         {isPro ? <PROView /> : <UGCView />}
 
