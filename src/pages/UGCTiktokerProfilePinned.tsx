@@ -193,7 +193,7 @@ export default function UGCTiktokerProfilePinned() {
           <div className={`rounded-br-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
             isPro ? 'bg-zinc-900' : 'bg-white'
           }`}>
-            <div className="px-1 py-0.5 ml-4 w-fit inline-block">
+            <div className="px-4 py-0.5 w-fit inline-block">
               <button className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105 shadow-lg">
                 Hire
               </button>
