@@ -33,8 +33,8 @@ export default function PROView() {
           <Pin className="w-3 h-3" /> Pinned Collabs
         </div>
         <div className="flex gap-3">
-          <div className="h-24 w-24 rounded-full bg-white shadow" />
-          <div className="h-24 w-24 rounded-full bg-white shadow" />
+          <div className="h-16 w-16 rounded-full bg-white shadow" />
+          <div className="h-16 w-16 rounded-full bg-white shadow" />
         </div>
       </div>
       <div className="mt-6">
