@@ -132,12 +132,13 @@ export default function UGCTiktokerProfilePinned() {
               isPro ? 'border-white/10' : 'border-gray-100'
             }`}
           >
-            {profile.promocode && (
-              <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>Promo code: {profile.promocode}</div>
-            )}
-            {typeof profile.xp === 'number' && (
-              <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>{profile.xp} XP</div>
-            )}
+            <div className={`flex items-center gap-2 ${isPro ? 'text-gray-300' : 'text-gray-700'}`}>
+              <span>95 jobs</span>
+              <span className="text-gray-400">|</span>
+              <span>500 XP</span>
+              <span className="text-gray-400">|</span>
+              <span>4 collaborators</span>
+            </div>
           </div>
           <div
             className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 rounded-bl-2xl rounded-br-2xl ${isPro ? 'border-white/10' : 'border-gray-100'}`}
