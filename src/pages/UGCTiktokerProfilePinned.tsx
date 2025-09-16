@@ -190,13 +190,25 @@ export default function UGCTiktokerProfilePinned() {
          </div>
 
         {isPro && (
-          <div className={`rounded-b-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
-            isPro ? 'bg-zinc-900' : 'bg-white'
-          }`}>
-            <div className="px-1 py-0.5 ml-4 w-fit inline-block">
-              <button className="px-3 py-1 rounded-md text-xs font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
-                Hire
-              </button>
+          <div className="relative">
+            {/* Connecting Triangle */}
+            <div className="absolute -top-6 right-0 w-0 h-0 z-10">
+              <svg width="50" height="24" viewBox="0 0 50 24" className="absolute">
+                <path
+                  d="M0 0 Q25 6 50 0 L25 24 Z"
+                  fill="rgb(39 39 42)"
+                  className="transition-colors duration-700"
+                />
+              </svg>
+            </div>
+            <div className={`rounded-b-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
+              isPro ? 'bg-zinc-900' : 'bg-white'
+            }`}>
+              <div className="px-1 py-0.5 ml-4 w-fit inline-block">
+                <button className="px-3 py-1 rounded-md text-xs font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
+                  Hire
+                </button>
+              </div>
             </div>
           </div>
         )}
