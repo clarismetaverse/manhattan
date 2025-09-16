@@ -2,11 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Header from '@/components/profile/Header';
 import UGCView from '@/components/profile/UGCView';
 import PROView from '@/components/profile/PROView';
-import { CardShellWithInsetTab, insetTabPresets } from '@/components/profile/CardShellWithInsetTab';
 import { Share2, Instagram, Music2 } from 'lucide-react';
 import { fetchUserProfile, type UserProfileResponse } from '@/services/couponApi';
 import { useNavigate } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 type Mode = 'UGC' | 'PRO';
 type RingState = 'idle' | 'sweeping' | 'lit';
@@ -50,7 +48,6 @@ export default function UGCTiktokerProfilePinned() {
   const [mode, setMode] = useState<Mode>('UGC');
   const [ringState, setRingState] = useState<RingState>('idle');
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function loadProfile() {
@@ -82,24 +79,6 @@ export default function UGCTiktokerProfilePinned() {
 
   const isPro = mode === 'PRO';
 
-  const tabWidth = isMobile ? 188 : 220;
-  const tabDepth = isMobile ? 60 : 64;
-  const tabRoundness = 0.85;
-
-  const coverImage =
-    (isPro ? profile.back?.url : profile.UGC_cover?.url) ??
-    profile.Pro_Profile?.url ??
-    profile.Profile_pic?.url ??
-    undefined;
-
-  const overlayClass = isPro ? 'bg-black/55' : 'bg-black/35';
-  const borderMuted = isPro ? 'border-white/15' : 'border-white/20';
-  const secondaryText = isPro ? 'text-gray-300' : 'text-gray-100';
-  const linkClass = isPro ? 'text-gray-300 hover:text-white' : 'text-gray-100 hover:text-white';
-  const cardBackground = isPro
-    ? 'from-[#141418] via-[#111114] to-[#0f0f12]'
-    : 'from-[#f6edff] via-[#fde8ff] to-[#ffe5f4]';
-
   const toggle = () => {
     const nextMode: Mode = isPro ? 'UGC' : 'PRO';
     setMode(nextMode);
@@ -119,126 +98,101 @@ export default function UGCTiktokerProfilePinned() {
       className={`min-h-screen transition-colors duration-700 ${isPro ? 'bg-black' : 'bg-white'}`}
     >
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
-        <CardShellWithInsetTab
-          tabPosition={insetTabPresets.left.tabPosition}
-          tabWidth={tabWidth}
-          tabDepth={tabDepth}
-          tabRoundness={tabRoundness}
-          className="rounded-2xl shadow-xl transition-colors duration-700"
-          innerClassName="h-72 sm:h-80 md:h-88"
-          backgroundClassName={cardBackground}
-          tabSlot={
-            isPro ? (
-              <div className="relative">
-                <button
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    // open hire flow/modal
-                  }}
-                  className="rounded-full bg-gradient-to-r from-purple-500 to-blue-600 px-6 py-2 font-semibold text-white shadow-inner hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-400"
-                  aria-label="Hire this creator"
-                >
-                  Hire
-                </button>
-
-                {/* subtle “drop” inside the notch */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute left-1/2 top-full h-3 w-40 -translate-x-1/2 -translate-y-1 rounded-full"
-                  style={{
-                    background:
-                      'radial-gradient(70px 10px at 50% 50%, rgba(36,36,46,.55), transparent 60%)',
-                    filter: 'blur(1px)',
-                    opacity: 0.7,
-                  }}
-                />
-              </div>
-            ) : null
-          }
+        <div
+          className={`rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 ${
+            isPro ? 'bg-zinc-900' : 'bg-white'
+          }`}
         >
-          <div className="relative h-full w-full">
-            {coverImage ? (
-              <img
-                src={coverImage}
-                alt={`${profile.name} cover`}
-                className="absolute inset-0 h-full w-full object-cover"
-                loading="lazy"
-              />
-            ) : null}
-            <div className={`absolute inset-0 ${overlayClass}`} />
-            <div className="relative z-10 flex h-full flex-col px-4 py-5 pb-24 text-white sm:px-6">
-              <Header
-                profile={profile}
-                mode={mode}
-                setMode={setMode}
-                ringState={ringState}
-                setRingState={setRingState}
-                className="items-center"
-              />
-              <p className="mt-4 text-sm font-medium text-gray-100 sm:text-base">
-                “{profile.bio || ''}”
-              </p>
-              <div
-                className={`mt-4 flex flex-wrap items-center gap-4 border-t pt-4 text-xs sm:text-sm ${borderMuted} ${secondaryText}`}
-              >
-                {profile.promocode && (
-                  <div>
-                    Promo code: <span className="font-semibold text-white">{profile.promocode}</span>
-                  </div>
-                )}
-                {typeof profile.xp === 'number' && (
-                  <div>
-                    <span className="font-semibold text-white">{profile.xp}</span> XP
-                  </div>
-                )}
-              </div>
-              <div
-                className={`mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between ${borderMuted}`}
-              >
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-100">
-                  {profile.Tiktok_account && (
-                    <a
-                      href={profile.Tiktok_account}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`flex items-center gap-1 transition-colors ${linkClass}`}
-                    >
-                      <Music2 className="h-4 w-4" /> TikTok
-                    </a>
-                  )}
-                  {profile.IG_account && (
-                    <a
-                      href={profile.IG_account}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`flex items-center gap-1 transition-colors ${linkClass}`}
-                    >
-                      <Instagram className="h-4 w-4" /> Instagram
-                    </a>
-                  )}
-                </div>
-                <div className="block sm:hidden">
-                  <div
-                    tabIndex={0}
-                    role="switch"
-                    aria-checked={isPro}
-                    onClick={toggle}
-                    onKeyDown={onKeyDown}
-                    className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
-                  >
-                    <div className="toggle-thumb" />
-                    {!isPro && (
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white">PRO</span>
-                    )}
-                    {isPro && (
-                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-white">UGC</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div
+            className={`h-28 sm:h-36 ${
+              isPro ? 'bg-gradient-to-r from-purple-900 to-pink-900' : 'bg-gradient-to-r from-fuchsia-200 to-pink-300'
+            }`}
+            style={{
+              backgroundImage: isPro 
+                ? (profile.back?.url ? `url(${profile.back.url})` : undefined)
+                : (profile.UGC_cover?.url ? `url(${profile.UGC_cover.url})` : undefined),
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+          <Header
+            profile={profile}
+            mode={mode}
+            setMode={setMode}
+            ringState={ringState}
+            setRingState={setRingState}
+          />
+          <div className="px-4 pb-3">
+            <p className={`text-sm font-medium ${isPro ? 'text-gray-200' : 'text-gray-800'}`}>“{profile.bio || ''}”</p>
           </div>
-        </CardShellWithInsetTab>
+          <div
+            className={`px-4 pb-4 text-xs sm:text-sm flex items-center gap-4 border-t pt-3 ${
+              isPro ? 'border-white/10' : 'border-gray-100'
+            }`}
+          >
+            {profile.promocode && (
+              <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>Promo code: {profile.promocode}</div>
+            )}
+            {typeof profile.xp === 'number' && (
+              <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>{profile.xp} XP</div>
+            )}
+          </div>
+          <div
+            className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 ${isPro ? 'border-white/10' : 'border-gray-100'}`}
+          >
+            <div className="flex gap-3">
+              {profile.Tiktok_account && (
+                <a
+                  href={profile.Tiktok_account}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`flex items-center gap-1 text-sm ${
+                    isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
+                  }`}
+                >
+                  <Music2 className="w-4 h-4" /> TikTok
+                </a>
+              )}
+              {profile.IG_account && (
+                <a
+                  href={profile.IG_account}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`flex items-center gap-1 text-sm ${
+                    isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
+                  }`}
+                >
+                  <Instagram className="w-4 h-4" /> Instagram
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {isPro && (
+                <button className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105">
+                  Hire Me
+                </button>
+              )}
+              <div className="block sm:hidden">
+              <div
+                tabIndex={0}
+                role="switch"
+                aria-checked={isPro}
+                onClick={toggle}
+                onKeyDown={onKeyDown}
+                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
+              >
+                <div className="toggle-thumb" />
+                {!isPro && (
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
+                )}
+                {isPro && (
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
+                )}
+               </div>
+             </div>
+           </div>
+         </div>
+        </div>
 
         {isPro ? <PROView /> : <UGCView />}
 

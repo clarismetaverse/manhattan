@@ -514,39 +514,4 @@ All colors MUST be HSL.
       height: 24px;
     }
   }
-
-  /* Toggle Switch Styles */
-  .toggle-track {
-    position: relative;
-    width: 80px;
-    height: 32px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 16px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-  }
-
-  .toggle-track.active {
-    background: linear-gradient(135deg, #ff1744, #d81b60);
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 0 0 1px rgba(255, 23, 68, 0.3), 0 4px 12px rgba(255, 23, 68, 0.2);
-  }
-
-  .toggle-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 26px;
-    height: 26px;
-    background: #ffffff;
-    border-radius: 50%;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  .toggle-track.active .toggle-thumb {
-    transform: translateX(48px);
-  }
 }
