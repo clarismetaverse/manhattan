@@ -192,7 +192,7 @@ export default function UGCTiktokerProfilePinned() {
          </div>
 
         {isPro && (
-          <div className={`rounded-br-2xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
+          <div className={`rounded-br-2xl overflow-hidden transition-colors duration-700 w-1/3 py-3 ${
             isPro 
               ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]'
               : 'bg-gray-100 shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)]'
