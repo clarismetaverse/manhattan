@@ -83,8 +83,8 @@ export default function UGCTiktokerProfilePinned() {
   const isPro = mode === 'PRO';
 
   const tabWidth = isMobile ? 180 : 210;
-  const tabDepth = isMobile ? 72 : 76;
-  const tabRoundness = 0.95;
+  const tabDepth = isMobile ? 64 : 68;
+  const tabRoundness = 0.88;
 
   const coverImage =
     (isPro ? profile.back?.url : profile.UGC_cover?.url) ??

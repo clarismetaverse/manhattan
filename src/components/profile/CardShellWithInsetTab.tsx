@@ -106,17 +106,10 @@ export function generateInsetTabPath(options: InsetTabPathOptions): InsetTabPath
 
   const apexX = tabStart + clampedTabWidth / 2;
   const apexY = h - depth;
-  // Enhanced curve parameters for better button wrapping
-  const curveWidth = Math.max(clampedTabWidth / 2 - 8, clampedTabWidth * (0.35 + roundness * 0.2));
-  const controlOffset = Math.min(curveWidth, clampedTabWidth / 2 - 4);
-  const depthEase = depth * (0.4 + roundness * 0.35);
+  const curveWidth = Math.max(clampedTabWidth / 2 - 12, clampedTabWidth * (0.2 + roundness * 0.15));
+  const controlOffset = Math.min(curveWidth, clampedTabWidth / 2 - 8);
+  const depthEase = depth * (0.55 + roundness * 0.25);
 
-  // Enhanced curve control points for natural button wrapping
-  const leftControlX = tabStart + controlOffset * 0.8;
-  const rightControlX = tabEnd - controlOffset * 0.8;
-  const leftControlY = h - depth * 0.15;
-  const rightControlY = h - depth * 0.15;
-  
   const commands = [
     `M ${r},0`,
     `H ${w - r}`,
@@ -124,8 +117,8 @@ export function generateInsetTabPath(options: InsetTabPathOptions): InsetTabPath
     `V ${h - r}`,
     `C ${w},${h - r * 0.4} ${w - r * 0.4},${h} ${w - r},${h}`,
     `H ${tabEnd}`,
-    `C ${rightControlX},${rightControlY} ${apexX + controlOffset * 0.25},${apexY + depthEase * 0.7} ${apexX},${apexY}`,
-    `C ${apexX - controlOffset * 0.25},${apexY + depthEase * 0.7} ${leftControlX},${leftControlY} ${tabStart},${h}`,
+    `C ${tabEnd - controlOffset},${h} ${apexX + controlOffset * 0.3},${apexY + depthEase} ${apexX},${apexY}`,
+    `C ${apexX - controlOffset * 0.3},${apexY + depthEase} ${tabStart + controlOffset},${h} ${tabStart},${h}`,
     `H ${r}`,
     `C ${r * 0.4},${h} 0,${h - r * 0.4} 0,${h - r}`,
     `V ${r}`,
