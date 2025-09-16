@@ -98,11 +98,11 @@ export default function UGCTiktokerProfilePinned() {
       className={`min-h-screen transition-colors duration-700 ${isPro ? 'bg-black' : 'bg-white'}`}
     >
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
-        <div
-          className={`rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 ${
-            isPro ? 'bg-zinc-900' : 'bg-white'
-          }`}
-        >
+          <div
+            className={`rounded-2xl rounded-bl-none shadow-xl overflow-hidden transition-colors duration-700 ${
+              isPro ? 'bg-zinc-900' : 'bg-white'
+            }`}
+          >
           <div
             className={`h-28 sm:h-36 ${
               isPro ? 'bg-gradient-to-r from-purple-900 to-pink-900' : 'bg-gradient-to-r from-fuchsia-200 to-pink-300'
