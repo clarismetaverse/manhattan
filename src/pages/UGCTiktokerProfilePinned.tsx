@@ -192,11 +192,13 @@ export default function UGCTiktokerProfilePinned() {
                </div>
              </div>
            </div>
-         </div>
-         </div>
+          </div>
+          </div>
+
+        {isPro ? <PROView /> : <UGCView />}
 
         {isPro && (
-          <div className={`rounded-br-2xl rounded-bl-2xl rounded-tl-2xl overflow-hidden transition-colors duration-700 w-1/3 py-3 ${
+          <div className={`rounded-br-2xl rounded-bl-2xl rounded-tl-2xl overflow-hidden transition-colors duration-700 w-1/3 py-3 mt-6 ${
             isPro 
               ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]'
               : 'bg-gray-100 shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)]'
@@ -208,8 +210,6 @@ export default function UGCTiktokerProfilePinned() {
             </div>
           </div>
         )}
-
-        {isPro ? <PROView /> : <UGCView />}
 
         <div className="mt-8 text-center">
           <button className="bg-gradient-to-r from-pink-400 to-fuchsia-500 text-white px-6 py-3 rounded-xl shadow-lg shadow-pink-500/25 inline-flex items-center justify-center">
