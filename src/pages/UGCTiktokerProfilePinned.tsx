@@ -190,7 +190,7 @@ export default function UGCTiktokerProfilePinned() {
          </div>
 
         {isPro && (
-          <div className={`mt-2 rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 ${
+          <div className={`mt-2 rounded-2xl shadow-xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
             isPro ? 'bg-zinc-900' : 'bg-white'
           }`}>
             <div className="px-1 py-0.5 ml-4 w-fit inline-block">
