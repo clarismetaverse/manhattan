@@ -100,9 +100,9 @@ export default function UGCTiktokerProfilePinned() {
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
         <div
           className={`rounded-t-2xl rounded-br-2xl overflow-hidden transition-colors duration-700 ${
-            isPro ? 'bg-zinc-900' : 'bg-gray-100'
-          } shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)] ${
-            isPro ? 'shadow-[8px_8px_16px_rgba(0,0,0,0.5),-8px_-8px_16px_rgba(255,255,255,0.05)]' : ''
+            isPro 
+              ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]' 
+              : 'bg-gray-100 shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)]'
           }`}
         >
           <div
@@ -193,10 +193,12 @@ export default function UGCTiktokerProfilePinned() {
 
         {isPro && (
           <div className={`rounded-br-2xl overflow-hidden transition-colors duration-700 w-1/4 py-3 ${
-            isPro ? 'bg-zinc-900' : 'bg-gray-100'
-          } shadow-[8px_8px_16px_rgba(0,0,0,0.5),-8px_-8px_16px_rgba(255,255,255,0.05)]`}>
+            isPro 
+              ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]'
+              : 'bg-gray-100 shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)]'
+          }`}>
             <div className="px-4 py-0.5 w-fit inline-block">
-              <button className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.1),inset_-2px_-2px_4px_rgba(0,0,0,0.2),4px_4px_8px_rgba(0,0,0,0.3)] hover:shadow-[inset_1px_1px_2px_rgba(255,255,255,0.1),inset_-1px_-1px_2px_rgba(0,0,0,0.2),2px_2px_4px_rgba(0,0,0,0.4)]">
+              <button className="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 hover:scale-105 shadow-[inset_3px_3px_6px_rgba(255,255,255,0.1),inset_-3px_-3px_6px_rgba(0,0,0,0.4),6px_6px_12px_rgba(0,0,0,0.6)] hover:shadow-[inset_2px_2px_4px_rgba(255,255,255,0.1),inset_-2px_-2px_4px_rgba(0,0,0,0.4),3px_3px_6px_rgba(0,0,0,0.7)]">
                 Hire
               </button>
             </div>
