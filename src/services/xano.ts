@@ -56,86 +56,41 @@ export interface XanoError {
   [key: string]: unknown;
 }
 
-const API = (import.meta.env.VITE_XANO_API || "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3").replace(/\/$/, "");
-const UPLOAD_PATH = import.meta.env.VITE_XANO_UPLOAD_PATH || "/upload";
+export const API = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3";
 
-function authHeadersForUpload(): Headers {
-  const headers = new Headers();
+const UPLOAD_PATH = "/upload";
 
-  if (!headers.has("Authorization")) {
-    let token = "";
-    try {
-      if (typeof window !== "undefined") {
-        token = localStorage.getItem("auth_token") || "";
-      }
-    } catch {
-      // ignore errors accessing localStorage
+function authHeaders() {
+  const h = new Headers();
+  try {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("user_turbo_token");
+      if (token) h.set("Authorization", `Bearer ${token}`);
     }
-    if (!token) {
-      token = import.meta.env.VITE_XANO_TOKEN || "";
-    }
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
+  } catch {
+    // ignore access issues (e.g. server-side)
   }
-
-  return headers;
-}
-
-if (!API) {
-  console.error("⚠️ Xano API URL missing");
-  throw new Error("Missing Xano API URL");
+  return h;
 }
 
 export async function request<T>(path: string, options: RequestInit = {}) {
-  // Build headers dynamically so we attach the logged-in auth token when available
-  const headers = new Headers({
+  const headers = {
     Accept: "application/json",
     "Content-Type": "application/json",
-  });
-  if (options.headers) {
-    const opt = new Headers(options.headers as HeadersInit);
-    opt.forEach((value, key) => headers.set(key, value));
-  }
-
-  // If caller didn't provide Authorization, try localStorage token first, then env token
-  if (!headers.has("Authorization")) {
-    let token = "";
-    try {
-      if (typeof window !== "undefined") {
-        token = localStorage.getItem("auth_token") || "";
-      }
-    } catch {
-      // ignore errors accessing localStorage
-    }
-    if (!token) {
-      token = import.meta.env.VITE_XANO_TOKEN || "";
-    }
-    if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-  }
+    ...Object.fromEntries(authHeaders().entries()),
+    ...(options.headers || {}),
+  } as HeadersInit;
 
   const res = await fetch(`${API}${path}`, {
     ...options,
     headers,
   });
 
-  const contentType = res.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
-    const text = await res.text();
-    console.error(text.slice(0, 100));
-    throw new Error("Invalid response from Xano, expected JSON");
-  }
-
-  const data = (await res.json()) as unknown;
-
   if (!res.ok) {
-    const msg = (data as XanoError)?.message || res.statusText;
-    throw new Error(msg);
+    throw new Error(`${res.status} ${res.statusText}`);
   }
 
-  return data as T;
+  return res.json() as Promise<T>;
 }
 
 export function fetchUserTurbo() {
@@ -149,25 +104,53 @@ export async function fetchPortfolio() {
 }
 
 export async function uploadFileToXano(file: File) {
-  const url = `${API}${UPLOAD_PATH}`;
-  const form = new FormData();
-  form.append("file", file);
+  const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
+  let finalFile = file;
 
-  const headers = authHeadersForUpload();
-
-  const res = await fetch(url, { method: "POST", body: form, headers });
-  if (!res.ok) {
-    const msg = await res.text().catch(() => res.statusText);
-    throw Object.assign(new Error(`Upload error ${res.status}: ${msg}`), { status: res.status });
+  if (!ALLOWED.includes(file.type)) {
+    const lower = file.name.toLowerCase();
+    if (file.type === "image/heic" || lower.endsWith(".heic")) {
+      finalFile = await convertHeicToJpeg(file);
+    } else {
+      throw new Error("Unsupported format. Please upload JPG, PNG or WebP.");
+    }
   }
-  return res.json() as Promise<{ url: string } & Record<string, any>>;
+
+  const form = new FormData();
+  form.append("file", finalFile);
+
+  const res = await fetch(`${API}${UPLOAD_PATH}`, {
+    method: "POST",
+    body: form,
+    headers: authHeaders(),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => "");
+    throw new Error(`Upload error ${res.status}: ${msg}`);
+  }
+
+  return res.json() as Promise<{ url: string }>;
 }
 
 export async function uploadFilesToXano(files: File[]) {
   const results = [];
-  for (const f of files) {
-    const r = await uploadFileToXano(f);
-    results.push(r);
-  }
+  for (const f of files) results.push(await uploadFileToXano(f));
   return results;
+}
+
+async function convertHeicToJpeg(file: File): Promise<File> {
+  const blob = await file.arrayBuffer();
+  const imageBitmap = await createImageBitmap(new Blob([blob]));
+  const canvas = document.createElement("canvas");
+  canvas.width = imageBitmap.width;
+  canvas.height = imageBitmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+  ctx.drawImage(imageBitmap, 0, 0);
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+  const bin = atob(dataUrl.split(",")[1]);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new File([arr], file.name.replace(/\.heic$/i, ".jpg"), { type: "image/jpeg" });
 }

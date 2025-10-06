@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { request, uploadFileToXano, uploadFilesToXano } from "@/services/xano";
-import { useNavigate } from "react-router-dom";
 import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
+import { request, uploadFileToXano, uploadFilesToXano } from "@/services/xano";
+import { useForm } from "react-hook-form";
 
 type BrandLite = { id: number; BrandName: string; LogoBrand?: { url?: string } };
 type UserLite  = { id: number; handle?: string; name?: string; avatar?: { url?: string } };
@@ -40,8 +39,6 @@ const Chip: React.FC<React.PropsWithChildren<{ onRemove?: () => void }>> = ({ ch
 );
 
 const PortfolioNewPage: React.FC = () => {
-  const nav = useNavigate();
-
   // --- RHF base (campi testuali) ---
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
     defaultValues: {
@@ -115,28 +112,18 @@ const PortfolioNewPage: React.FC = () => {
     const payload: any = {
       Name: v.Name?.trim() || undefined,
       Deliverables: v.Deliverables,
-      Shooting_Location: v.Shooting_Location || undefined,
+      Shooting_Location: Number(v.Shooting_Location) || undefined,
       Brand: brandsSel.map(b => b.id),       // array di ID brand
       Team: teamSel.map(u => u.id),          // array di ID user
       KPI: v.KPI ? parseKPI(v.KPI) : undefined,
     };
 
     // Cover
-    if (coverFile) {
-      const uploaded = await uploadFileToXano(coverFile);
-      if (uploaded?.url) payload.Cover = { url: uploaded.url };
-    }
-
-    // Hero
-    if (heroFile) {
-      const uploaded = await uploadFileToXano(heroFile);
-      if (uploaded?.url) payload.Hero = { url: uploaded.url };
-    }
-
-    // Work_Body (multi)
+    if (coverFile) payload.Cover = await uploadFileToXano(coverFile);
+    if (heroFile) payload.Hero = await uploadFileToXano(heroFile);
     if (workFiles.length) {
       const up = await uploadFilesToXano(workFiles);
-      payload.Work_Body = up.filter(x => x?.url).map(x => ({ url: x.url }));
+      payload.Work_Body = up.map(x => ({ url: x.url }));
     }
 
     // 2) Pulisci chiavi vuote
@@ -149,13 +136,12 @@ const PortfolioNewPage: React.FC = () => {
     // 3) POST crea portfolio
     const created = await request<any>("/portfolio", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
     const newId = created?.id ?? created?.portfolio_id ?? created?.data?.id;
     if (newId != null) {
-      nav(`/case/${encodeURIComponent(String(newId))}`);
+      window.location.href = `/case/${encodeURIComponent(String(newId))}`;
     } else {
       alert("Creato, ma non ho ricevuto l'ID. Controlla la risposta Xano in console.");
       console.log("Xano create response:", created);
