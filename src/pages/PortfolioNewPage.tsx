@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { request, uploadFileToXano, uploadFilesToXano } from "@/services/xano";
-import { useNavigate } from "react-router-dom";
+import { getAuthToken, request } from "@/services/xano";
 import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
 
 type BrandLite = { id: number; BrandName: string; LogoBrand?: { url?: string } };
@@ -39,8 +38,17 @@ const Chip: React.FC<React.PropsWithChildren<{ onRemove?: () => void }>> = ({ ch
   </span>
 );
 
+function parseKPI(text?: string) {
+  const rows = (text || "").split("\n").map(s => s.trim()).filter(Boolean);
+  return rows.map((row, i) => {
+    const [k, ...rest] = row.split(":");
+    const key = (k || `kpi_${i}`).trim();
+    const val = rest.join(":").trim();
+    return { [key]: val };
+  });
+}
+
 const PortfolioNewPage: React.FC = () => {
-  const nav = useNavigate();
 
   // --- RHF base (campi testuali) ---
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
@@ -99,66 +107,54 @@ const PortfolioNewPage: React.FC = () => {
   const previewCover = useMemo(() => (coverFile ? URL.createObjectURL(coverFile) : null), [coverFile]);
   const previewHero  = useMemo(() => (heroFile ? URL.createObjectURL(heroFile) : null), [heroFile]);
 
-  function parseKPI(txt?: string) {
-    const rows = (txt || "").split("\n").map(s => s.trim()).filter(Boolean);
-    return rows.map((row, i) => {
-      const [k, ...rest] = row.split(":");
-      const key = (k || `kpi_${i}`).trim();
-      const val = rest.join(":").trim();
-      return { [key]: val };
-    });
-  }
-
   // --- Submit ---
   async function onSubmit(v: FormData) {
-    // 1) Upload assets (se presenti)
-    const payload: any = {
-      Name: v.Name?.trim() || undefined,
-      Deliverables: v.Deliverables,
-      Shooting_Location: v.Shooting_Location || undefined,
-      Brand: brandsSel.map(b => b.id),       // array di ID brand
-      Team: teamSel.map(u => u.id),          // array di ID user
-      KPI: v.KPI ? parseKPI(v.KPI) : undefined,
-    };
+    const token = getAuthToken();
 
-    // Cover
-    if (coverFile) {
-      const uploaded = await uploadFileToXano(coverFile);
-      if (uploaded?.url) payload.Cover = { url: uploaded.url };
+    const form = new FormData();
+
+    if (v.Name) form.append("Name", v.Name.trim());
+    if (v.Deliverables) form.append("Deliverables", v.Deliverables);
+    if (v.Shooting_Location) {
+      const raw = v.Shooting_Location.trim();
+      if (raw) {
+        const loc = Number(raw);
+        form.append(
+          "Shooting_Location",
+          !Number.isNaN(loc) && loc > 0 ? String(loc) : raw
+        );
+      }
     }
 
-    // Hero
-    if (heroFile) {
-      const uploaded = await uploadFileToXano(heroFile);
-      if (uploaded?.url) payload.Hero = { url: uploaded.url };
-    }
+    if (brandsSel.length) form.append("Brand", JSON.stringify(brandsSel.map(b => b.id)));
+    if (teamSel.length) form.append("Team", JSON.stringify(teamSel.map(u => u.id)));
 
-    // Work_Body (multi)
-    if (workFiles.length) {
-      const up = await uploadFilesToXano(workFiles);
-      payload.Work_Body = up.filter(x => x?.url).map(x => ({ url: x.url }));
-    }
+    if (v.KPI) form.append("KPI", JSON.stringify(parseKPI(v.KPI)));
 
-    // 2) Pulisci chiavi vuote
-    Object.keys(payload).forEach(k => {
-      const v = payload[k];
-      const emptyArr = Array.isArray(v) && v.length === 0;
-      if (v === undefined || v === "" || emptyArr) delete payload[k];
-    });
+    if (coverFile) form.append("Cover", coverFile);
+    if (heroFile) form.append("Hero", heroFile);
+    workFiles.forEach(f => form.append("Work_Body[]", f));
 
-    // 3) POST crea portfolio
-    const created = await request<any>("/portfolio", {
+    const res = await fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/portfolio", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: form,
     });
 
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.error("[/portfolio] POST failed", res.status, errText);
+      alert(`Create failed: ${res.status}`);
+      return;
+    }
+
+    const created = await res.json().catch(() => ({} as any));
     const newId = created?.id ?? created?.portfolio_id ?? created?.data?.id;
-    if (newId != null) {
-      nav(`/case/${encodeURIComponent(String(newId))}`);
+    if (newId) {
+      window.location.href = `/case/${encodeURIComponent(String(newId))}`;
     } else {
-      alert("Creato, ma non ho ricevuto l'ID. Controlla la risposta Xano in console.");
-      console.log("Xano create response:", created);
+      console.log("Create OK but no id in response", created);
+      alert("Created, but missing ID in response.");
     }
   }
 
