@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { request, uploadFileToXano, uploadFilesToXano } from "@/services/xano";
 import { useNavigate } from "react-router-dom";
+import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
 
 type BrandLite = { id: number; BrandName: string; LogoBrand?: { url?: string } };
 type UserLite  = { id: number; handle?: string; name?: string; avatar?: { url?: string } };
@@ -54,7 +55,7 @@ const PortfolioNewPage: React.FC = () => {
   // --- State per Upload ---
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [heroFile, setHeroFile]   = useState<File | null>(null);
-  const [workFiles, setWorkFiles] = useState<File[]>([]);
+  const [workFiles, setWorkFiles] = useState<WBFile[]>([]);
 
   // --- Brand search (multi) ---
   const [brandQuery, setBrandQuery] = useState("");
@@ -97,7 +98,6 @@ const PortfolioNewPage: React.FC = () => {
   // --- Helpers ---
   const previewCover = useMemo(() => (coverFile ? URL.createObjectURL(coverFile) : null), [coverFile]);
   const previewHero  = useMemo(() => (heroFile ? URL.createObjectURL(heroFile) : null), [heroFile]);
-  const previewWorks = useMemo(() => workFiles.map(f => ({ name: f.name, url: URL.createObjectURL(f) })), [workFiles]);
 
   function parseKPI(txt?: string) {
     const rows = (txt || "").split("\n").map(s => s.trim()).filter(Boolean);
@@ -278,46 +278,69 @@ const PortfolioNewPage: React.FC = () => {
           </div>
 
           {/* --- Uploaders --- */}
+          {/* Cover upload */}
           <div>
             <label className={label}>Cover (immagine singola)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-              className={input}
-            />
-            {previewCover && <img src={previewCover} alt="cover" className="mt-2 w-full rounded-xl border" />}
+            <div className="mt-2">
+              <label
+                htmlFor="cover-upload"
+                className="group relative flex h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-400 dark:border-neutral-700 hover:border-pink-500 transition-colors"
+              >
+                {previewCover ? (
+                  <img src={previewCover} alt="cover" className="absolute inset-0 h-full w-full object-cover rounded-xl" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-500 text-white group-hover:bg-pink-600 transition-colors">
+                      <span className="text-2xl font-bold leading-none">+</span>
+                    </div>
+                    <span className="mt-2 text-xs opacity-80">Aggiungi Cover</span>
+                  </div>
+                )}
+              </label>
+              <input
+                id="cover-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+            </div>
           </div>
 
+          {/* Hero upload */}
           <div>
             <label className={label}>Hero (immagine singola)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setHeroFile(e.target.files?.[0] || null)}
-              className={input}
-            />
-            {previewHero && <img src={previewHero} alt="hero" className="mt-2 w-full rounded-xl border" />}
+            <div className="mt-2">
+              <label
+                htmlFor="hero-upload"
+                className="group relative flex h-36 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-400 dark:border-neutral-700 hover:border-pink-500 transition-colors"
+              >
+                {previewHero ? (
+                  <img src={previewHero} alt="hero" className="absolute inset-0 h-full w-full object-cover rounded-xl" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-pink-500 text-white group-hover:bg-pink-600 transition-colors">
+                      <span className="text-2xl font-bold leading-none">+</span>
+                    </div>
+                    <span className="mt-2 text-xs opacity-80">Aggiungi Hero</span>
+                  </div>
+                )}
+              </label>
+              <input
+                id="hero-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setHeroFile(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+            </div>
           </div>
 
           <div>
             <label className={label}>Work Body (più immagini)</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => setWorkFiles(Array.from(e.target.files || []))}
-              className={input}
-            />
-            {!!previewWorks.length && (
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {previewWorks.map((p, i) => (
-                  <div key={i} className="aspect-square overflow-hidden rounded-lg border">
-                    <img src={p.url} className="h-full w-full object-cover" alt={p.name} />
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="mt-2">
+              <WorkBodyUploader files={workFiles} onChange={setWorkFiles} max={12} />
+            </div>
           </div>
 
           {/* KPI facoltativa */}
