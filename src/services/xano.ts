@@ -63,6 +63,20 @@ if (!API) {
   throw new Error("Missing Xano API URL");
 }
 
+export function getAuthToken(): string {
+  try {
+    if (typeof window !== "undefined") {
+      return (
+        localStorage.getItem("user_turbo_id_token") ||
+        localStorage.getItem("user_turbo_token") ||
+        localStorage.getItem("auth_token") ||
+        ""
+      );
+    }
+  } catch {}
+  return "";
+}
+
 export async function request<T>(path: string, options: RequestInit = {}) {
   // Build headers dynamically so we attach the logged-in auth token when available
   const headers = new Headers({
