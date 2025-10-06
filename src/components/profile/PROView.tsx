@@ -65,14 +65,6 @@ export default function PROView() {
         <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
           <Briefcase className="w-3 h-3" /> Editorial / Marketing Projects
         </div>
-        <div className="mb-3 mt-2 flex justify-end">
-          <button
-            onClick={() => navigate("/portfolio/new")}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold bg-black text-white dark:bg-white dark:text-black"
-          >
-            + Add Project
-          </button>
-        </div>
         {pfLoading && (
           <div className="grid gap-4">
             {[1, 2].map((i) => (
