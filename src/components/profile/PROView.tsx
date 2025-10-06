@@ -90,14 +90,6 @@ export default function PROView() {
         )}
         {!pfLoading && !pfErr && (
           <>
-            <div className="mb-3 flex justify-end">
-              <button
-                onClick={() => navigate("/portfolio/new")}
-                className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold bg-black text-white dark:bg-white dark:text-black"
-              >
-                + Add Project
-              </button>
-            </div>
             {Array.isArray(portfolio) && portfolio.length ? (
               <div className="grid gap-4">
                 {portfolio.map((p) => {
