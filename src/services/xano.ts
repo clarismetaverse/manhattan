@@ -57,24 +57,34 @@ export interface XanoError {
 }
 
 const API = (import.meta.env.VITE_XANO_API || "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3").replace(/\/$/, "");
+const UPLOAD_PATH = import.meta.env.VITE_XANO_UPLOAD_PATH || "/upload";
+
+function authHeadersForUpload(): Headers {
+  const headers = new Headers();
+
+  if (!headers.has("Authorization")) {
+    let token = "";
+    try {
+      if (typeof window !== "undefined") {
+        token = localStorage.getItem("auth_token") || "";
+      }
+    } catch {
+      // ignore errors accessing localStorage
+    }
+    if (!token) {
+      token = import.meta.env.VITE_XANO_TOKEN || "";
+    }
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
+
+  return headers;
+}
 
 if (!API) {
   console.error("⚠️ Xano API URL missing");
   throw new Error("Missing Xano API URL");
-}
-
-export function getAuthToken(): string {
-  try {
-    if (typeof window !== "undefined") {
-      return (
-        localStorage.getItem("user_turbo_id_token") ||
-        localStorage.getItem("user_turbo_token") ||
-        localStorage.getItem("auth_token") ||
-        ""
-      );
-    }
-  } catch {}
-  return "";
 }
 
 export async function request<T>(path: string, options: RequestInit = {}) {
@@ -136,4 +146,28 @@ export function fetchUserTurbo() {
 export async function fetchPortfolio() {
   const data = await request<PortfolioItem[] | PortfolioItem>("/portfolio");
   return Array.isArray(data) ? data : data ? [data as PortfolioItem] : [];
+}
+
+export async function uploadFileToXano(file: File) {
+  const url = `${API}${UPLOAD_PATH}`;
+  const form = new FormData();
+  form.append("file", file);
+
+  const headers = authHeadersForUpload();
+
+  const res = await fetch(url, { method: "POST", body: form, headers });
+  if (!res.ok) {
+    const msg = await res.text().catch(() => res.statusText);
+    throw Object.assign(new Error(`Upload error ${res.status}: ${msg}`), { status: res.status });
+  }
+  return res.json() as Promise<{ url: string } & Record<string, any>>;
+}
+
+export async function uploadFilesToXano(files: File[]) {
+  const results = [];
+  for (const f of files) {
+    const r = await uploadFileToXano(f);
+    results.push(r);
+  }
+  return results;
 }
