@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { getAuthToken, request } from "@/services/xano";
+import { useNavigate } from "react-router-dom";
+import { request } from "@/services/xano";
 import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
 
 type BrandLite = { id: number; BrandName: string; LogoBrand?: { url?: string } };
@@ -9,8 +10,9 @@ type UserLite  = { id: number; handle?: string; name?: string; avatar?: { url?: 
 type FormData = {
   Name: string;
   Deliverables: string;             // "Reel", "Stories", etc.
-  Shooting_Location: string;        // id o testo
+  Shooting_Location: string;        // id numerico
   KPI?: string;                     // facoltativa — "Key: Value" per riga
+  About?: string;
 };
 
 const input = "w-full rounded-xl border px-3 py-2 text-sm bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 placeholder:text-neutral-400";
@@ -49,6 +51,8 @@ function parseKPI(text?: string) {
 }
 
 const PortfolioNewPage: React.FC = () => {
+
+  const navigate = useNavigate();
 
   // --- RHF base (campi testuali) ---
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
@@ -109,31 +113,27 @@ const PortfolioNewPage: React.FC = () => {
 
   // --- Submit ---
   async function onSubmit(v: FormData) {
-    const token = getAuthToken();
+    const token =
+      localStorage.getItem("user_turbo_id_token") ||
+      localStorage.getItem("user_turbo_token") ||
+      localStorage.getItem("auth_token") || "";
 
     const form = new FormData();
 
     if (v.Name) form.append("Name", v.Name.trim());
     if (v.Deliverables) form.append("Deliverables", v.Deliverables);
     if (v.Shooting_Location) {
-      const raw = v.Shooting_Location.trim();
-      if (raw) {
-        const loc = Number(raw);
-        form.append(
-          "Shooting_Location",
-          !Number.isNaN(loc) && loc > 0 ? String(loc) : raw
-        );
-      }
+      const loc = Number(v.Shooting_Location);
+      if (!Number.isNaN(loc)) form.append("Shooting_Location", String(loc));
     }
-
     if (brandsSel.length) form.append("Brand", JSON.stringify(brandsSel.map(b => b.id)));
     if (teamSel.length) form.append("Team", JSON.stringify(teamSel.map(u => u.id)));
-
     if (v.KPI) form.append("KPI", JSON.stringify(parseKPI(v.KPI)));
+    if (v.About) form.append("About", v.About);
 
-    if (coverFile) form.append("Cover", coverFile);
-    if (heroFile) form.append("Hero", heroFile);
-    workFiles.forEach(f => form.append("Work_Body[]", f));
+    if (coverFile) form.append("CoverF", coverFile);
+    if (heroFile) form.append("HeroF", heroFile);
+    workFiles.forEach(f => form.append("Work_BodyF[]", f));
 
     const res = await fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/portfolio", {
       method: "POST",
@@ -142,8 +142,8 @@ const PortfolioNewPage: React.FC = () => {
     });
 
     if (!res.ok) {
-      const errText = await res.text().catch(() => "");
-      console.error("[/portfolio] POST failed", res.status, errText);
+      const txt = await res.text().catch(() => "");
+      console.error("Create portfolio failed", res.status, txt);
       alert(`Create failed: ${res.status}`);
       return;
     }
@@ -151,10 +151,10 @@ const PortfolioNewPage: React.FC = () => {
     const created = await res.json().catch(() => ({} as any));
     const newId = created?.id ?? created?.portfolio_id ?? created?.data?.id;
     if (newId) {
-      window.location.href = `/case/${encodeURIComponent(String(newId))}`;
+      navigate(`/case/${encodeURIComponent(String(newId))}`);
     } else {
-      console.log("Create OK but no id in response", created);
-      alert("Created, but missing ID in response.");
+      console.log("Created without id", created);
+      alert("Created, but missing ID.");
     }
   }
 
@@ -276,7 +276,7 @@ const PortfolioNewPage: React.FC = () => {
           {/* --- Uploaders --- */}
           {/* Cover upload */}
           <div>
-            <label className={label}>Cover (immagine singola)</label>
+            <label className={label}>Cover (file → inviato come CoverF)</label>
             <div className="mt-2">
               <label
                 htmlFor="cover-upload"
@@ -305,7 +305,7 @@ const PortfolioNewPage: React.FC = () => {
 
           {/* Hero upload */}
           <div>
-            <label className={label}>Hero (immagine singola)</label>
+            <label className={label}>Hero (file → inviato come HeroF)</label>
             <div className="mt-2">
               <label
                 htmlFor="hero-upload"
@@ -333,7 +333,7 @@ const PortfolioNewPage: React.FC = () => {
           </div>
 
           <div>
-            <label className={label}>Work Body (più immagini)</label>
+            <label className={label}>Work Body (più file → inviato come Work_BodyF[])</label>
             <div className="mt-2">
               <WorkBodyUploader files={workFiles} onChange={setWorkFiles} max={12} />
             </div>
