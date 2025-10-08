@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom";
 import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
 import BrandSearchSelect from "@/components/BrandSearchSelect";
 import TeamSearchSelect, { Teammate } from "@/components/TeamSearchSelect";
+import LocationSearchSelect from "@/components/LocationSearchSelect";
 import type { BrandLite } from "@/services/brands";
+import type { LocationLite } from "@/services/locations";
 
 type FormData = {
   Name: string;
   Deliverables: string;             // "Reel", "Stories", etc.
-  Shooting_Location: string;        // id numerico
   KPI?: string;                     // facoltativa — "Key: Value" per riga
   About?: string;
 };
@@ -36,7 +37,6 @@ const PortfolioNewPage: React.FC = () => {
     defaultValues: {
       Name: "",
       Deliverables: "Reel",
-      Shooting_Location: "",
       KPI: "",
     }
   });
@@ -48,6 +48,9 @@ const PortfolioNewPage: React.FC = () => {
 
   // --- Brand search (multi) ---
   const [brandsSel, setBrandsSel]   = useState<BrandLite[]>([]);
+
+  // --- Location search (single) ---
+  const [shootLoc, setShootLoc] = useState<LocationLite | null>(null);
 
   // --- Team search (multi) ---
   const [teamSel, setTeamSel] = useState<Teammate[]>([]);
@@ -67,9 +70,9 @@ const PortfolioNewPage: React.FC = () => {
 
     if (v.Name) form.append("Name", v.Name.trim());
     if (v.Deliverables) form.append("Deliverables", v.Deliverables);
-    if (v.Shooting_Location) {
-      const loc = Number(v.Shooting_Location);
-      if (!Number.isNaN(loc)) form.append("Shooting_Location", String(loc));
+    if (shootLoc?.id != null) {
+      const n = Number(shootLoc.id);
+      form.append("Shooting_Location", Number.isFinite(n) ? String(n) : String(shootLoc.id));
     }
     if (brandsSel.length) form.append("Brand", JSON.stringify(brandsSel.map(b => b.id)));
     if (teamSel.length) {
@@ -139,8 +142,14 @@ const PortfolioNewPage: React.FC = () => {
           </div>
 
           <div>
-            <label className={label}>Shooting Location (id o testo)</label>
-            <input {...register("Shooting_Location")} className={input} placeholder="421 o 'Los Angeles, CA'" />
+            <label className={label}>Shooting location</label>
+            <div className="mt-2">
+              <LocationSearchSelect
+                value={shootLoc}
+                onChangeSingle={setShootLoc}
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
 
           {/* --- Brand multi-search --- */}
