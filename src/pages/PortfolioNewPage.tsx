@@ -1,12 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import { request } from "@/services/xano";
 import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
 import BrandSearchSelect from "@/components/BrandSearchSelect";
+import TeamSearchSelect, { Teammate } from "@/components/TeamSearchSelect";
 import type { BrandLite } from "@/services/brands";
-
-type UserLite  = { id: number; handle?: string; name?: string; avatar?: { url?: string } };
 
 type FormData = {
   Name: string;
@@ -18,27 +16,6 @@ type FormData = {
 
 const input = "w-full rounded-xl border px-3 py-2 text-sm bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 placeholder:text-neutral-400";
 const label = "text-xs font-medium text-neutral-700 dark:text-neutral-200";
-
-// Endpoints di ricerca (aggiusta se hai path diversi)
-const USER_SEARCH_PATH  = import.meta.env.VITE_XANO_USER_SEARCH  || "/users/search";
-
-function useDebounced<T>(value: T, delay = 300) {
-  const [v, setV] = useState(value);
-  React.useEffect(() => {
-    const id = setTimeout(() => setV(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return v;
-}
-
-const Chip: React.FC<React.PropsWithChildren<{ onRemove?: () => void }>> = ({ children, onRemove }) => (
-  <span className="inline-flex items-center gap-1 rounded-full bg-neutral-200 dark:bg-neutral-800 px-2 py-1 text-xs">
-    {children}
-    {onRemove && (
-      <button type="button" onClick={onRemove} className="ml-1 text-[11px] opacity-70 hover:opacity-100">✕</button>
-    )}
-  </span>
-);
 
 function parseKPI(text?: string) {
   const rows = (text || "").split("\n").map(s => s.trim()).filter(Boolean);
@@ -73,23 +50,7 @@ const PortfolioNewPage: React.FC = () => {
   const [brandsSel, setBrandsSel]   = useState<BrandLite[]>([]);
 
   // --- Team search (multi) ---
-  const [teamQuery, setTeamQuery] = useState("");
-  const debTeam = useDebounced(teamQuery, 300);
-  const [teamOpts, setTeamOpts]   = useState<UserLite[]>([]);
-  const [teamSel, setTeamSel]     = useState<UserLite[]>([]);
-
-  React.useEffect(() => {
-    (async () => {
-      if (!debTeam) { setTeamOpts([]); return; }
-      try {
-        const res = await request<UserLite[] | { items: UserLite[] }>(`${USER_SEARCH_PATH}?q=${encodeURIComponent(debTeam)}`);
-        const list = Array.isArray(res) ? res : (res as any)?.items || [];
-        setTeamOpts(list);
-      } catch {
-        setTeamOpts([]);
-      }
-    })();
-  }, [debTeam]);
+  const [teamSel, setTeamSel] = useState<Teammate[]>([]);
 
   // --- Helpers ---
   const previewCover = useMemo(() => (coverFile ? URL.createObjectURL(coverFile) : null), [coverFile]);
@@ -111,7 +72,13 @@ const PortfolioNewPage: React.FC = () => {
       if (!Number.isNaN(loc)) form.append("Shooting_Location", String(loc));
     }
     if (brandsSel.length) form.append("Brand", JSON.stringify(brandsSel.map(b => b.id)));
-    if (teamSel.length) form.append("Team", JSON.stringify(teamSel.map(u => u.id)));
+    if (teamSel.length) {
+      form.append("Team", JSON.stringify(teamSel.map(u => u.id)));
+      form.append(
+        "TeamRoles",
+        JSON.stringify(teamSel.map(t => ({ id: t.id, role: t.role })))
+      );
+    }
     if (v.KPI) form.append("KPI", JSON.stringify(parseKPI(v.KPI)));
     if (v.About) form.append("About", v.About);
 
@@ -187,37 +154,12 @@ const PortfolioNewPage: React.FC = () => {
           {/* --- Team multi-search --- */}
           <div>
             <label className={label}>Team</label>
-            <div className="flex gap-2 flex-wrap mb-2">
-              {teamSel.map(u => (
-                <Chip key={u.id} onRemove={() => setTeamSel(prev => prev.filter(x => x.id !== u.id))}>
-                  {u.handle || u.name || `User #${u.id}`}
-                </Chip>
-              ))}
+            <div className="mt-2">
+              <TeamSearchSelect value={teamSel} onChange={setTeamSel} disabled={isSubmitting} />
             </div>
-            <input
-              value={teamQuery}
-              onChange={(e) => setTeamQuery(e.target.value)}
-              className={input}
-              placeholder="Cerca utente..."
-            />
-            {!!teamOpts.length && (
-              <div className="mt-2 rounded-xl border bg-white dark:bg-neutral-900 max-h-48 overflow-auto">
-                {teamOpts.map(o => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => {
-                      if (!teamSel.find(u => u.id === o.id)) setTeamSel(prev => [...prev, o]);
-                      setTeamQuery("");
-                      setTeamOpts([]);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  >
-                    {o.handle || o.name || `User #${o.id}`}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+              Seleziona utenti e imposta il ruolo.
+            </div>
           </div>
 
           {/* --- Uploaders --- */}
