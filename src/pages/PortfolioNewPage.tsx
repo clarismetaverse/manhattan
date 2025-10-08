@@ -3,8 +3,9 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { request } from "@/services/xano";
 import WorkBodyUploader, { WBFile } from "@/components/WorkBodyUploader";
+import BrandSearchSelect from "@/components/BrandSearchSelect";
+import type { BrandLite } from "@/services/brands";
 
-type BrandLite = { id: number; BrandName: string; LogoBrand?: { url?: string } };
 type UserLite  = { id: number; handle?: string; name?: string; avatar?: { url?: string } };
 
 type FormData = {
@@ -19,7 +20,6 @@ const input = "w-full rounded-xl border px-3 py-2 text-sm bg-white dark:bg-neutr
 const label = "text-xs font-medium text-neutral-700 dark:text-neutral-200";
 
 // Endpoints di ricerca (aggiusta se hai path diversi)
-const BRAND_SEARCH_PATH = import.meta.env.VITE_XANO_BRAND_SEARCH || "/brands/search";
 const USER_SEARCH_PATH  = import.meta.env.VITE_XANO_USER_SEARCH  || "/users/search";
 
 function useDebounced<T>(value: T, delay = 300) {
@@ -70,23 +70,7 @@ const PortfolioNewPage: React.FC = () => {
   const [workFiles, setWorkFiles] = useState<WBFile[]>([]);
 
   // --- Brand search (multi) ---
-  const [brandQuery, setBrandQuery] = useState("");
-  const debBrand = useDebounced(brandQuery, 300);
-  const [brandOpts, setBrandOpts]   = useState<BrandLite[]>([]);
   const [brandsSel, setBrandsSel]   = useState<BrandLite[]>([]);
-
-  React.useEffect(() => {
-    (async () => {
-      if (!debBrand) { setBrandOpts([]); return; }
-      try {
-        const res = await request<BrandLite[] | { items: BrandLite[] }>(`${BRAND_SEARCH_PATH}?q=${encodeURIComponent(debBrand)}`);
-        const list = Array.isArray(res) ? res : (res as any)?.items || [];
-        setBrandOpts(list);
-      } catch {
-        setBrandOpts([]);
-      }
-    })();
-  }, [debBrand]);
 
   // --- Team search (multi) ---
   const [teamQuery, setTeamQuery] = useState("");
@@ -195,45 +179,8 @@ const PortfolioNewPage: React.FC = () => {
           {/* --- Brand multi-search --- */}
           <div>
             <label className={label}>Brands</label>
-            <div className="flex gap-2 flex-wrap mb-2">
-              {brandsSel.map(b => (
-                <Chip key={b.id} onRemove={() => setBrandsSel(prev => prev.filter(x => x.id !== b.id))}>
-                  {b.BrandName}
-                </Chip>
-              ))}
-            </div>
-            <input
-              value={brandQuery}
-              onChange={(e) => setBrandQuery(e.target.value)}
-              className={input}
-              placeholder="Cerca brand..."
-            />
-            {!!brandOpts.length && (
-              <div className="mt-2 rounded-xl border bg-white dark:bg-neutral-900 max-h-48 overflow-auto">
-                {brandOpts.map(o => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => {
-                      if (!brandsSel.find(b => b.id === o.id)) setBrandsSel(prev => [...prev, o]);
-                      setBrandQuery("");
-                      setBrandOpts([]);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  >
-                    {o.BrandName}
-                  </button>
-                ))}
-              </div>
-            )}
             <div className="mt-2">
-              <button
-                type="button"
-                onClick={() => alert("Create Brand: coming soon")}
-                className="text-xs underline opacity-80"
-              >
-                + Create Brand (coming soon)
-              </button>
+              <BrandSearchSelect value={brandsSel} onChange={setBrandsSel} disabled={isSubmitting} />
             </div>
           </div>
 
