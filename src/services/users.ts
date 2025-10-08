@@ -10,37 +10,57 @@ function getToken() {
 }
 
 export type UserLite = {
-  id: number;
+  id: string | number;
   name?: string | null;
   handle?: string | null;
   avatar?: { url?: string } | null;
 };
 
-export async function searchUsers(q: string, limit = 8): Promise<UserLite[]> {
-  const url = new URL(API + "/user_turbo");
-  if (q) url.searchParams.set("q", q);
-  url.searchParams.set("limit", String(limit));
-
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${getToken()}` },
-  });
-  if (!res.ok) throw new Error(await res.text());
-  const data = await res.json();
-
-  const list: UserLite[] = Array.isArray(data)
-    ? data
-    : Array.isArray((data as any).items)
-    ? (data as any).items
-    : [];
-
-  if (q) {
-    const ql = q.toLowerCase();
-    return list
-      .filter(u =>
-        (u.name || "").toLowerCase().includes(ql) ||
-        (u.handle || "").toLowerCase().includes(ql)
-      )
-      .slice(0, limit);
+function igHandle(url?: string | null) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    const seg = u.pathname.split("/").filter(Boolean)[0];
+    return seg ? `@${seg}` : null;
+  } catch {
+    return null;
   }
-  return list.slice(0, limit);
+}
+
+function makeSyntheticId(item: any, index: number) {
+  return (
+    item?.id ??
+    item?.IG_account ??
+    item?.Tiktok_account ??
+    `${(item?.name || "user").toLowerCase()}-${index}`
+  );
+}
+
+export async function searchUsers(q: string): Promise<UserLite[]> {
+  const term = (q || "").trim();
+  if (term.length < 2) return [];
+
+  const res = await fetch(`${API}/user_turbo`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${getToken()}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ q: term }),
+  });
+
+  if (!res.ok) {
+    const msg = await res.text().catch(() => res.statusText);
+    throw new Error(msg || "Xano user search failed");
+  }
+
+  const data = (await res.json()) as any[];
+
+  return (Array.isArray(data) ? data : []).map((item, i) => ({
+    id: makeSyntheticId(item, i),
+    name: item?.name ?? null,
+    handle: igHandle(item?.IG_account),
+    avatar: item?.Profile_pic ? { url: item.Profile_pic.url } : null,
+  }));
 }
