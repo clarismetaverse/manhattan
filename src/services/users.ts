@@ -40,13 +40,18 @@ export async function searchUsers(q: string): Promise<UserLite[]> {
   const term = (q || "").trim();
   if (term.length < 2) return [];
 
-  const res = await fetch(`${API}/user_turbo`, {
+  const token = getToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API}/search/user_turbo`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${getToken()}`,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
+    headers,
     body: JSON.stringify({ q: term }),
   });
 
