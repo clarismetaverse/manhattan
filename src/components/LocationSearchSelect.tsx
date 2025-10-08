@@ -22,6 +22,7 @@ export default function LocationSearchSelect(props: Props) {
   const multi = (props as any).multi === true;
   const disabled = Boolean((props as any).disabled);
 
+  const DEBOUNCE_MS = 220;
   const [q, setQ] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
@@ -41,25 +42,52 @@ export default function LocationSearchSelect(props: Props) {
     else (props as any).onChangeSingle(next[0] ?? null);
   };
 
-  // debounce search
   React.useEffect(() => {
+    console.debug("[LocationSearchSelect] debounce for q:", q);
     let alive = true;
     const h = setTimeout(async () => {
       try {
-        if (!q || disabled) { setResults([]); setLoading(false); return; }
+        if (!alive) return;
+        if (!q || disabled) {
+          console.debug("[LocationSearchSelect] skip search (empty/disabled)", { q, disabled });
+          setResults([]);
+          setLoading(false);
+          return;
+        }
         setLoading(true);
+        console.debug("[LocationSearchSelect] calling searchLocations:", q);
         const data = await searchLocations(q);
         if (!alive) return;
-        const selectedIds = new Set(selectedList.map(s => s.id));
-        setResults(data.filter(d => !selectedIds.has(d.id)));
-      } catch {
+        const selectedIds = new Set(selectedList.map((s) => s.id));
+        const filtered = data.filter((d) => !selectedIds.has(d.id));
+        console.debug("[LocationSearchSelect] results:", filtered.length);
+        setResults(filtered);
+      } catch (e) {
+        console.error("[LocationSearchSelect] search error:", e);
+        if (!alive) return;
         setResults([]);
       } finally {
+        if (!alive) return;
         setLoading(false);
       }
-    }, 220);
-    return () => { alive = false; clearTimeout(h); };
+    }, DEBOUNCE_MS);
+
+    return () => {
+      alive = false;
+      clearTimeout(h);
+    };
   }, [q, JSON.stringify(selectedList), disabled]);
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const probe = await searchLocations("mil");
+        console.debug("[LocationSearchSelect] smoke test ok:", probe.length);
+      } catch (e) {
+        console.error("[LocationSearchSelect] smoke test failed:", e);
+      }
+    })();
+  }, []);
 
   // close on outside click
   React.useEffect(() => {
@@ -140,7 +168,12 @@ export default function LocationSearchSelect(props: Props) {
         <input
           ref={inputRef}
           value={q}
-          onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+          onChange={(e) => {
+            const v = e.target.value;
+            console.debug("[LocationSearchSelect] input:", v);
+            setQ(v);
+            setOpen(true);
+          }}
           onKeyDown={onKeyDown}
           placeholder={(props as any).placeholder || "Search location…"}
           disabled={disabled}

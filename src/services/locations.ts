@@ -9,63 +9,53 @@ function getToken() {
   );
 }
 
-// Minimal shape the selector needs
 export type LocationLite = {
   id: number | string;
-  name: string;       // e.g., "Los Angeles"
-  region?: string | null;   // e.g., "CA"
-  country?: string | null;  // e.g., "USA" or "Italy"
+  name: string;
+  region?: string | null;
+  country?: string | null;
 };
 
-// Try POST /search/location { q }, fallback to GET /location?q=
-export async function searchLocations(q: string, limit = 8): Promise<LocationLite[]> {
+export async function searchLocations(q: string): Promise<LocationLite[]> {
   const term = (q || "").trim();
-  if (term.length < 2) return [];
+  if (term.length < 2) {
+    console.debug("[searchLocations] skip (too short):", term);
+    return [];
+  }
 
+  const url = `${API}/search/location`;
   const token = getToken();
+  console.debug("[searchLocations] firing →", { url, term, hasToken: !!token });
 
-  // Preferred: POST /search/location
   try {
-    const res = await fetch(`${API}/search/location`, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ q: term, limit }),
+      body: JSON.stringify({ q: term }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      const arr = Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []);
-      return arr.map((x: any, i: number) => ({
-        id: x?.id ?? `${(x?.name || "loc").toLowerCase()}-${i}`,
-        name: String(x?.name ?? x?.city ?? x?.label ?? ""),
-        region: x?.region ?? x?.state ?? null,
-        country: x?.country ?? null,
-      })).filter(l => l.name);
-    }
-  } catch (_) { /* fall through to GET */ }
 
-  // Fallback: GET /location?q=&limit=
-  const url = new URL(`${API}/location`);
-  url.searchParams.set("q", term);
-  url.searchParams.set("limit", String(limit));
-  const res2 = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-  });
-  if (!res2.ok) throw new Error(await res2.text().catch(() => res2.statusText));
-  const data2 = await res2.json();
-  const list = Array.isArray(data2) ? data2 : (Array.isArray(data2?.items) ? data2.items : []);
-  // client-side narrowing if backend ignores ?q
-  const narrowed = list.filter((x: any) => {
-    const s = (x?.name || x?.city || x?.label || "").toLowerCase();
-    return s.includes(term.toLowerCase());
-  });
-  return narrowed.slice(0, limit).map((x: any, i: number) => ({
-    id: x?.id ?? `${(x?.name || "loc").toLowerCase()}-${i}`,
-    name: String(x?.name ?? x?.city ?? x?.label ?? ""),
-    region: x?.region ?? x?.state ?? null,
-    country: x?.country ?? null,
-  })).filter(l => l.name);
+    console.debug("[searchLocations] status:", res.status);
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText);
+      throw new Error(`${res.status} ${text}`);
+    }
+
+    const data = await res.json();
+    console.debug("[searchLocations] ok, items:", Array.isArray(data) ? data.length : data);
+
+    return (Array.isArray(data) ? data : []).map((x: any, i: number) => ({
+      id: x?.id ?? `${(x?.name || "loc").toLowerCase()}-${i}`,
+      name: String(x?.name ?? x?.city ?? x?.label ?? ""),
+      region: x?.region ?? x?.state ?? null,
+      country: x?.country ?? null,
+    })).filter((l) => l.name);
+  } catch (err) {
+    console.error("[searchLocations] ERROR:", err);
+    return [];
+  }
 }
