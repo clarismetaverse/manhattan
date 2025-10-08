@@ -1,18 +1,18 @@
 import * as React from "react";
-import { searchLocations, type LocationLite } from "@/services/locations";
+import { searchPlaces, type PlaceLite } from "@/services/locations";
 
 type Props =
   | {
       multi?: false;
-      value: LocationLite | null;
-      onChangeSingle: (loc: LocationLite | null) => void;
+      value: PlaceLite | null;
+      onChangeSingle: (loc: PlaceLite | null) => void;
       placeholder?: string;
       disabled?: boolean;
     }
   | {
       multi: true;
-      value: LocationLite[];
-      onChange: (next: LocationLite[]) => void;
+      value: PlaceLite[];
+      onChange: (next: PlaceLite[]) => void;
       placeholder?: string;
       disabled?: boolean;
       max?: number;
@@ -26,18 +26,18 @@ export default function LocationSearchSelect(props: Props) {
   const [q, setQ] = React.useState("");
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
-  const [results, setResults] = React.useState<LocationLite[]>([]);
+  const [results, setResults] = React.useState<PlaceLite[]>([]);
   const [active, setActive] = React.useState(0);
   const boxRef = React.useRef<HTMLDivElement | null>(null);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const selectedList: LocationLite[] = multi
+  const selectedList: PlaceLite[] = multi
     ? (props as any).value
     : (props as any).value
     ? [(props as any).value]
     : [];
 
-  const setSelectedList = (next: LocationLite[]) => {
+  const setSelectedList = (next: PlaceLite[]) => {
     if (multi) (props as any).onChange(next);
     else (props as any).onChangeSingle(next[0] ?? null);
   };
@@ -55,8 +55,8 @@ export default function LocationSearchSelect(props: Props) {
           return;
         }
         setLoading(true);
-        console.debug("[LocationSearchSelect] calling searchLocations:", q);
-        const data = await searchLocations(q);
+        console.debug("[LocationSearchSelect] calling searchPlaces:", q);
+        const data = await searchPlaces(q);
         if (!alive) return;
         const selectedIds = new Set(selectedList.map((s) => s.id));
         const filtered = data.filter((d) => !selectedIds.has(d.id));
@@ -81,7 +81,7 @@ export default function LocationSearchSelect(props: Props) {
   React.useEffect(() => {
     (async () => {
       try {
-        const probe = await searchLocations("mil");
+        const probe = await searchPlaces("mil");
         console.debug("[LocationSearchSelect] smoke test ok:", probe.length);
       } catch (e) {
         console.error("[LocationSearchSelect] smoke test failed:", e);
@@ -99,7 +99,7 @@ export default function LocationSearchSelect(props: Props) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
-  const add = (loc: LocationLite) => {
+  const add = (loc: PlaceLite) => {
     if (disabled) return;
     if (multi) {
       const max = (props as any).max ?? 8;
@@ -147,11 +147,14 @@ export default function LocationSearchSelect(props: Props) {
       >
         {selectedList.map((l, i) => (
           <span key={`${l.id}`} className="inline-flex items-center gap-2 rounded-full bg-neutral-800 px-2 py-1">
-            <span className="h-5 w-5 grid place-items-center text-[11px]">📍</span>
-            <span className="text-sm">
-              {l.name}
-              {l.region ? `, ${l.region}` : ""}{l.country ? `, ${l.country}` : ""}
+            <span className="h-6 w-6 overflow-hidden rounded bg-neutral-700 text-[11px]">
+              {l.thumb ? (
+                <img src={l.thumb} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center">📍</span>
+              )}
             </span>
+            <span className="max-w-[160px] truncate text-sm">{l.name}</span>
             {multi && !disabled && (
               <button
                 type="button"
@@ -196,11 +199,15 @@ export default function LocationSearchSelect(props: Props) {
               onClick={() => add(l)}
               className={`w-full px-3 py-2 text-left flex items-center gap-2 hover:bg-neutral-800 ${i===active ? "bg-neutral-800" : ""}`}
             >
-              <span className="h-7 w-7 grid place-items-center">📍</span>
+              <span className="h-7 w-7 overflow-hidden rounded bg-neutral-800">
+                {l.thumb ? (
+                  <img src={l.thumb} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center text-sm">📍</span>
+                )}
+              </span>
               <div className="min-w-0">
-                <div className="truncate">
-                  {l.name}{l.region ? `, ${l.region}` : ""}{l.country ? `, ${l.country}` : ""}
-                </div>
+                <div className="truncate text-sm">{l.name}</div>
               </div>
             </button>
           ))}

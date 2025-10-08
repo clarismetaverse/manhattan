@@ -6,7 +6,7 @@ import BrandSearchSelect from "@/components/BrandSearchSelect";
 import TeamSearchSelect, { Teammate } from "@/components/TeamSearchSelect";
 import LocationSearchSelect from "@/components/LocationSearchSelect";
 import type { BrandLite } from "@/services/brands";
-import type { LocationLite } from "@/services/locations";
+import type { PlaceLite } from "@/services/locations";
 
 type FormData = {
   Name: string;
@@ -50,7 +50,7 @@ const PortfolioNewPage: React.FC = () => {
   const [brandsSel, setBrandsSel]   = useState<BrandLite[]>([]);
 
   // --- Location search (single) ---
-  const [shootLoc, setShootLoc] = useState<LocationLite | null>(null);
+  const [shootLoc, setShootLoc] = useState<PlaceLite | null>(null);
 
   // --- Team search (multi) ---
   const [teamSel, setTeamSel] = useState<Teammate[]>([]);
