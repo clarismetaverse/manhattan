@@ -9,23 +9,22 @@ function getToken() {
   );
 }
 
-export type LocationLite = {
+export type PlaceLite = {
   id: number | string;
   name: string;
-  region?: string | null;
-  country?: string | null;
+  thumb?: string | null;
 };
 
-export async function searchLocations(q: string): Promise<LocationLite[]> {
+export async function searchPlaces(q: string): Promise<PlaceLite[]> {
   const term = (q || "").trim();
   if (term.length < 2) {
-    console.debug("[searchLocations] skip (too short):", term);
+    console.debug("[searchPlaces] skip (too short):", term);
     return [];
   }
 
   const url = `${API}/search/location`;
   const token = getToken();
-  console.debug("[searchLocations] firing →", { url, term, hasToken: !!token });
+  console.debug("[searchPlaces] firing →", { url, term, hasToken: !!token });
 
   try {
     const res = await fetch(url, {
@@ -37,8 +36,7 @@ export async function searchLocations(q: string): Promise<LocationLite[]> {
       },
       body: JSON.stringify({ q: term }),
     });
-
-    console.debug("[searchLocations] status:", res.status);
+    console.debug("[searchPlaces] status:", res.status);
 
     if (!res.ok) {
       const text = await res.text().catch(() => res.statusText);
@@ -46,16 +44,17 @@ export async function searchLocations(q: string): Promise<LocationLite[]> {
     }
 
     const data = await res.json();
-    console.debug("[searchLocations] ok, items:", Array.isArray(data) ? data.length : data);
+    console.debug("[searchPlaces] data:", Array.isArray(data) ? data.length : data);
 
-    return (Array.isArray(data) ? data : []).map((x: any, i: number) => ({
-      id: x?.id ?? `${(x?.name || "loc").toLowerCase()}-${i}`,
-      name: String(x?.name ?? x?.city ?? x?.label ?? ""),
-      region: x?.region ?? x?.state ?? null,
-      country: x?.country ?? null,
-    })).filter((l) => l.name);
+    return (Array.isArray(data) ? data : [])
+      .map((r: any, i: number) => ({
+        id: r?.id ?? i,
+        name: r?.name ?? r?.Name ?? "",
+        thumb: r?.Cover?.url ?? null,
+      }))
+      .filter((x) => x.name);
   } catch (err) {
-    console.error("[searchLocations] ERROR:", err);
+    console.error("[searchPlaces] ERROR:", err);
     return [];
   }
 }
