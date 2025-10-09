@@ -11,7 +11,7 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
         <div className="pointer-events-none absolute -inset-0.5 rounded-3xl bg-gradient-to-br from-purple-800 via-pink-800 to-purple-900 opacity-25 blur-xl" />
         
         {/* Main card with PRO view gradient colors */}
-        <div className="relative rounded-3xl bg-gradient-to-br from-purple-950 via-zinc-950 to-pink-950/95 border border-purple-500/20 backdrop-blur-sm p-6 shadow-[0_0_60px_-15px_rgba(168,85,247,0.5),0_20px_40px_-10px_rgba(0,0,0,0.8)] transition-all duration-300 hover:shadow-[0_0_80px_-10px_rgba(168,85,247,0.6),0_25px_50px_-10px_rgba(0,0,0,0.9)]">
+        <div className="relative rounded-3xl bg-gradient-to-br from-zinc-950 via-zinc-950 to-zinc-900 border border-purple-500/20 backdrop-blur-sm p-6 shadow-[0_0_60px_-15px_rgba(168,85,247,0.5),0_20px_40px_-10px_rgba(0,0,0,0.8)] transition-all duration-300 hover:shadow-[0_0_80px_-10px_rgba(168,85,247,0.6),0_25px_50px_-10px_rgba(0,0,0,0.9)]">
           
           {/* Header with icon and title */}
           <div className="flex items-center gap-3">
