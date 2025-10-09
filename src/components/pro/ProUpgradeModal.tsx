@@ -6,16 +6,16 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
   return (
     <div className="w-full px-4 py-6">
       <div className="relative w-full max-w-sm mx-auto rounded-3xl overflow-hidden">
-        {/* Enhanced multi-layer glow effect */}
-        <div className="pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-br from-fuchsia-500 via-rose-500 to-purple-600 opacity-40 blur-3xl animate-pulse" />
-        <div className="pointer-events-none absolute -inset-0.5 rounded-3xl bg-gradient-to-br from-fuchsia-600 via-rose-600 to-purple-700 opacity-25 blur-xl" />
+        {/* Enhanced multi-layer glow effect - matching PRO view purple/pink */}
+        <div className="pointer-events-none absolute -inset-1 rounded-3xl bg-gradient-to-br from-purple-700 via-pink-700 to-purple-800 opacity-40 blur-3xl animate-pulse" />
+        <div className="pointer-events-none absolute -inset-0.5 rounded-3xl bg-gradient-to-br from-purple-800 via-pink-800 to-purple-900 opacity-25 blur-xl" />
         
-        {/* Main card with improved shadows and borders */}
-        <div className="relative rounded-3xl bg-gradient-to-br from-zinc-950 via-zinc-950 to-zinc-900/95 border border-white/20 backdrop-blur-sm p-6 shadow-[0_0_60px_-15px_rgba(236,72,153,0.5),0_20px_40px_-10px_rgba(0,0,0,0.8)] transition-all duration-300 hover:shadow-[0_0_80px_-10px_rgba(236,72,153,0.6),0_25px_50px_-10px_rgba(0,0,0,0.9)]">
+        {/* Main card with PRO view gradient colors */}
+        <div className="relative rounded-3xl bg-gradient-to-br from-purple-950 via-zinc-950 to-pink-950/95 border border-purple-500/20 backdrop-blur-sm p-6 shadow-[0_0_60px_-15px_rgba(168,85,247,0.5),0_20px_40px_-10px_rgba(0,0,0,0.8)] transition-all duration-300 hover:shadow-[0_0_80px_-10px_rgba(168,85,247,0.6),0_25px_50px_-10px_rgba(0,0,0,0.9)]">
           
           {/* Header with icon and title */}
           <div className="flex items-center gap-3">
-            <div className="relative h-11 w-11 rounded-2xl bg-gradient-to-br from-rose-500 via-fuchsia-500 to-purple-600 ring-2 ring-white/30 shadow-[0_0_20px_rgba(236,72,153,0.4)] animate-scale-in">
+            <div className="relative h-11 w-11 rounded-2xl bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 ring-2 ring-purple-400/30 shadow-[0_0_20px_rgba(168,85,247,0.4)] animate-scale-in">
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent" />
             </div>
             <div>
@@ -25,9 +25,9 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
           </div>
 
           {/* Price section with subtle divider */}
-          <div className="mt-6 pt-5 border-t border-white/5">
+          <div className="mt-6 pt-5 border-t border-purple-900/30">
             <div className="flex items-baseline gap-2">
-              <div className="text-5xl font-black tracking-tight bg-gradient-to-br from-white via-white to-zinc-300 bg-clip-text text-transparent">${plan.Price ?? 0}</div>
+              <div className="text-5xl font-black tracking-tight bg-gradient-to-br from-white via-purple-100 to-pink-200 bg-clip-text text-transparent">${plan.Price ?? 0}</div>
               <div className="text-zinc-400 text-sm font-medium">/ {plan.Renews || 'month'}</div>
             </div>
           </div>
@@ -36,7 +36,7 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
           <ul className="mt-6 space-y-4">
             {(plan.Features ?? []).slice(0, 3).map((f, idx) => (
               <li key={f.Feature} className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
-                <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 via-fuchsia-500 to-purple-600 text-white text-sm font-bold ring-2 ring-white/20 shadow-lg">
+                <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 text-white text-sm font-bold ring-2 ring-purple-400/20 shadow-lg">
                   ✓
                 </span>
                 <div className="flex-1 min-w-0">
@@ -49,16 +49,16 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
 
           {/* CTA section with enhanced button */}
           <div className="mt-7 flex flex-col items-center gap-3">
-            <button className="relative h-12 w-full rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-rose-600 via-fuchsia-600 to-purple-700 shadow-[0_10px_40px_-10px_rgba(168,85,247,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_15px_50px_-10px_rgba(168,85,247,1),inset_0_1px_0_rgba(255,255,255,0.3)] active:scale-[0.98] transition-all duration-200 overflow-hidden group">
+            <button className="relative h-12 w-full rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-purple-700 via-pink-700 to-purple-800 shadow-[0_10px_40px_-10px_rgba(168,85,247,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_15px_50px_-10px_rgba(168,85,247,1),inset_0_1px_0_rgba(255,255,255,0.3)] active:scale-[0.98] transition-all duration-200 overflow-hidden group">
               <span className="relative z-10">Upgrade to PRO</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-rose-500 via-fuchsia-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
-            <span className="text-sm text-fuchsia-400 hover:text-fuchsia-300 cursor-pointer transition-all duration-200 hover:underline underline-offset-2">
+            <span className="text-sm text-purple-400 hover:text-purple-300 cursor-pointer transition-all duration-200 hover:underline underline-offset-2">
               See full benefits
             </span>
           </div>
 
-          <p className="mt-4 pt-4 border-t border-white/5 text-[10px] text-zinc-500 text-center">Cancel anytime. Prices shown in USD.</p>
+          <p className="mt-4 pt-4 border-t border-purple-900/30 text-[10px] text-zinc-500 text-center">Cancel anytime. Prices shown in USD.</p>
         </div>
       </div>
     </div>
