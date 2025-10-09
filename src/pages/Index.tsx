@@ -5,10 +5,11 @@ import { toast } from "@/hooks/use-toast";
 import { PlaceCard, type Place } from "@/components/home/PlaceCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import SearchBar from "@/components/SearchBar";
 import AdvancedFilterModal, { getActiveSelectionCount, type AdvancedFilterMap } from "@/components/filters/AdvancedFilterModal";
 import WeekdayFilter from "@/components/filters/WeekdayFilter";
 import BottomNavigation from "@/components/navigation/BottomNavigation";
-import { Calendar, X, SlidersHorizontal, LogIn } from "lucide-react";
+import { Calendar, X, SlidersHorizontal, LogIn, Search as SearchIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { searchPlaces, type PlaceLite } from "@/services/locations";
@@ -33,6 +34,7 @@ const Index = () => {
   const [searchQ, setSearchQ] = useState("");
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<PlaceLite[]>([]);
+  const [showSearch, setShowSearch] = useState(false);
 
 
   useEffect(() => {
@@ -174,19 +176,7 @@ const Index = () => {
         </script>
       </Helmet>
 
-
-<div className="relative mx-auto max-w-5xl px-4 pt-20 mt-6">
-        {/* Search input */}
-        <div className="mb-4">
-          <input
-            value={searchQ}
-            onChange={(e) => setSearchQ(e.target.value)}
-            placeholder="Search venues…"
-            className="w-full rounded-2xl bg-card/60 border border-border/60 backdrop-blur-xl px-4 py-3 text-sm text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-red-500/40"
-            aria-label="Search venues"
-          />
-        </div>
-
+      <div className="relative mx-auto max-w-5xl px-4 pt-20 mt-6 sticky top-0 z-50">
         <div className="flex justify-between items-center mb-4">
           <div>
             {!user && (
@@ -201,7 +191,9 @@ const Index = () => {
             )}
           </div>
         </div>
-        <div className="flex justify-end gap-2">
+
+        {/* ACTIONS ROW */}
+        <div className="flex justify-end gap-2 mb-2">
           <Button
             ref={weekdayBtnRef}
             variant="outline"
@@ -252,6 +244,34 @@ const Index = () => {
               </span>
             ) : null}
           </Button>
+
+          {/* NEW: Search toggle */}
+          <Button
+            variant="outline"
+            size="icon"
+            aria-label="Toggle search"
+            onClick={() => setShowSearch((v) => !v)}
+            className="rounded-2xl bg-card/60 border-border/60 backdrop-blur-xl"
+          >
+            <SearchIcon />
+          </Button>
+        </div>
+
+        {/* COLLAPSIBLE SEARCH AREA */}
+        <div
+          className={[
+            "overflow-hidden transition-all duration-250 ease-out",
+            showSearch ? "max-h-24 mt-2" : "max-h-0",
+            "z-50 relative",
+          ].join(" ")}
+        >
+          <SearchBar
+            value={searchQ}
+            onChange={setSearchQ}
+            onClose={() => setShowSearch(false)}
+            autoFocus
+            className="w-full"
+          />
         </div>
 
         <WeekdayFilter
@@ -264,7 +284,7 @@ const Index = () => {
         />
       </div>
 
-<main className="mx-auto max-w-5xl px-4 pb-24 safe-pb">
+      <main className="mx-auto max-w-5xl px-4 pb-24 safe-pb">
         <div className="mt-4 rounded-2xl border border-border/60 bg-card/60 p-3 md:p-4 backdrop-blur-sm">
           {/* Keep the original skeleton for initial feed only (when not searching) */}
           {(isLoading || isFetching) && searchQ.trim().length < 2 ? (
