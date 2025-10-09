@@ -51,7 +51,7 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
           <div className="mt-7 flex flex-col items-center gap-3">
             <button className="relative h-12 w-full rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-purple-700 via-pink-700 to-purple-800 shadow-[0_10px_40px_-10px_rgba(168,85,247,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_15px_50px_-10px_rgba(168,85,247,1),inset_0_1px_0_rgba(255,255,255,0.3)] active:scale-[0.98] transition-all duration-200 overflow-hidden group">
               <span className="relative z-10">Upgrade to PRO</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-pink-600 to-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
             <span className="text-sm text-purple-400 hover:text-purple-300 cursor-pointer transition-all duration-200 hover:underline underline-offset-2">
               See full benefits
