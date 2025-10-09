@@ -18,8 +18,7 @@ interface HeaderProps {
   profile: Profile;
   mode: Mode;
   ringState: RingState;
-  setMode: (mode: Mode) => void;
-  setRingState: (state: RingState) => void;
+  onToggle: () => void;
 }
 
 const ringClass = (rs: RingState) => {
@@ -28,19 +27,13 @@ const ringClass = (rs: RingState) => {
   return 'sweep-ring bg-white rounded-full';
 };
 
-export default function Header({ profile, mode, setMode, ringState, setRingState }: HeaderProps) {
+export default function Header({ profile, mode, ringState, onToggle }: HeaderProps) {
   const isPro = mode === 'PRO';
-
-  const toggle = () => {
-    const nextMode: Mode = isPro ? 'UGC' : 'PRO';
-    setMode(nextMode);
-    setRingState(nextMode === 'PRO' ? 'sweeping' : 'idle');
-  };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      toggle();
+      onToggle();
     }
   };
 
@@ -74,7 +67,7 @@ export default function Header({ profile, mode, setMode, ringState, setRingState
           tabIndex={0}
           role="switch"
           aria-checked={isPro}
-          onClick={toggle}
+          onClick={onToggle}
           onKeyDown={onKeyDown}
           className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
         >
