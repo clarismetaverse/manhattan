@@ -11,6 +11,7 @@ import BottomNavigation from "@/components/navigation/BottomNavigation";
 import { Calendar, X, SlidersHorizontal, LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import { searchPlaces, type PlaceLite } from "@/services/locations";
 
 const API_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW";
 
@@ -29,6 +30,9 @@ const Index = () => {
   const [isWeekdayOpen, setIsWeekdayOpen] = useState(false);
   const totalCount = advCount + weekday.length;
   const weekdayBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [searchQ, setSearchQ] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<PlaceLite[]>([]);
 
 
   useEffect(() => {
@@ -117,6 +121,36 @@ const Index = () => {
   }, [isError]);
 
 
+  useEffect(() => {
+    let alive = true;
+    const h = setTimeout(async () => {
+      const q = searchQ.trim();
+      if (q.length < 2) {
+        if (alive) setSearchResults([]);
+        return;
+      }
+      try {
+        setSearching(true);
+        const res = await searchPlaces(q);
+        if (!alive) return;
+        setSearchResults(res);
+      } catch (e) {
+        console.error("location search error", e);
+        if (alive) setSearchResults([]);
+      } finally {
+        if (alive) setSearching(false);
+      }
+    }, 220);
+    return () => {
+      alive = false;
+      clearTimeout(h);
+    };
+  }, [searchQ]);
+
+  const toPlace = (p: PlaceLite) =>
+    ({ id: p.id, Name: p.name, Cover: p.thumb ? { url: p.thumb } : undefined }) as unknown as Place;
+
+
   return (
     <div className="min-h-screen bg-black">
       <Helmet>
@@ -142,10 +176,21 @@ const Index = () => {
 
 
 <div className="relative mx-auto max-w-5xl px-4 pt-20 mt-6">
+        {/* Search input */}
+        <div className="mb-4">
+          <input
+            value={searchQ}
+            onChange={(e) => setSearchQ(e.target.value)}
+            placeholder="Search venues…"
+            className="w-full rounded-2xl bg-card/60 border border-border/60 backdrop-blur-xl px-4 py-3 text-sm text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-red-500/40"
+            aria-label="Search venues"
+          />
+        </div>
+
         <div className="flex justify-between items-center mb-4">
           <div>
             {!user && (
-              <Button 
+              <Button
                 onClick={() => navigate('/login')}
                 variant="default"
                 className="bg-red-600 hover:bg-red-700 text-white"
@@ -221,7 +266,8 @@ const Index = () => {
 
 <main className="mx-auto max-w-5xl px-4 pb-24 safe-pb">
         <div className="mt-4 rounded-2xl border border-border/60 bg-card/60 p-3 md:p-4 backdrop-blur-sm">
-          {isLoading || isFetching ? (
+          {/* Keep the original skeleton for initial feed only (when not searching) */}
+          {(isLoading || isFetching) && searchQ.trim().length < 2 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="overflow-hidden rounded-lg">
@@ -235,7 +281,17 @@ const Index = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {data && data.length > 0 ? (
+              {searchQ.trim().length >= 2 ? (
+                searching ? (
+                  <div className="col-span-full text-center py-6 text-muted-foreground">Searching…</div>
+                ) : searchResults.length ? (
+                  searchResults.map((p) => <PlaceCard key={p.id} place={toPlace(p)} />)
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-muted-foreground">No venues found for “{searchQ}”.</p>
+                  </div>
+                )
+              ) : data && data.length > 0 ? (
                 data.map((p) => <PlaceCard key={p.id} place={p} />)
               ) : (
                 <div className="col-span-full text-center py-12">

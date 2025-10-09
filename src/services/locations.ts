@@ -9,52 +9,31 @@ function getToken() {
   );
 }
 
-export type PlaceLite = {
-  id: number | string;
-  name: string;
-  thumb?: string | null;
-};
+export type PlaceLite = { id: number | string; name: string; thumb?: string | null };
 
 export async function searchPlaces(q: string): Promise<PlaceLite[]> {
   const term = (q || "").trim();
-  if (term.length < 2) {
-    console.debug("[searchPlaces] skip (too short):", term);
-    return [];
-  }
+  if (term.length < 2) return [];
 
-  const url = `${API}/search/location`;
-  const token = getToken();
-  console.debug("[searchPlaces] firing →", { url, term, hasToken: !!token });
+  const res = await fetch(`${API}/search/location`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${getToken()}`,
+    },
+    body: JSON.stringify({ q: term }),
+  });
 
-  try {
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ q: term }),
-    });
-    console.debug("[searchPlaces] status:", res.status);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const data = await res.json();
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => res.statusText);
-      throw new Error(`${res.status} ${text}`);
-    }
-
-    const data = await res.json();
-    console.debug("[searchPlaces] data:", Array.isArray(data) ? data.length : data);
-
-    return (Array.isArray(data) ? data : [])
-      .map((r: any, i: number) => ({
-        id: r?.id ?? i,
-        name: r?.name ?? r?.Name ?? "",
-        thumb: r?.Cover?.url ?? null,
-      }))
-      .filter((x) => x.name);
-  } catch (err) {
-    console.error("[searchPlaces] ERROR:", err);
-    return [];
-  }
+  // Normalize: prefer .name, fallback to .Name; cover image under .Cover.url
+  return (Array.isArray(data) ? data : [])
+    .map((r: any, i: number) => ({
+      id: r?.id ?? i,
+      name: r?.name ?? r?.Name ?? "",
+      thumb: r?.Cover?.url ?? null,
+    }))
+    .filter(x => x.name);
 }
