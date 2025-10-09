@@ -29,7 +29,7 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
                 </span>
                 <div>
                   <div className="text-zinc-200 text-sm font-semibold leading-tight">{f.Feature}</div>
-                  <div className="text-xs text-zinc-400 ml-8">{f.About ?? ''}</div>
+                  <div className="text-xs text-zinc-400">{f.About ?? ''}</div>
                 </div>
               </li>
             ))}

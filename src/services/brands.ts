@@ -50,7 +50,7 @@ function normalizeBrands(items: unknown[]): BrandLite[] {
         LogoBrand: logo,
       } satisfies BrandLite;
     })
-    .filter((item): item is BrandLite => Boolean(item));
+    .filter((item) => item !== null) as BrandLite[];
 }
 
 export async function searchBrands(q: string, limit = 8): Promise<BrandLite[]> {
