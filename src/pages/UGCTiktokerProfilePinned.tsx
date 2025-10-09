@@ -5,6 +5,7 @@ import PROView from '@/components/profile/PROView';
 import { Share2, Instagram, Music2 } from 'lucide-react';
 import { fetchUserProfile, type UserProfileResponse } from '@/services/couponApi';
 import { useNavigate } from 'react-router-dom';
+import ProUpgradeModal from '@/components/pro/ProUpgradeModal';
 
 type Mode = 'UGC' | 'PRO';
 type RingState = 'idle' | 'sweeping' | 'lit';
@@ -23,6 +24,7 @@ interface Profile {
   Pro_Profile?: { url?: string } | null;
   IG_account?: string | null;
   Tiktok_account?: string | null;
+  is_pro?: boolean;
 }
 
 async function mockFetch(): Promise<Profile> {
@@ -40,6 +42,7 @@ async function mockFetch(): Promise<Profile> {
     Pro_Profile: { url: 'https://images.unsplash.com/photo-1544006659-f0b21884ce1d?q=80&w=600&auto=format&fit=crop' },
     IG_account: 'https://instagram.com/',
     Tiktok_account: 'https://tiktok.com/',
+    is_pro: false,
   };
 }
 
@@ -47,6 +50,7 @@ export default function UGCTiktokerProfilePinned() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [mode, setMode] = useState<Mode>('UGC');
   const [ringState, setRingState] = useState<RingState>('idle');
+  const [showProModal, setShowProModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,12 +58,19 @@ export default function UGCTiktokerProfilePinned() {
       try {
         const data: UserProfileResponse = await fetchUserProfile();
         setProfile(data as Profile);
+
+        if (!(data as Profile)?.is_pro) {
+          setShowProModal(true);
+        }
       } catch (err: unknown) {
         if (err instanceof Error && err.message.includes('401')) {
           navigate('/login');
         } else if (import.meta.env.DEV) {
           const mock = await mockFetch();
           setProfile(mock);
+          if (!mock.is_pro) {
+            setShowProModal(true);
+          }
         }
       }
     }
@@ -77,10 +88,15 @@ export default function UGCTiktokerProfilePinned() {
 
   if (!profile) return null;
 
-  const isPro = mode === 'PRO';
+  const isProUser = Boolean(profile?.is_pro);
+  const isProUI = mode === 'PRO';
 
-  const toggle = () => {
-    const nextMode: Mode = isPro ? 'UGC' : 'PRO';
+  const tryToggle = () => {
+    if (!isProUser && !isProUI) {
+      setShowProModal(true);
+      return;
+    }
+    const nextMode: Mode = isProUI ? 'UGC' : 'PRO';
     setMode(nextMode);
     setRingState(nextMode === 'PRO' ? 'sweeping' : 'idle');
   };
@@ -88,29 +104,29 @@ export default function UGCTiktokerProfilePinned() {
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      toggle();
+      tryToggle();
     }
   };
 
   return (
     <div
       data-testid="profile-page"
-      className={`min-h-screen transition-colors duration-700 ${isPro ? 'bg-black' : 'bg-white'}`}
+      className={`min-h-screen transition-colors duration-700 ${isProUI ? 'bg-black' : 'bg-white'}`}
     >
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
         <div
           className={`rounded-t-2xl rounded-br-2xl rounded-bl-2xl overflow-hidden transition-colors duration-700 ${
-            isPro 
-              ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]' 
+            isProUI
+              ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]'
               : 'bg-gray-100 shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)]'
           }`}
         >
           <div
             className={`h-28 sm:h-36 ${
-              isPro ? 'bg-gradient-to-r from-purple-900 to-pink-900' : 'bg-gradient-to-r from-fuchsia-200 to-pink-300'
+              isProUI ? 'bg-gradient-to-r from-purple-900 to-pink-900' : 'bg-gradient-to-r from-fuchsia-200 to-pink-300'
             }`}
             style={{
-              backgroundImage: isPro 
+              backgroundImage: isProUI
                 ? (profile.back?.url ? `url(${profile.back.url})` : undefined)
                 : (profile.UGC_cover?.url ? `url(${profile.UGC_cover.url})` : undefined),
               backgroundSize: 'cover',
@@ -120,19 +136,20 @@ export default function UGCTiktokerProfilePinned() {
           <Header
             profile={profile}
             mode={mode}
-            setMode={setMode}
             ringState={ringState}
-            setRingState={setRingState}
+            onToggle={tryToggle}
           />
           <div className="px-4 pb-3">
-            <p className={`text-sm font-medium ${isPro ? 'text-gray-200' : 'text-gray-800'}`}>{isPro ? (profile.bio || '') : 'UGC creator'}</p>
+            <p className={`text-sm font-medium ${isProUI ? 'text-gray-200' : 'text-gray-800'}`}>
+              {isProUI ? (profile.bio || '') : 'UGC creator'}
+            </p>
           </div>
           <div
             className={`px-4 pb-4 text-xs sm:text-sm flex items-center gap-4 border-t pt-3 ${
-              isPro ? 'border-white/10' : 'border-gray-100'
+              isProUI ? 'border-white/10' : 'border-gray-100'
             }`}
           >
-            {isPro ? (
+            {isProUI ? (
               <div className="text-gray-300"><span className="text-blue-800 font-bold">151</span> Jobs</div>
             ) : (
               profile.promocode && (
@@ -140,11 +157,13 @@ export default function UGCTiktokerProfilePinned() {
               )
             )}
             {typeof profile.xp === 'number' && (
-              <div className={isPro ? 'text-gray-300' : 'text-gray-700'}>{profile.xp} XP</div>
+              <div className={isProUI ? 'text-gray-300' : 'text-gray-700'}>{profile.xp} XP</div>
             )}
           </div>
           <div
-            className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 rounded-bl-2xl rounded-br-2xl ${isPro ? 'border-white/10' : 'border-gray-100'}`}
+            className={`px-4 pb-4 flex justify-between items-center gap-3 border-t pt-3 rounded-bl-2xl rounded-br-2xl ${
+              isProUI ? 'border-white/10' : 'border-gray-100'
+            }`}
           >
             <div className="flex gap-3">
               {profile.Tiktok_account && (
@@ -153,7 +172,7 @@ export default function UGCTiktokerProfilePinned() {
                   target="_blank"
                   rel="noreferrer"
                   className={`flex items-center gap-1 text-sm ${
-                    isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
+                    isProUI ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
                   }`}
                 >
                   <Music2 className="w-4 h-4" /> TikTok
@@ -165,7 +184,7 @@ export default function UGCTiktokerProfilePinned() {
                   target="_blank"
                   rel="noreferrer"
                   className={`flex items-center gap-1 text-sm ${
-                    isPro ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
+                    isProUI ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-black'
                   }`}
                 >
                   <Instagram className="w-4 h-4" /> Instagram
@@ -174,32 +193,34 @@ export default function UGCTiktokerProfilePinned() {
             </div>
             <div className="flex items-center gap-3">
               <div className="block sm:hidden">
-              <div
-                tabIndex={0}
-                role="switch"
-                aria-checked={isPro}
-                onClick={toggle}
-                onKeyDown={onKeyDown}
-                className={`toggle-track ${isPro ? 'active' : ''} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
-              >
-                <div className="toggle-thumb" />
-                {!isPro && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
-                )}
-                {isPro && (
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
-                )}
-               </div>
-             </div>
-           </div>
+                <div
+                  tabIndex={0}
+                  role="switch"
+                  aria-checked={isProUI}
+                  onClick={tryToggle}
+                  onKeyDown={onKeyDown}
+                  className={`toggle-track ${
+                    isProUI ? 'active' : ''
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500`}
+                >
+                  <div className="toggle-thumb" />
+                  {!isProUI && (
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-white text-[10px]">PRO</span>
+                  )}
+                  {isProUI && (
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-white text-[10px]">UGC</span>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-          </div>
+        </div>
 
-        {isPro ? <PROView /> : <UGCView />}
+        {isProUI ? <PROView /> : <UGCView />}
 
-        {isPro && (
+        {isProUI && (
           <div className={`rounded-br-2xl rounded-bl-2xl rounded-tl-2xl overflow-hidden transition-colors duration-700 w-1/3 py-3 mt-6 ${
-            isPro 
+            isProUI
               ? 'bg-zinc-800 shadow-[12px_12px_24px_rgba(0,0,0,0.8),-12px_-12px_24px_rgba(255,255,255,0.02)]'
               : 'bg-gray-100 shadow-[8px_8px_16px_rgba(0,0,0,0.15),-8px_-8px_16px_rgba(255,255,255,0.7)]'
           }`}>
@@ -217,6 +238,7 @@ export default function UGCTiktokerProfilePinned() {
           </button>
         </div>
       </div>
+      <ProUpgradeModal open={showProModal} onClose={() => setShowProModal(false)} />
     </div>
   );
 }
