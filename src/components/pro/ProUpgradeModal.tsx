@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // same visual card as before, but driven by props
-function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; Renews?: string; Features?: { Feature: string }[] } }) {
+function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; Renews?: string; Features?: { Feature: string; About?: string }[] } }) {
   return (
     <div className="w-full px-4 py-6">
       <div className="relative w-full max-w-sm mx-auto rounded-3xl overflow-hidden">
@@ -27,7 +27,10 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
                 <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-purple-600 text-white/90 ring-1 ring-white/20">
                   ✓
                 </span>
-                <span className="text-zinc-200 text-sm leading-tight">{f.Feature}</span>
+                <div>
+                  <div className="text-zinc-200 text-sm font-semibold leading-tight">{f.Feature}</div>
+                  <div className="text-xs text-zinc-400 ml-8">{f.About ?? ''}</div>
+                </div>
               </li>
             ))}
           </ul>
@@ -59,7 +62,7 @@ type Plan = {
   Name: string;
   Price: number;
   Renews?: string;
-  Features?: { Feature: string }[];
+  Features?: { Feature: string; About?: string }[];
 };
 
 export default function ProUpgradeModal({ open, onClose }: ProUpgradeModalProps) {
