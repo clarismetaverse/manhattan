@@ -34,16 +34,19 @@ export default function PROView() {
         </div>
         <div className="flex gap-3">
           {!pfLoading && !pfErr && Array.isArray(portfolio) && portfolio.length > 0 && (() => {
-            // Extract unique brands from portfolio
-            const uniqueBrands = portfolio
-              .flatMap(p => p.Brand || [])
-              .filter(brand => brand?.LogoBrand?.url)
-              .slice(0, 6) // Limit to 6 brands max
-              .map((brand, index) => ({ ...brand, uniqueKey: `${brand.id}-${index}` }));
+            // Extract unique brands from portfolio (filter duplicates by ID)
+            const uniqueBrands = Array.from(
+              new Map(
+                portfolio
+                  .flatMap(p => p.Brand || [])
+                  .filter(brand => brand?.LogoBrand?.url)
+                  .map(brand => [brand.id, brand])
+              ).values()
+            ).slice(0, 6); // Limit to 6 brands max
             
             return uniqueBrands.length > 0 ? (
               uniqueBrands.map((brand) => (
-                <div key={brand.uniqueKey} className="h-16 w-16 rounded-full bg-white shadow overflow-hidden">
+                <div key={brand.id} className="h-16 w-16 rounded-full bg-white shadow overflow-hidden">
                   <img 
                     src={brand.LogoBrand?.url} 
                     alt={`${brand.BrandName} logo`}
