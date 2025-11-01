@@ -333,7 +333,7 @@ export default function MemberspassDetail() {
                           bg-white/[0.06] backdrop-blur-2xl 
                           shadow-[0_30px_90px_rgba(0,0,0,0.55)] p-5 sm:p-6">
             <header className="text-center mb-5">
-              <h3 className="text-[18px] font-light tracking-[-0.01em]">Request Access</h3>
+              <h3 className="text-[18px] font-light tracking-[-0.01em]">request members guest access</h3>
               <p className="mt-1 text-sm text-white/70">Choose how you'd like to proceed.</p>
             </header>
 
