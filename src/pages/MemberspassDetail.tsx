@@ -326,45 +326,68 @@ export default function MemberspassDetail() {
         </div>
       </main>
 
-      {/* --- MODALS --------------------------------------------------------- */}
+      {/* ===== Request Access (CENTERED, GLASS) ===== */}
       {showRequest && (
         <Modal onClose={() => setShowRequest(false)}>
-          <div className="space-y-6">
-            <header className="text-center">
+          <div className="mx-auto w-full max-w-[520px] rounded-3xl border border-white/10 
+                          bg-white/[0.06] backdrop-blur-2xl 
+                          shadow-[0_30px_90px_rgba(0,0,0,0.55)] p-5 sm:p-6">
+            <header className="text-center mb-5">
               <h3 className="text-[18px] font-light tracking-[-0.01em]">Request Access</h3>
-              <p className="mt-1 text-sm text-white/70">
-                Choose how you'd like to proceed.
-              </p>
+              <p className="mt-1 text-sm text-white/70">Choose how you'd like to proceed.</p>
             </header>
-            <div className="grid sm:grid-cols-2 gap-4">
+
+            <div className="space-y-3">
+              {/* 1) GENERAL REQUEST — first & bigger */}
+              <button
+                onClick={() => {
+                  setShowRequest(false);
+                  // TODO: trigger general request API
+                  alert("General request sent. Any member may support your access.");
+                }}
+                className="group w-full rounded-2xl border border-white/14 bg-white/[0.08]
+                           hover:bg-white/[0.12] transition px-5 py-4 text-left"
+              >
+                <div className="flex items-center gap-3">
+                  {/* Ripple / Signal icon (ivory) */}
+                  <svg width="28" height="28" viewBox="0 0 64 64" fill="none" className="shrink-0">
+                    <circle cx="32" cy="42" r="6" fill="white"/>
+                    <path d="M16 42c0-8.8 7.2-16 16-16s16 7.2 16 16" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                    <path d="M8 42c0-13.3 10.7-24 24-24s24 10.7 24 24" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity=".85"/>
+                  </svg>
+                  <div>
+                    <div className="text-[15px] font-medium tracking-tight">General Request</div>
+                    <div className="text-[13px] text-white/75">Any member can support your request</div>
+                  </div>
+                </div>
+              </button>
+
+              {/* 2) DIRECT GUEST — gold label & icon */}
               <button
                 onClick={() => {
                   setShowRequest(false);
                   setShowMembersPicker(true);
                 }}
-                className="group rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-left hover:bg-white/[0.06] transition"
+                className="group w-full rounded-2xl border border-white/14 bg-white/[0.06]
+                           hover:bg-white/[0.10] transition px-5 py-3.5 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <img src={directGuestIcon} alt="Direct Guest" className="w-5 h-5" />
+                  {/* Intersecting circles (gold) */}
+                  <svg width="26" height="26" viewBox="0 0 64 64" fill="none" className="shrink-0">
+                    <defs>
+                      <linearGradient id="mp-gold" x1="0" x2="1" y1="0" y2="1">
+                        <stop offset="0%" stopColor="#D9CBA3"/>
+                        <stop offset="100%" stopColor="#BFAF86"/>
+                      </linearGradient>
+                    </defs>
+                    <circle cx="26" cy="32" r="12" stroke="url(#mp-gold)" strokeWidth="3"/>
+                    <circle cx="38" cy="32" r="12" stroke="url(#mp-gold)" strokeWidth="3"/>
+                  </svg>
                   <div>
-                    <div className="text-[14px] font-medium">Direct Guest (DG)</div>
-                    <div className="text-xs text-white/70">Ask a specific member to be your host</div>
-                  </div>
-                </div>
-              </button>
-              <button
-                onClick={() => {
-                  setShowRequest(false);
-                  // Here you would trigger general request API
-                  alert("General request sent. Any member may support your access.");
-                }}
-                className="group rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-left hover:bg-white/[0.06] transition"
-              >
-                <div className="flex items-center gap-3">
-                  <img src={generalRequestIcon} alt="General Request" className="w-5 h-5" />
-                  <div>
-                    <div className="text-[14px] font-medium">General Request</div>
-                    <div className="text-xs text-white/70">Any member can support your request</div>
+                    <div className="text-[15px] font-medium tracking-tight text-[#D9CBA3]">
+                      Direct Guest (DG)
+                    </div>
+                    <div className="text-[13px] text-white/75">Ask a specific member to be your host</div>
                   </div>
                 </div>
               </button>
@@ -518,17 +541,29 @@ export default function MemberspassDetail() {
   );
 }
 
-// --- UI: Minimal Cinematic Modal -------------------------------------------
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+// ===== Minimal cinematic Modal (centered, glass backdrop) =====
+function Modal({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="relative z-10 w-full sm:w-[560px] rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#0E0F10]/95 text-white p-5 sm:p-6 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
-        <button onClick={onClose} className="absolute right-4 top-4 text-white/70 hover:text-white">
-          <X className="w-5 h-5" />
-        </button>
-        {children}
-      </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* dimmed glass backdrop */}
+      <div
+        className="absolute inset-0 bg-[rgba(5,6,7,0.6)] backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative z-10 max-w-full px-4">{children}</div>
+      <button
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute right-6 top-6 text-white/80 hover:text-white"
+      >
+        <X className="w-5 h-5" />
+      </button>
     </div>
   );
 }
