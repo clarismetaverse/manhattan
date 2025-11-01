@@ -36,11 +36,31 @@ const CLUBS = {
     about:
       "Since 1931, Cipriani has been the heart of Milano's social elite. Our members represent the pinnacle of business, arts, and culture. The club maintains its legacy through carefully curated experiences and unwavering standards of excellence.",
     amenities: [
-      "Private dining rooms",
-      "Business center",
-      "Wine cellar",
-      "Rooftop terrace",
-      "Member events",
+      { 
+        name: "Private dining rooms", 
+        description: "Intimate spaces for exclusive gatherings and business dinners",
+        image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Business center", 
+        description: "State-of-the-art facilities for meetings and presentations",
+        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Wine cellar", 
+        description: "Curated collection of rare vintages from around the world",
+        image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Rooftop terrace", 
+        description: "Panoramic city views in an elegant outdoor setting",
+        image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Member events", 
+        description: "Exclusive social gatherings and cultural experiences",
+        image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop"
+      },
     ],
     rulesOfConduct: [
       "Respect privacy and discretion at all times",
@@ -63,11 +83,31 @@ const CLUBS = {
     about:
       "The Sanctuary opened in 2018 as Milano's answer to the modern member. We celebrate innovation, creativity, and the power of diverse perspectives. Our space is designed for serendipitous encounters and meaningful collaboration.",
     amenities: [
-      "Co-working spaces",
-      "Art gallery",
-      "Recording studio",
-      "Wellness lounge",
-      "Monthly showcases",
+      { 
+        name: "Co-working spaces", 
+        description: "Flexible workspaces designed for collaboration and focus",
+        image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Art gallery", 
+        description: "Rotating exhibitions featuring emerging and established artists",
+        image: "https://images.unsplash.com/photo-1577083165633-14ebcdb0f658?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Recording studio", 
+        description: "Professional audio equipment for music and podcast production",
+        image: "https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Wellness lounge", 
+        description: "Meditation and relaxation space for mental clarity",
+        image: "https://images.unsplash.com/photo-1545389336-cf090694435e?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Monthly showcases", 
+        description: "Platform for members to present their creative projects",
+        image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200&auto=format&fit=crop"
+      },
     ],
     rulesOfConduct: [
       "Embrace diverse perspectives and ideas",
@@ -90,11 +130,31 @@ const CLUBS = {
     about:
       "Palazzo Parigi embodies the grandeur of Milano's golden age. Housed in a restored 19th century palazzo, every corner tells a story. Our members are custodians of tradition while embracing the future of luxury.",
     amenities: [
-      "Grand ballroom",
-      "Private library",
-      "Cigar lounge",
-      "Spa facilities",
-      "Chef's table",
+      { 
+        name: "Grand ballroom", 
+        description: "Opulent space for galas and sophisticated celebrations",
+        image: "https://images.unsplash.com/photo-1519167758481-83f29da8585c?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Private library", 
+        description: "Historic collection in a tranquil reading environment",
+        image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Cigar lounge", 
+        description: "Premium selection in a refined smoking room",
+        image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Spa facilities", 
+        description: "Luxury treatments and wellness therapies",
+        image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?q=80&w=1200&auto=format&fit=crop"
+      },
+      { 
+        name: "Chef's table", 
+        description: "Intimate culinary experiences with our master chef",
+        image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1200&auto=format&fit=crop"
+      },
     ],
     rulesOfConduct: [
       "Maintain elegance in behavior and presentation",
@@ -119,6 +179,7 @@ export default function MemberspassDetail() {
   const [showMembersPicker, setShowMembersPicker] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [showAmenities, setShowAmenities] = useState(false);
+  const [currentAmenity, setCurrentAmenity] = useState(0);
 
   const aboutMembers = useMemo(() => {
     // Short, people-centric blurb aligned with the rationale.
@@ -368,45 +429,68 @@ export default function MemberspassDetail() {
       )}
 
       {showAmenities && (
-        <Modal onClose={() => setShowAmenities(false)}>
-          <div className="space-y-5">
-            <header className="text-center">
-              <h3 className="flex items-center justify-center gap-2 text-[18px] font-light tracking-[-0.01em]">
-                <DoorOpen className="w-5 h-5" /> Amenities
-              </h3>
-            </header>
-            <Carousel className="w-full">
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm flex items-center justify-center">
+          <button 
+            onClick={() => setShowAmenities(false)} 
+            className="absolute right-6 top-6 z-10 text-white/70 hover:text-white transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          
+          <div className="relative w-full h-full flex flex-col items-center justify-center px-4 sm:px-8 py-12">
+            <Carousel 
+              className="w-full max-w-2xl"
+              opts={{ loop: true }}
+              setApi={(api) => {
+                api?.on("select", () => {
+                  setCurrentAmenity(api.selectedScrollSnap());
+                });
+              }}
+            >
               <CarouselContent>
-                {club.amenities.map((amenity: string, i: number) => {
-                  const amenityImages = [
-                    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1200&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1200&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
-                    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop",
-                  ];
-                  return (
-                    <CarouselItem key={i}>
-                      <div className="rounded-[16px] overflow-hidden border border-white/10 bg-[#0E0F10]/60">
-                        <div 
-                          className="h-48 bg-cover bg-center"
-                          style={{ backgroundImage: `url(${amenityImages[i % amenityImages.length]})` }}
-                        />
-                        <div className="p-5">
-                          <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">
-                            {amenity}
+                {club.amenities.map((amenity: any, i: number) => (
+                  <CarouselItem key={i}>
+                    <div className="flex flex-col items-center justify-center space-y-6">
+                      <div 
+                        className="w-full aspect-[3/4] max-h-[65vh] rounded-[24px] overflow-hidden border border-white/10 bg-cover bg-center shadow-2xl"
+                        style={{ backgroundImage: `url(${amenity.image})` }}
+                      >
+                        <div className="w-full h-full bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+                          <h3 className="text-[28px] sm:text-[32px] font-light tracking-tight text-white mb-3">
+                            {amenity.name}
+                          </h3>
+                          <p className="text-[15px] sm:text-[16px] font-light leading-relaxed text-white/90 max-w-md">
+                            {amenity.description}
                           </p>
                         </div>
                       </div>
-                    </CarouselItem>
-                  );
-                })}
+                    </div>
+                  </CarouselItem>
+                ))}
               </CarouselContent>
-              <CarouselPrevious className="left-2" />
-              <CarouselNext className="right-2" />
+              <CarouselPrevious className="left-4 sm:left-8 h-12 w-12 bg-white/10 border-white/20 hover:bg-white/20" />
+              <CarouselNext className="right-4 sm:right-8 h-12 w-12 bg-white/10 border-white/20 hover:bg-white/20" />
             </Carousel>
+            
+            {/* Navigation dots */}
+            <div className="flex items-center gap-2 mt-8">
+              {club.amenities.map((_: any, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setCurrentAmenity(i);
+                    // Would need carousel API to scroll to index
+                  }}
+                  className={`h-2 rounded-full transition-all ${
+                    i === currentAmenity 
+                      ? "w-8 bg-white" 
+                      : "w-2 bg-white/40 hover:bg-white/60"
+                  }`}
+                />
+              ))}
+            </div>
           </div>
-        </Modal>
+        </div>
       )}
     </div>
   );
