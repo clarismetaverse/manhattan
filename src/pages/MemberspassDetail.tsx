@@ -9,10 +9,12 @@ import {
   Sparkles,
   DoorOpen,
   X,
+  User,
 } from "lucide-react";
 import directGuestIcon from "@/assets/direct-guest-icon.png";
 import generalRequestIcon from "@/assets/general-request-icon.png";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Carousel,
   CarouselContent,
@@ -399,36 +401,56 @@ export default function MemberspassDetail() {
       {showMembersPicker && (
         <Modal onClose={() => setShowMembersPicker(false)}>
           <div className="space-y-5">
-            <header className="text-center">
+            <header className="text-center relative">
               <h3 className="text-[18px] font-light tracking-[-0.01em]">Choose a Member</h3>
               <p className="mt-1 text-sm text-white/70">
                 Send a Direct Guest request to a door member.
               </p>
+              <div className="absolute top-0 right-0 rounded-full bg-white/10 px-3 py-1 text-xs">
+                <span className="text-white/70">Requests left:</span> <span className="font-medium">3</span>
+              </div>
             </header>
 
             <ul className="space-y-3 max-h-[46vh] overflow-y-auto pr-1">
-              {["@danielv (Guardian)", "@michaelr (Guardian)", "@emilyp (Guardian)", "@celine (Discreet)", "@andrew (Discreet)", "@marco (Locked)"]
-                .map((m, i) => (
+              {[
+                { username: "@danielv", type: "guardian" },
+                { username: "@michaelr", type: "guardian" },
+                { username: "@emilyp", type: "guardian" },
+                { username: "@celine", type: "discreet" },
+                { username: "@andrew", type: "discreet" },
+                { username: "@marco", type: "locked" }
+              ].map((member, i) => (
                   <li
                     key={i}
                     className={
-                      "flex items-center justify-between rounded-2xl border px-4 py-3 " +
-                      (m.includes("Locked")
+                      "flex items-center justify-between rounded-2xl border px-4 py-3 gap-3 " +
+                      (member.type === "locked"
                         ? "border-white/10 bg-white/[0.03] text-white/40"
                         : "border-white/10 bg-white/[0.05] text-white/90")
                     }
                   >
-                    <span className="text-sm">{m}</span>
-                    <Button
-                      disabled={m.includes("Locked")}
-                      className="h-9 rounded-[10px] bg-white/10 text-white border border-white/20 hover:bg-white/20 text-[12px] font-light"
-                      onClick={() => {
-                        setShowMembersPicker(false);
-                        alert(`Request sent to ${m.split(" ")[0]}`);
-                      }}
-                    >
-                      Send
-                    </Button>
+                    <span className="text-sm flex-1">{member.username}</span>
+                    <div className="flex items-center gap-3">
+                      {member.type === "discreet" ? (
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback className="bg-white/10 text-white text-xs">
+                            {member.username.slice(1, 3).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : (
+                        <User className="w-5 h-5 text-white/60" />
+                      )}
+                      <Button
+                        disabled={member.type === "locked"}
+                        className="h-9 rounded-[10px] bg-white/10 text-white border border-white/20 hover:bg-white/20 text-[12px] font-light"
+                        onClick={() => {
+                          setShowMembersPicker(false);
+                          alert(`Request sent to ${member.username}`);
+                        }}
+                      >
+                        Send
+                      </Button>
+                    </div>
                   </li>
                 ))}
             </ul>
