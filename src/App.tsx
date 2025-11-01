@@ -16,6 +16,7 @@ import UGCTiktokerProfilePinned from "./pages/UGCTiktokerProfilePinned";
 import CaseShowcasePage from "./pages/CaseShowcasePage";
 import UGCViewPage from "./pages/UGCViewPage";
 import PortfolioNewPage from "./pages/PortfolioNewPage";
+import MemberspassHome from "./pages/MemberspassHome";
 
 
 
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/ugc" element={<UGCViewPage />} />
               <Route path="/case/:id" element={<CaseShowcasePage />} />
               <Route path="/portfolio/new" element={<PortfolioNewPage />} />
+              <Route path="/memberspass" element={<MemberspassHome />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
