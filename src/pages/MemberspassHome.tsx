@@ -36,17 +36,17 @@ export default function MemberspassCinematicHomeExact() {
               <div className="absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(8,9,10,0.50)_0%,rgba(8,9,10,0.60)_60%,rgba(8,9,10,0.66)_100%)]" />
 
               {/* Content */}
-              <div className="relative z-10 px-5 py-6 sm:px-7 sm:py-8">
-                <div className="absolute bottom-5 right-5 sm:bottom-7 sm:right-7 flex items-baseline gap-1.5">
-                  <div className="font-light text-[18px] leading-none text-white/90 tracking-[-0.01em]">
-                    {card.count}
-                  </div>
+              <div className="relative z-10 px-5 py-8 sm:px-7 sm:py-10">
+                <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col items-end gap-0.5">
                   <div className="text-[9px] leading-none text-white/60 tracking-[0.07em] uppercase">
                     tonight check ins
                   </div>
+                  <div className="font-light text-[12px] leading-none text-white/90 tracking-[-0.01em] mr-2">
+                    {card.count}
+                  </div>
                 </div>
 
-                <h3 className="mt-5 sm:mt-6 text-[30px] sm:text-[36px] md:text-[40px] leading-[1.05] font-light tracking-[-0.015em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.65)]">
+                <h3 className="mt-12 sm:mt-16 text-[30px] sm:text-[36px] md:text-[40px] leading-[1.05] font-light tracking-[-0.015em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.65)]">
                   {card.title}
                 </h3>
 
