@@ -192,7 +192,7 @@ export default function MemberspassDetail() {
         </div>
 
         {/* ABOUT MEMBERS — people > place */}
-        <section className="rounded-[20px] border border-white/5 bg-[#0E0F10]/40 p-6 sm:p-8 mb-6" id="about-members">
+        <section className="mb-6" id="about-members">
           <h2 className="flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-white/55 mb-3">
             <Sparkles className="w-3.5 h-3.5" /> About Members
           </h2>
