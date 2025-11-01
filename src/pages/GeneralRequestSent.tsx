@@ -65,7 +65,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
 
   const avatarTransition = prefersReducedMotion
     ? { duration: 0 }
-    : { duration: 0.6, ease: "easeOut", delay: 0.12 };
+    : { duration: 0.6, delay: 0.12 };
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-[#F2F1EF]">
@@ -175,11 +175,11 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
         <div className="fixed inset-x-0 bottom-0 z-20 mx-auto mb-8 max-w-[760px] px-6">
           <div className="rounded-2xl border border-white/12 bg-black/40 p-3 backdrop-blur-xl">
             <Button
-              aria-label="Return Home"
-              onClick={() => navigate("/memberspass")}
-              className="h-12 w-full rounded-[12px] border border-white/20 bg-white/10 text-[14px] font-light tracking-wide text-white transition hover:bg-white/20"
+              aria-label="Open Guest Cards"
+              onClick={() => navigate("/guest-cards")}
+              className="h-10 w-full rounded-[12px] border border-white/20 bg-white/10 text-[13px] font-light tracking-wide text-white transition hover:bg-white/20"
             >
-              Return Home
+              Open Guest Cards
             </Button>
           </div>
         </div>
