@@ -401,7 +401,7 @@ export default function MemberspassDetail() {
       {showMembersPicker && (
         <Modal onClose={() => setShowMembersPicker(false)}>
           <div className="space-y-5 relative">
-            <div className="absolute -top-3 right-0 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm border border-white/10">
+            <div className="absolute -top-8 right-0 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm border border-white/10">
               <span className="text-white/70">Requests left:</span> <span className="font-medium">3</span>
             </div>
             
