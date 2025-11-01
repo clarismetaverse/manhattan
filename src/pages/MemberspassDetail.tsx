@@ -414,18 +414,40 @@ export default function MemberspassDetail() {
       )}
 
       {showAbout && (
-        <Modal onClose={() => setShowAbout(false)}>
-          <div className="space-y-4">
-            <header>
-              <h3 className="flex items-center gap-2 text-[18px] font-light tracking-[-0.01em]">
-                <Info className="w-5 h-5" /> About {club.title}
-              </h3>
-            </header>
-            <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">
-              {club.about}
-            </p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" onClick={() => setShowAbout(false)} />
+          
+          <div className="relative z-10 w-full sm:w-[680px] mx-4 rounded-[24px] overflow-hidden border border-white/10 shadow-2xl">
+            <button 
+              onClick={() => setShowAbout(false)} 
+              className="absolute right-5 top-5 z-20 text-white/70 hover:text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="relative h-[70vh] sm:h-[500px]">
+              <div 
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${club.image})` }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/75" />
+              
+              <div className="relative z-10 h-full flex flex-col justify-end p-8 sm:p-10">
+                <div className="flex items-center gap-2 text-white/70 mb-4">
+                  <Info className="w-5 h-5" />
+                  <span className="text-[11px] uppercase tracking-[0.08em]">About</span>
+                </div>
+                <h3 className="text-[32px] sm:text-[38px] font-light tracking-tight text-white mb-6">
+                  {club.title}
+                </h3>
+                <div className="w-16 h-[1px] bg-white/30 mb-6" />
+                <p className="text-[15px] sm:text-[16px] font-light leading-relaxed text-white/95 max-w-[560px]">
+                  {club.about}
+                </p>
+              </div>
+            </div>
           </div>
-        </Modal>
+        </div>
       )}
 
       {showAmenities && (
