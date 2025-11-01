@@ -75,7 +75,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
         aria-hidden="true"
       />
       <div
-        className="absolute inset-0 z-0 bg-black/38 pointer-events-none"
+        className="absolute inset-0 z-0 bg-black/28 pointer-events-none"
         aria-hidden="true"
       />
       <div
