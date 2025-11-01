@@ -346,7 +346,7 @@ export default function MemberspassDetail() {
                   alert("General request sent. Any member may support your access.");
                 }}
                 className="group w-full rounded-2xl border border-white/14 bg-white/[0.08]
-                           hover:bg-white/[0.12] transition px-5 py-4 text-left"
+                           hover:bg-white/[0.12] transition px-5 py-6 text-left"
               >
                 <div className="flex items-center gap-3">
                   {/* Ripple / Signal icon (ivory) */}
