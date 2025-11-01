@@ -431,7 +431,7 @@ export default function MemberspassDetail() {
                 className="absolute inset-0 bg-cover bg-center"
                 style={{ backgroundImage: `url(${club.image})` }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/60 to-black/75" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/85 to-black/95" />
               
               {/* Content */}
               <div className="relative z-10 p-8 sm:p-12 min-h-[400px] flex flex-col justify-center">
