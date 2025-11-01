@@ -46,7 +46,7 @@ export default function MemberspassCinematicHomeExact() {
                   </div>
                 </div>
 
-                <h3 className="mt-5 sm:mt-6 text-[30px] sm:text-[36px] md:text-[40px] leading-[1.05] font-light tracking-[-0.015em] text-[#EEF1F0] drop-shadow-[0_1px_0_rgba(0,0,0,0.65)]">
+                <h3 className="mt-5 sm:mt-6 text-[30px] sm:text-[36px] md:text-[40px] leading-[1.05] font-light tracking-[-0.015em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.65)]">
                   {card.title}
                 </h3>
 
