@@ -553,7 +553,7 @@ function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* dimmed glass backdrop */}
       <div
-        className="absolute inset-0 bg-[rgba(5,6,7,0.6)] backdrop-blur-sm"
+        className="absolute inset-0 bg-[#0A0B0C]"
         onClick={onClose}
       />
       <div className="relative z-10 max-w-full px-4">{children}</div>
