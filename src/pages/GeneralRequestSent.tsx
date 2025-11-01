@@ -70,21 +70,27 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-[#F2F1EF]">
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 z-0 bg-cover bg-center [filter:saturate(110%)_contrast(105%)_brightness(88%)]"
         style={{ backgroundImage: `url(${clubImage})` }}
         aria-hidden="true"
       />
-      <div className="absolute inset-0 bg-[rgba(6,7,8,0.08)]" aria-hidden="true" />
-      <div className="absolute inset-0 backdrop-blur-[2px]" aria-hidden="true" />
+      <div
+        className="absolute inset-0 z-0 bg-black/28 pointer-events-none"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-0 z-0 backdrop-blur-[6px] bg-black/0 pointer-events-none"
+        aria-hidden="true"
+      />
       <motion.div
-        className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(600px_140px_at_50%_0%,rgba(255,255,255,0.12),rgba(255,255,255,0)_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-52 bg-[radial-gradient(600px_140px_at_50%_0%,rgba(255,255,255,0.12),rgba(255,255,255,0)_70%)]"
         initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.8, ease: "easeOut" }}
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-64 bg-gradient-to-t from-black/70 via-black/30 to-transparent"
         aria-hidden="true"
       />
 
