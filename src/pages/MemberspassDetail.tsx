@@ -8,10 +8,10 @@ import {
   Shield,
   Sparkles,
   DoorOpen,
-  SendHorizontal,
-  UserPlus,
   X,
 } from "lucide-react";
+import directGuestIcon from "@/assets/direct-guest-icon.png";
+import generalRequestIcon from "@/assets/general-request-icon.png";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -345,7 +345,7 @@ export default function MemberspassDetail() {
                 className="group rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-left hover:bg-white/[0.06] transition"
               >
                 <div className="flex items-center gap-3">
-                  <UserPlus className="w-5 h-5 text-white/90" />
+                  <img src={directGuestIcon} alt="Direct Guest" className="w-5 h-5" />
                   <div>
                     <div className="text-[14px] font-medium">Direct Guest (DG)</div>
                     <div className="text-xs text-white/70">Ask a specific member to be your host</div>
@@ -361,7 +361,7 @@ export default function MemberspassDetail() {
                 className="group rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 text-left hover:bg-white/[0.06] transition"
               >
                 <div className="flex items-center gap-3">
-                  <SendHorizontal className="w-5 h-5 text-white/90" />
+                  <img src={generalRequestIcon} alt="General Request" className="w-5 h-5" />
                   <div>
                     <div className="text-[14px] font-medium">General Request</div>
                     <div className="text-xs text-white/70">Any member can support your request</div>
