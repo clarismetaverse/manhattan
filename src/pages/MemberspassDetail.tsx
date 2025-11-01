@@ -22,7 +22,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import GeneralRequestSent from "@/components/GeneralRequestSent";
 
 // --- DATA -------------------------------------------------------------------
 const CLUBS = {
@@ -183,7 +182,6 @@ export default function MemberspassDetail() {
   const [showAbout, setShowAbout] = useState(false);
   const [showAmenities, setShowAmenities] = useState(false);
   const [currentAmenity, setCurrentAmenity] = useState(0);
-  const [showGeneralRequestSent, setShowGeneralRequestSent] = useState(false);
 
   const aboutMembers = useMemo(() => {
     // Short, people-centric blurb aligned with the rationale.
@@ -346,7 +344,8 @@ export default function MemberspassDetail() {
               <button
                 onClick={() => {
                   setShowRequest(false);
-                  setShowGeneralRequestSent(true);
+                  // TODO: trigger general request API
+                  alert("General request sent. Any member may support your access.");
                 }}
                 className="group w-full rounded-2xl border border-white/14 bg-white/[0.08]
                            hover:bg-white/[0.12] transition px-5 py-8 text-left"
@@ -562,15 +561,6 @@ export default function MemberspassDetail() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* General Request Sent View */}
-      {showGeneralRequestSent && (
-        <GeneralRequestSent
-          clubName={club.title}
-          clubImage={club.image}
-          membersReviewing={club.count}
-        />
       )}
     </div>
   );
