@@ -400,25 +400,26 @@ export default function MemberspassDetail() {
 
       {showMembersPicker && (
         <Modal onClose={() => setShowMembersPicker(false)}>
-          <div className="space-y-5">
-            <header className="text-center relative">
+          <div className="space-y-5 relative">
+            <div className="absolute -top-3 right-0 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm border border-white/10">
+              <span className="text-white/70">Requests left:</span> <span className="font-medium">3</span>
+            </div>
+            
+            <header className="text-center">
               <h3 className="text-[18px] font-light tracking-[-0.01em]">Choose a Member</h3>
               <p className="mt-1 text-sm text-white/70">
                 Send a Direct Guest request to a door member.
               </p>
-              <div className="absolute top-0 right-0 rounded-full bg-white/10 px-3 py-1 text-xs">
-                <span className="text-white/70">Requests left:</span> <span className="font-medium">3</span>
-              </div>
             </header>
 
             <ul className="space-y-3 max-h-[46vh] overflow-y-auto pr-1">
               {[
-                { username: "@danielv", type: "guardian" },
-                { username: "@michaelr", type: "guardian" },
-                { username: "@emilyp", type: "guardian" },
-                { username: "@celine", type: "discreet" },
-                { username: "@andrew", type: "discreet" },
-                { username: "@marco", type: "locked" }
+                { username: "@danielv", type: "guardian", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop" },
+                { username: "@michaelr", type: "guardian", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop" },
+                { username: "@emilyp", type: "guardian", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop" },
+                { username: "@celine", type: "discreet", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=celine&backgroundColor=b6e3f4,c0aede,d1d4f9" },
+                { username: "@andrew", type: "discreet", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=andrew&backgroundColor=ffdfbf,ffd5dc,c0aede" },
+                { username: "@marco", type: "locked", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop" }
               ].map((member, i) => (
                   <li
                     key={i}
@@ -431,15 +432,12 @@ export default function MemberspassDetail() {
                   >
                     <span className="text-sm flex-1">{member.username}</span>
                     <div className="flex items-center gap-3">
-                      {member.type === "discreet" ? (
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-white/10 text-white text-xs">
-                            {member.username.slice(1, 3).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : (
-                        <User className="w-5 h-5 text-white/60" />
-                      )}
+                      <Avatar className="h-9 w-9 border border-white/10">
+                        <img src={member.avatar} alt={member.username} className="object-cover" />
+                        <AvatarFallback className="bg-white/10 text-white text-xs">
+                          {member.username.slice(1, 3).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       <Button
                         disabled={member.type === "locked"}
                         className="h-9 rounded-[10px] bg-white/10 text-white border border-white/20 hover:bg-white/20 text-[12px] font-light"
