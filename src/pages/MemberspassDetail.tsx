@@ -414,40 +414,18 @@ export default function MemberspassDetail() {
       )}
 
       {showAbout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAbout(false)} />
-          
-          <div className="relative z-10 w-full max-w-3xl mx-4 sm:mx-8 rounded-[24px] overflow-hidden border border-white/10 shadow-2xl">
-            <button 
-              onClick={() => setShowAbout(false)} 
-              className="absolute right-6 top-6 z-10 text-white/70 hover:text-white transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="relative">
-              {/* Background image with overlay */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${club.image})` }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/85 to-black/95" />
-              
-              {/* Content */}
-              <div className="relative z-10 p-8 sm:p-12 min-h-[400px] flex flex-col justify-center">
-                <header className="mb-6">
-                  <h3 className="flex items-center gap-3 text-[32px] sm:text-[36px] font-light tracking-tight text-white mb-2">
-                    <Info className="w-7 h-7" /> About {club.title}
-                  </h3>
-                  <div className="h-[2px] w-16 bg-white/40 rounded-full" />
-                </header>
-                <p className="text-[16px] sm:text-[17px] font-light leading-relaxed text-white/90 max-w-2xl">
-                  {club.about}
-                </p>
-              </div>
-            </div>
+        <Modal onClose={() => setShowAbout(false)}>
+          <div className="space-y-4">
+            <header>
+              <h3 className="flex items-center gap-2 text-[18px] font-light tracking-[-0.01em]">
+                <Info className="w-5 h-5" /> About {club.title}
+              </h3>
+            </header>
+            <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">
+              {club.about}
+            </p>
           </div>
-        </div>
+        </Modal>
       )}
 
       {showAmenities && (
