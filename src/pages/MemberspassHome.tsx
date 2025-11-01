@@ -37,11 +37,11 @@ export default function MemberspassCinematicHomeExact() {
 
               {/* Content */}
               <div className="relative z-10 px-5 py-6 sm:px-7 sm:py-8">
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="pt-1 font-light text-[36px] sm:text-[42px] leading-none text-[#E8ECEB] tracking-[-0.01em] drop-shadow-[0_1px_0_rgba(0,0,0,0.6)]">
+                <div className="absolute bottom-5 right-5 sm:bottom-7 sm:right-7 flex items-baseline gap-1.5">
+                  <div className="font-light text-[18px] leading-none text-white/90 tracking-[-0.01em]">
                     {card.count}
                   </div>
-                  <div className="pt-[10px] sm:pt-[12px] text-[12.5px] sm:text-[13.5px] leading-none text-[#A9AFAD] tracking-[0.07em] uppercase">
+                  <div className="text-[9px] leading-none text-white/60 tracking-[0.07em] uppercase">
                     tonight check ins
                   </div>
                 </div>
