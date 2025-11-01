@@ -110,6 +110,7 @@ export default function MemberspassDetail() {
 
   const [showRequest, setShowRequest] = useState(false);
   const [showMembersPicker, setShowMembersPicker] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   const aboutMembers = useMemo(() => {
     // Short, people-centric blurb aligned with the rationale.
@@ -176,7 +177,7 @@ export default function MemberspassDetail() {
             {/* In-picture, wrapped chips: ABOUT / AMENITIES */}
             <div className="mt-4 flex items-center gap-3">
               <button
-                onClick={() => aboutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                onClick={() => setShowAbout(true)}
                 className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[12px] tracking-[0.08em] uppercase text-white/90 hover:bg-white/15"
               >
                 About
@@ -217,13 +218,6 @@ export default function MemberspassDetail() {
           </div>
         </div>
 
-        {/* ABOUT (SPACE) */}
-        <section ref={aboutRef} className="rounded-[20px] border border-white/5 bg-[#0E0F10]/40 p-6 sm:p-8 mb-6">
-          <h2 className="flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-white/55 mb-3">
-            <Info className="w-3.5 h-3.5" /> About
-          </h2>
-          <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">{club.about}</p>
-        </section>
 
         {/* AMENITIES */}
         <section ref={amenitiesRef} className="rounded-[20px] border border-white/5 bg-[#0E0F10]/40 p-6 sm:p-8 mb-6">
@@ -361,6 +355,21 @@ export default function MemberspassDetail() {
                   </li>
                 ))}
             </ul>
+          </div>
+        </Modal>
+      )}
+
+      {showAbout && (
+        <Modal onClose={() => setShowAbout(false)}>
+          <div className="space-y-4">
+            <header>
+              <h3 className="flex items-center gap-2 text-[18px] font-light tracking-[-0.01em]">
+                <Info className="w-5 h-5" /> About {club.title}
+              </h3>
+            </header>
+            <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">
+              {club.about}
+            </p>
           </div>
         </Modal>
       )}
