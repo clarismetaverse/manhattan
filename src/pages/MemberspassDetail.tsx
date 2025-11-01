@@ -13,6 +13,7 @@ const CLUBS = {
     dressCode: "Formal attire required. Jackets mandatory after 7pm.",
     about: "Since 1931, Cipriani has been the heart of Milano's social elite. Our members represent the pinnacle of business, arts, and culture. The club maintains its legacy through carefully curated experiences and unwavering standards of excellence.",
     amenities: ["Private dining rooms", "Business center", "Wine cellar", "Rooftop terrace", "Member events"],
+    rulesOfConduct: ["Respect privacy and discretion at all times", "Mobile devices on silent in common areas", "Photography requires prior approval", "Business discussions welcome in designated areas", "Punctuality is expected for all reservations"],
   },
   sanctuary: {
     title: "The Sanctuary",
@@ -23,6 +24,7 @@ const CLUBS = {
     dressCode: "Smart casual. No sportswear or beach attire.",
     about: "The Sanctuary opened in 2018 as Milano's answer to the modern member. We celebrate innovation, creativity, and the power of diverse perspectives. Our space is designed for serendipitous encounters and meaningful collaboration.",
     amenities: ["Co-working spaces", "Art gallery", "Recording studio", "Wellness lounge", "Monthly showcases"],
+    rulesOfConduct: ["Embrace diverse perspectives and ideas", "Keep communal spaces tidy and welcoming", "Respect working members with minimal noise", "Share opportunities and connections freely", "Support fellow members' creative endeavors"],
   },
   parigi: {
     title: "Palazzo Parigi",
@@ -33,6 +35,7 @@ const CLUBS = {
     dressCode: "Business formal. Evening gowns and suits preferred.",
     about: "Palazzo Parigi embodies the grandeur of Milano's golden age. Housed in a restored 19th century palazzo, every corner tells a story. Our members are custodians of tradition while embracing the future of luxury.",
     amenities: ["Grand ballroom", "Private library", "Cigar lounge", "Spa facilities", "Chef's table"],
+    rulesOfConduct: ["Maintain elegance in behavior and presentation", "No photography in private member areas", "Phones must be silenced throughout the venue", "Smoking permitted only in designated lounges", "Treat staff and fellow members with courtesy"],
   },
 };
 
@@ -127,6 +130,19 @@ export default function MemberspassDetail() {
               <li key={i} className="text-[14px] font-light text-[#E9ECEB]/90 flex items-center gap-3">
                 <span className="w-1 h-1 rounded-full bg-white/40" />
                 {amenity}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Rules of Conduct */}
+        <div className="rounded-[20px] border border-white/5 bg-[#0E0F10]/40 p-6 sm:p-8 mb-6">
+          <h2 className="text-[11px] uppercase tracking-[0.08em] text-white/50 mb-4">Rules of Conduct</h2>
+          <ul className="space-y-2">
+            {club.rulesOfConduct.map((rule, i) => (
+              <li key={i} className="text-[14px] font-light text-[#E9ECEB]/90 flex items-center gap-3">
+                <span className="w-1 h-1 rounded-full bg-white/40" />
+                {rule}
               </li>
             ))}
           </ul>
