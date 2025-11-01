@@ -6,9 +6,33 @@ import React from "react";
  */
 
 const CARDS = [
-  { id: "cipriani", title: "Cipriani", count: 91, image: "https://images.unsplash.com/photo-1579551055097-5f8b0b6b1d4f?q=80&w=1800&auto=format&fit=crop" },
-  { id: "sanctuary", title: "The Sanctuary", count: 72, image: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?q=80&w=1800&auto=format&fit=crop" },
-  { id: "parigi", title: "Palazzo Parigi", count: 61, image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1800&auto=format&fit=crop" },
+  { 
+    id: "cipriani", 
+    title: "Cipriani", 
+    count: 91, 
+    image: "https://images.unsplash.com/photo-1579551055097-5f8b0b6b1d4f?q=80&w=1800&auto=format&fit=crop",
+    description: "Where industry leaders and creative minds converge. Members include founders building the next generation of tech, artists redefining culture, and tastemakers shaping tomorrow.",
+    guestPolicy: "Members may bring up to 2 guests",
+    dressCode: "Smart casual after 6pm"
+  },
+  { 
+    id: "sanctuary", 
+    title: "The Sanctuary", 
+    count: 72, 
+    image: "https://images.unsplash.com/photo-1498654200943-1088dd4438ae?q=80&w=1800&auto=format&fit=crop",
+    description: "A haven for those who move between cities and ideas. Members span from venture capitalists to documentary filmmakers, united by curiosity and a commitment to meaningful work.",
+    guestPolicy: "Members may bring 1 guest",
+    dressCode: "Elevated casual always"
+  },
+  { 
+    id: "parigi", 
+    title: "Palazzo Parigi", 
+    count: 61, 
+    image: "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1800&auto=format&fit=crop",
+    description: "An intimate circle of entrepreneurs, designers, and cultural innovators. Members value craftsmanship, understated luxury, and conversations that spark new perspectives.",
+    guestPolicy: "Members-only on weekends",
+    dressCode: "Business elegant preferred"
+  },
 ];
 
 export default function MemberspassCinematicHomeExact() {
@@ -36,7 +60,7 @@ export default function MemberspassCinematicHomeExact() {
               <div className="absolute inset-0 rounded-[inherit] bg-[linear-gradient(180deg,rgba(8,9,10,0.50)_0%,rgba(8,9,10,0.60)_60%,rgba(8,9,10,0.66)_100%)]" />
 
               {/* Content */}
-              <div className="relative z-10 px-5 py-8 sm:px-7 sm:py-10">
+              <div className="relative z-10 px-5 py-8 sm:px-7 sm:py-10 flex flex-col h-full min-h-[480px] sm:min-h-[520px]">
                 <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col items-end gap-0.5">
                   <div className="text-[9px] leading-none text-white/60 tracking-[0.07em] uppercase">
                     tonight check ins
@@ -46,12 +70,31 @@ export default function MemberspassCinematicHomeExact() {
                   </div>
                 </div>
 
-                <h3 className="mt-12 sm:mt-16 text-[30px] sm:text-[36px] md:text-[40px] leading-[1.05] font-light tracking-[-0.015em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.65)]">
+                <h3 className="text-[30px] sm:text-[36px] md:text-[40px] leading-[1.05] font-light tracking-[-0.015em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.65)] mb-6">
                   {card.title}
                 </h3>
 
+                <p className="text-[13px] sm:text-[14px] leading-[1.6] text-white/75 font-light mb-8 max-w-[520px]">
+                  {card.description}
+                </p>
+
+                <div className="space-y-3 mb-auto">
+                  <div className="flex items-start gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.08em] text-white/50 min-w-[90px] pt-0.5">Guest Policy</span>
+                    <span className="text-[13px] text-white/80 font-light">{card.guestPolicy}</span>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-[10px] uppercase tracking-[0.08em] text-white/50 min-w-[90px] pt-0.5">Dress Code</span>
+                    <span className="text-[13px] text-white/80 font-light">{card.dressCode}</span>
+                  </div>
+                </div>
+
+                <button className="mt-8 px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-lg text-[13px] text-white font-light tracking-[0.02em] transition-all duration-300 backdrop-blur-sm self-start">
+                  See members
+                </button>
+
                 <div className="pointer-events-none absolute inset-0 rounded-[inherit] ring-1 ring-white/10" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 rounded-b-[inherit] bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 rounded-b-[inherit] bg-gradient-to-t from-black/70 to-transparent" />
               </div>
             </li>
           ))}
