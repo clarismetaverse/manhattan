@@ -13,6 +13,13 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 // --- DATA -------------------------------------------------------------------
 const CLUBS = {
@@ -111,6 +118,7 @@ export default function MemberspassDetail() {
   const [showRequest, setShowRequest] = useState(false);
   const [showMembersPicker, setShowMembersPicker] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showAmenities, setShowAmenities] = useState(false);
 
   const aboutMembers = useMemo(() => {
     // Short, people-centric blurb aligned with the rationale.
@@ -183,7 +191,7 @@ export default function MemberspassDetail() {
                 About
               </button>
               <button
-                onClick={() => amenitiesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                onClick={() => setShowAmenities(true)}
                 className="rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[12px] tracking-[0.08em] uppercase text-white/90 hover:bg-white/15"
               >
                 Amenities
@@ -218,21 +226,6 @@ export default function MemberspassDetail() {
           </div>
         </div>
 
-
-        {/* AMENITIES */}
-        <section ref={amenitiesRef} className="rounded-[20px] border border-white/5 bg-[#0E0F10]/40 p-6 sm:p-8 mb-6">
-          <h2 className="flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-white/55 mb-3">
-            <DoorOpen className="w-3.5 h-3.5" /> Amenities
-          </h2>
-          <ul className="space-y-2">
-            {club.amenities.map((amenity: string, i: number) => (
-              <li key={i} className="text-[14px] font-light text-[#E9ECEB]/90 flex items-center gap-3">
-                <span className="w-1 h-1 rounded-full bg-white/40" />
-                {amenity}
-              </li>
-            ))}
-          </ul>
-        </section>
 
         {/* RULES OF CONDUCT + ADDITIONAL RULES */}
         <section className="rounded-[20px] border border-white/5 bg-[#0E0F10]/40 p-6 sm:p-8 mb-6">
@@ -370,6 +363,48 @@ export default function MemberspassDetail() {
             <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">
               {club.about}
             </p>
+          </div>
+        </Modal>
+      )}
+
+      {showAmenities && (
+        <Modal onClose={() => setShowAmenities(false)}>
+          <div className="space-y-5">
+            <header className="text-center">
+              <h3 className="flex items-center justify-center gap-2 text-[18px] font-light tracking-[-0.01em]">
+                <DoorOpen className="w-5 h-5" /> Amenities
+              </h3>
+            </header>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {club.amenities.map((amenity: string, i: number) => {
+                  const amenityImages = [
+                    "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1200&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1200&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop",
+                    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1200&auto=format&fit=crop",
+                  ];
+                  return (
+                    <CarouselItem key={i}>
+                      <div className="rounded-[16px] overflow-hidden border border-white/10 bg-[#0E0F10]/60">
+                        <div 
+                          className="h-48 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${amenityImages[i % amenityImages.length]})` }}
+                        />
+                        <div className="p-5">
+                          <p className="text-[15px] font-light leading-relaxed text-[#E9ECEB]/90">
+                            {amenity}
+                          </p>
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  );
+                })}
+              </CarouselContent>
+              <CarouselPrevious className="left-2" />
+              <CarouselNext className="right-2" />
+            </Carousel>
           </div>
         </Modal>
       )}
