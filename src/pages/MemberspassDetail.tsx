@@ -344,8 +344,15 @@ export default function MemberspassDetail() {
               <button
                 onClick={() => {
                   setShowRequest(false);
-                  // TODO: trigger general request API
-                  alert("General request sent. Any member may support your access.");
+                  navigate("/general-request-sent", {
+                    state: {
+                      clubName: club ? `${club.title} ${club.city}` : undefined,
+                      clubImage: club?.image,
+                      userAvatar:
+                        "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop",
+                      membersReviewing: club?.count ?? 35,
+                    },
+                  });
                 }}
                 className="group w-full rounded-2xl border border-white/14 bg-white/[0.08]
                            hover:bg-white/[0.12] transition px-5 py-8 text-left"
