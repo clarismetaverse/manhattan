@@ -70,7 +70,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-[#F2F1EF]">
       <div
-        className="absolute inset-0 z-0 bg-cover bg-center [filter:saturate(110%)_contrast(105%)_brightness(88%)]"
+        className="absolute inset-x-0 top-0 bottom-1/2 z-0 bg-cover bg-center [filter:saturate(110%)_contrast(105%)_brightness(88%)]"
         style={{ backgroundImage: `url(${clubImage})` }}
         aria-hidden="true"
       />
