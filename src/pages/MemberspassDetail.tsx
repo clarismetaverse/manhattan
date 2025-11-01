@@ -414,12 +414,12 @@ export default function MemberspassDetail() {
 
             <ul className="space-y-3 max-h-[46vh] overflow-y-auto pr-1">
               {[
-                { username: "@danielv", type: "guardian", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop" },
-                { username: "@michaelr", type: "guardian", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop" },
-                { username: "@emilyp", type: "guardian", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop" },
-                { username: "@celine", type: "discreet", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=celine&backgroundColor=b6e3f4,c0aede,d1d4f9" },
-                { username: "@andrew", type: "discreet", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=andrew&backgroundColor=ffdfbf,ffd5dc,c0aede" },
-                { username: "@marco", type: "locked", avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop" }
+                { username: "@danielv", type: "guardian", special: true, avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop" },
+                { username: "@michaelr", type: "guardian", special: false, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop" },
+                { username: "@emilyp", type: "guardian", special: true, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop" },
+                { username: "@celine", type: "discreet", special: false, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=celine&backgroundColor=b6e3f4,c0aede,d1d4f9" },
+                { username: "@andrew", type: "discreet", special: false, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=andrew&backgroundColor=ffdfbf,ffd5dc,c0aede" },
+                { username: "@marco", type: "locked", special: false, avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop" }
               ].map((member, i) => (
                   <li
                     key={i}
@@ -430,7 +430,12 @@ export default function MemberspassDetail() {
                         : "border-white/10 bg-white/[0.05] text-white/90")
                     }
                   >
-                    <span className="text-sm flex-1">{member.username}</span>
+                    <div className="flex-1">
+                      <div className="text-sm">{member.username}</div>
+                      {member.special && (
+                        <div className="text-[11px] text-[#D9CBA3] mt-0.5">Special member</div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-9 w-9 border border-white/10">
                         <img src={member.avatar} alt={member.username} className="object-cover" />
