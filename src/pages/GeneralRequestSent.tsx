@@ -129,7 +129,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: "easeOut", delay: 0.18 }}
         >
-          any member may pick your request
+          any member may endorse your request
         </motion.p>
 
         <motion.div
