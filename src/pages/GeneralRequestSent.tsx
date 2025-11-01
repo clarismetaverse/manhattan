@@ -74,8 +74,8 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
         style={{ backgroundImage: `url(${clubImage})` }}
         aria-hidden="true"
       />
-      <div className="absolute inset-0 bg-[rgba(6,7,8,0.20)]" aria-hidden="true" />
-      <div className="absolute inset-0 backdrop-blur-[4px]" aria-hidden="true" />
+      <div className="absolute inset-0 bg-[rgba(6,7,8,0.08)]" aria-hidden="true" />
+      <div className="absolute inset-0 backdrop-blur-[2px]" aria-hidden="true" />
       <motion.div
         className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(600px_140px_at_50%_0%,rgba(255,255,255,0.12),rgba(255,255,255,0)_70%)]"
         initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
