@@ -357,7 +357,7 @@ export default function MemberspassDetail() {
                   </svg>
                   <div>
                     <div className="text-[15px] font-medium tracking-tight">General Request</div>
-                    <div className="text-[13px] text-white/75">Any member can support your request</div>
+                    <div className="text-[13px] text-white/75">any Member of the selected membersclub can support your request</div>
                   </div>
                 </div>
               </button>
