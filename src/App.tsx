@@ -18,6 +18,7 @@ import UGCViewPage from "./pages/UGCViewPage";
 import PortfolioNewPage from "./pages/PortfolioNewPage";
 import MemberspassHome from "./pages/MemberspassHome";
 import MemberspassDetail from "./pages/MemberspassDetail";
+import MemberspassTickets from "./pages/MemberspassTickets";
 import GeneralRequestSent from "./pages/GeneralRequestSent";
 
 
@@ -57,6 +58,7 @@ const App = () => (
               <Route path="/case/:id" element={<CaseShowcasePage />} />
               <Route path="/portfolio/new" element={<PortfolioNewPage />} />
               <Route path="/memberspass" element={<MemberspassHome />} />
+              <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
               <Route path="/memberspass/:clubId" element={<MemberspassDetail />} />
               <Route path="/general-request-sent" element={<GeneralRequestSent />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
