@@ -132,14 +132,6 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           transition={avatarTransition}
         />
 
-        <motion.p
-          className="mt-6 text-center text-[13px] uppercase tracking-[0.08em] text-white/85 sm:text-[14px]"
-          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: "easeOut", delay: 0.18 }}
-        >
-          a Cipriani Member may pick your request
-        </motion.p>
 
         <motion.div
           className="mt-8 flex items-center"
@@ -188,6 +180,25 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
         <div className="flex-1" />
 
         <div className="fixed inset-x-0 bottom-0 z-20 mx-auto mb-8 max-w-[760px] px-6">
+          <motion.div
+            className="mb-3 flex items-center justify-center gap-2 text-center text-[11px] text-white/60"
+            initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.6, delay: 0.4 }}
+          >
+            <svg
+              className="h-4 w-4 flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+            <span>Direct contact to the Membersclub will result in permanent ban</span>
+          </motion.div>
           <div className="rounded-2xl border border-white/12 bg-black/40 p-3 backdrop-blur-xl">
             <Button
               aria-label="Open Guest Cards"
