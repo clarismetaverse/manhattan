@@ -197,7 +197,10 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               <line x1="15" y1="9" x2="9" y2="15" />
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
-            <span>Direct contact to the Membersclub will result in permanent ban</span>
+            <span>
+              Contact to the Membersclub will result in permanent ban<br />
+              and will get notified to members
+            </span>
           </motion.div>
           <div className="rounded-2xl border border-white/12 bg-black/40 p-3 backdrop-blur-xl">
             <Button
