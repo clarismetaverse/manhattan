@@ -273,21 +273,6 @@ export default function MemberspassDetail() {
           </p>
         </section>
 
-        {/* GUEST POLICY / DRESS CODE */}
-        <div className="grid sm:grid-cols-2 gap-6 mb-8">
-          <div className="rounded-[16px] border border-white/5 bg-[#0E0F10]/40 p-6">
-            <h3 className="flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-white/55 mb-3">
-              <Shield className="w-3.5 h-3.5" /> Guest Policy
-            </h3>
-            <p className="text-[14px] font-light leading-relaxed text-[#E9ECEB]/90">{club.guestPolicy}</p>
-          </div>
-          <div className="rounded-[16px] border border-white/5 bg-[#0E0F10]/40 p-6">
-            <h3 className="flex items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-white/55 mb-3">
-              <Shirt className="w-3.5 h-3.5" /> Dress Code
-            </h3>
-            <p className="text-[14px] font-light leading-relaxed text-[#E9ECEB]/90">{club.dressCode}</p>
-          </div>
-        </div>
 
 
         {/* RULES OF CONDUCT + ADDITIONAL RULES */}
@@ -312,18 +297,12 @@ export default function MemberspassDetail() {
         </section>
 
         {/* REQUEST ACCESS (opens modal) */}
-        <div className="mt-8 flex gap-3">
+        <div className="mt-8">
           <Button
-            className="flex-1 h-12 rounded-[12px] bg-white/10 text-white border border-white/20 hover:bg-white/20 text-[14px] font-light tracking-wide"
+            className="w-full h-12 rounded-[12px] bg-white/10 text-white border border-white/20 hover:bg-white/20 text-[14px] font-light tracking-wide"
             onClick={() => setShowRequest(true)}
           >
             Request Access
-          </Button>
-          <Button
-            className="h-12 rounded-[12px] bg-transparent text-white border border-white/20 hover:bg-white/10 text-[14px] font-light"
-            onClick={() => aboutRef.current?.scrollIntoView({ behavior: "smooth" })}
-          >
-            See Members
           </Button>
         </div>
       </main>
