@@ -104,23 +104,19 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           General Admission Request
         </motion.div>
 
-        <motion.h1
-          className="mt-6 text-center font-serif text-[26px] font-light tracking-[-0.01em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.5)] sm:text-[30px]"
+        <motion.div
+          className="mt-6 rounded-3xl border border-white/10 bg-white/5 px-8 py-6 shadow-[inset_0_2px_8px_rgba(255,255,255,0.08),0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-sm"
           initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: "easeOut", delay: 0.08 }}
         >
-          Request Sent
-        </motion.h1>
-
-        <motion.p
-          className="mt-2 text-center text-[14px] text-white/70"
-          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: "easeOut", delay: 0.12 }}
-        >
-          Members of {clubName}
-        </motion.p>
+          <h1 className="text-center font-serif text-[26px] font-light tracking-[-0.01em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.5)] sm:text-[30px]">
+            Request Sent
+          </h1>
+          <p className="mt-2 text-center text-[14px] text-white/70">
+            Members of {clubName}
+          </p>
+        </motion.div>
 
         <motion.img
           src={userAvatar}
