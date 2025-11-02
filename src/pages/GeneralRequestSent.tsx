@@ -104,60 +104,78 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           General Admission Request
         </motion.div>
 
-        <motion.div
-          className="mt-6 rounded-3xl border border-white/10 bg-white/5 px-8 py-8 shadow-[inset_0_2px_8px_rgba(255,255,255,0.08),0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-sm"
+        <motion.h1
+          className="mt-6 text-center font-serif text-[26px] font-light tracking-[-0.01em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.5)] sm:text-[30px]"
           initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: "easeOut", delay: 0.08 }}
         >
-          <h1 className="text-center font-serif text-[26px] font-light tracking-[-0.01em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.5)] sm:text-[30px]">
-            Request Sent
-          </h1>
-          <p className="mt-2 text-center text-[14px] text-white/70">
-            Members of {clubName}
-          </p>
+          Request Sent
+        </motion.h1>
 
-          <img
-            src={userAvatar}
-            alt="Your avatar"
-            loading="lazy"
-            className="mx-auto mt-6 h-[120px] w-[120px] rounded-full border border-white/30 object-cover shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
-          />
+        <motion.p
+          className="mt-2 text-center text-[14px] text-white/70"
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: "easeOut", delay: 0.12 }}
+        >
+          Members of {clubName}
+        </motion.p>
 
-          <div className="mt-8 flex items-center justify-center">
-            {displayedReviewers.map((src, idx) => (
-              <motion.img
-                key={src}
-                src={src}
-                alt="Reviewing member"
-                loading="lazy"
-                className="h-10 w-10 rounded-full border border-white/20 object-cover shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-                style={{ marginLeft: idx === 0 ? 0 : -12 }}
-                initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: prefersReducedMotion ? 0 : 0.4,
-                  ease: "easeOut",
-                  delay: prefersReducedMotion ? 0 : 0.26 + idx * 0.05,
-                }}
-              />
-            ))}
-            {remainingReviewers > 0 && (
-              <motion.div
-                className="ml-2 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[12px] text-white/85"
-                initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: "easeOut", delay: 0.34 }}
-              >
-                +{remainingReviewers} more
-              </motion.div>
-            )}
-          </div>
+        <motion.img
+          src={userAvatar}
+          alt="Your avatar"
+          loading="lazy"
+          className="mt-6 h-[120px] w-[120px] rounded-full border border-white/30 object-cover shadow-[0_20px_40px_rgba(0,0,0,0.4)]"
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : avatarInitial}
+          animate={avatarAnimate}
+          transition={avatarTransition}
+        />
 
-          <p className="mt-3 text-center text-[12px] text-white/70">
-            Active Members Processing Requests
-          </p>
+
+        <motion.div
+          className="mt-8 flex items-center"
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: "easeOut", delay: 0.24 }}
+        >
+          {displayedReviewers.map((src, idx) => (
+            <motion.img
+              key={src}
+              src={src}
+              alt="Reviewing member"
+              loading="lazy"
+              className="h-10 w-10 rounded-full border border-white/20 object-cover shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+              style={{ marginLeft: idx === 0 ? 0 : -12 }}
+              initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: prefersReducedMotion ? 0 : 0.4,
+                ease: "easeOut",
+                delay: prefersReducedMotion ? 0 : 0.26 + idx * 0.05,
+              }}
+            />
+          ))}
+          {remainingReviewers > 0 && (
+            <motion.div
+              className="ml-2 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[12px] text-white/85"
+              initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.4, ease: "easeOut", delay: 0.34 }}
+            >
+              +{remainingReviewers} more
+            </motion.div>
+          )}
         </motion.div>
+
+        <motion.p
+          className="mt-3 text-center text-[12px] text-white/70"
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.45, ease: "easeOut", delay: 0.32 }}
+        >
+          Active Members Processing Requests
+        </motion.p>
 
         <div className="flex-1" />
 
