@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 
 /**
@@ -38,6 +39,7 @@ const DEFAULTS: Required<GuestMatchProps> = {
 };
 
 export default function GuestMatch(props: GuestMatchProps) {
+  const navigate = useNavigate();
   const firstName = props.firstName ?? DEFAULTS.firstName;
   const venue = props.venue ?? DEFAULTS.venue;
   const hostName = props.hostName ?? DEFAULTS.hostName;
@@ -124,11 +126,17 @@ export default function GuestMatch(props: GuestMatchProps) {
           </button>
           <button
             type="button"
+            onClick={() => navigate("/memberspass/tickets")}
             className="flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/5 text-[13px] font-light uppercase tracking-[0.18em] text-white/90 backdrop-blur-lg transition-colors hover:bg-white/12"
           >
-            Guest List Details
+            Open Guest Experiences
           </button>
         </div>
+        
+        {/* Route description */}
+        <p className="mt-4 text-center text-[11px] text-white/50">
+          Access your exclusive guest tickets and experiences
+        </p>
       </main>
     </div>
   );
