@@ -110,8 +110,17 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: prefersReducedMotion ? 0 : 0.6, ease: "easeOut", delay: 0.08 }}
         >
-          Request Sent to {clubName}
+          Request Sent
         </motion.h1>
+
+        <motion.p
+          className="mt-2 text-center text-[14px] text-white/70"
+          initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.5, ease: "easeOut", delay: 0.12 }}
+        >
+          Members of {clubName}
+        </motion.p>
 
         <motion.img
           src={userAvatar}
