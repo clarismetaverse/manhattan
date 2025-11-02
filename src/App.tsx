@@ -20,6 +20,7 @@ import MemberspassHome from "./pages/MemberspassHome";
 import MemberspassDetail from "./pages/MemberspassDetail";
 import MemberspassTickets from "./pages/MemberspassTickets";
 import GeneralRequestSent from "./pages/GeneralRequestSent";
+import GuestMatch from "./pages/GuestMatch";
 
 
 
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/memberspass" element={<MemberspassHome />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
               <Route path="/memberspass/:clubId" element={<MemberspassDetail />} />
+              <Route path="/memberspass/guest-match" element={<GuestMatch />} />
               <Route path="/general-request-sent" element={<GeneralRequestSent />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
