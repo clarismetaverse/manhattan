@@ -242,9 +242,6 @@ export default function MemberspassDetail() {
             <h1 className="text-[36px] sm:text-[44px] leading-[1.05] font-light tracking-[-0.015em] text-white drop-shadow-[0_1px_0_rgba(0,0,0,0.65)]">
               {club.title}
             </h1>
-            <p className="mt-2 text-[14px] sm:text-[15px] font-light leading-relaxed text-white/85 max-w-[560px]">
-              {club.description}
-            </p>
 
             {/* In-picture, wrapped chips: ABOUT / AMENITIES */}
             <div className="mt-4 flex items-center gap-3">
