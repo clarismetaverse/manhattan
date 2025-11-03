@@ -52,7 +52,7 @@ export function MembersCountBadge({
   if (variant === "inline") {
     return (
       <span className={cn("text-xs font-medium text-muted-foreground", className)}>
-        {formattedCurrent} / {formattedTotal}
+        {formattedCurrent} {formattedTotal}
       </span>
     )
   }
