@@ -187,9 +187,6 @@ export function CiprianiAcrossWorld({
         <div className="max-w-xl space-y-1">
           <p className="text-xs font-medium uppercase tracking-[0.3em] text-muted-foreground">Cipriani Members Club</p>
           <h2 className="text-3xl font-semibold tracking-tight">Across The World</h2>
-          <p className="text-sm text-muted-foreground">
-            Discover our most active communities and plan your next visit with the Cipriani Members Pass.
-          </p>
         </div>
         <MembersCountBadge
           currentMembers={totals.current}
