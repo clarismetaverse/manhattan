@@ -274,6 +274,11 @@ export default function MemberspassDetail() {
           </p>
         </section>
 
+        {/* CIPRIANI ACROSS THE WORLD CAROUSEL */}
+        <div className="mb-8">
+          <CiprianiAcrossWorld locations={DEFAULT_LOCATIONS} />
+        </div>
+
 
 
         {/* RULES OF CONDUCT + ADDITIONAL RULES */}
@@ -305,11 +310,6 @@ export default function MemberspassDetail() {
           >
             Request Access
           </Button>
-        </div>
-
-        {/* CIPRIANI ACROSS THE WORLD CAROUSEL */}
-        <div className="mt-12">
-          <CiprianiAcrossWorld locations={DEFAULT_LOCATIONS} />
         </div>
       </main>
 
