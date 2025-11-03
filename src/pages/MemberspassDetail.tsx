@@ -22,6 +22,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { CiprianiAcrossWorld, DEFAULT_LOCATIONS } from "@/components/CiprianiAcrossWorld";
 
 // --- DATA -------------------------------------------------------------------
 const CLUBS = {
@@ -304,6 +305,11 @@ export default function MemberspassDetail() {
           >
             Request Access
           </Button>
+        </div>
+
+        {/* CIPRIANI ACROSS THE WORLD CAROUSEL */}
+        <div className="mt-12">
+          <CiprianiAcrossWorld locations={DEFAULT_LOCATIONS} />
         </div>
       </main>
 
