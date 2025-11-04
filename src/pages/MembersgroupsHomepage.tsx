@@ -119,7 +119,7 @@ export default function MembersgroupsHomepage() {
             Members Groups in Dubai
           </p>
           <h1 className="mt-4 text-center text-2xl font-light text-[#F4F5F3]">
-            Dive the Guest Experience
+            Dive into the guest experience
           </h1>
         </div>
         {content}
