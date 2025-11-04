@@ -518,9 +518,6 @@ export default function MemberspassDetail() {
                           <h3 className="text-[28px] sm:text-[32px] font-light tracking-tight text-white mb-3">
                             {amenity.name}
                           </h3>
-                          <p className="text-[15px] sm:text-[16px] font-light leading-relaxed text-white/90 max-w-md">
-                            {amenity.description}
-                          </p>
                         </div>
                       </div>
                     </div>
