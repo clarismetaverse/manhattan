@@ -118,7 +118,7 @@ export default function MembersgroupsHomepage() {
           <p className="text-center text-xs font-light uppercase tracking-[0.32em] text-white/40">
             Members Groups in Dubai
           </p>
-          <h1 className="mt-4 text-center text-3xl font-light text-[#F4F5F3]">
+          <h1 className="mt-4 text-center text-2xl font-light text-[#F4F5F3]">
             Dive the Guest Experience
           </h1>
         </div>
