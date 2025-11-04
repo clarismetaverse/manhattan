@@ -19,6 +19,7 @@ import PortfolioNewPage from "./pages/PortfolioNewPage";
 import MemberspassHome from "./pages/MemberspassHome";
 import MemberspassDetail from "./pages/MemberspassDetail";
 import MemberspassTickets from "./pages/MemberspassTickets";
+import MembersgroupsHomepage from "./pages/MembersgroupsHomepage";
 import GeneralRequestSent from "./pages/GeneralRequestSent";
 import GuestMatch from "./pages/GuestMatch";
 
@@ -59,6 +60,7 @@ const App = () => (
               <Route path="/case/:id" element={<CaseShowcasePage />} />
               <Route path="/portfolio/new" element={<PortfolioNewPage />} />
               <Route path="/memberspass" element={<MemberspassHome />} />
+              <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
               <Route path="/memberspass/:clubId" element={<MemberspassDetail />} />
               <Route path="/memberspass/guest-match" element={<GuestMatch />} />
