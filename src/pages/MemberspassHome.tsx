@@ -64,6 +64,13 @@ export default function MemberspassCinematicHomeExact() {
                   {card.membersCount.toLocaleString()} members on Memberspass
                 </p>
 
+                <Button
+                  onClick={() => navigate(`/memberspass/${card.id}`)}
+                  className="mt-6 h-11 w-full rounded-xl border border-white/20 bg-white/10 text-white/90 hover:bg-white/15"
+                  variant="ghost"
+                >
+                  See members
+                </Button>
 
                 {typeof card.tonightCount === "number" && (
                   <div className="absolute bottom-4 right-4 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] text-white/80 backdrop-blur">
