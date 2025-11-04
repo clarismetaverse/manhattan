@@ -121,6 +121,9 @@ export default function MembersgroupsHomepage() {
           <h1 className="mt-4 text-center text-2xl font-light text-[#F4F5F3]">
             Membersclub access
           </h1>
+          <p className="mt-2 text-center text-sm font-light text-white/60">
+            by members
+          </p>
         </div>
         {content}
       </div>
