@@ -236,15 +236,6 @@ export default function MembersgroupDetail() {
           </div>
         </section>
 
-        <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-start">
-          <Button
-            variant="outline"
-            className="h-12 flex-1 rounded-full border border-white/25 bg-transparent text-white/80 hover:bg-white/10 sm:flex-none sm:px-6"
-            onClick={() => navigate("/memberspass/groups")}
-          >
-            Return Home
-          </Button>
-        </div>
       </main>
 
       {showRequest && (
