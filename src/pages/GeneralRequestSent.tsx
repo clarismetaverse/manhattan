@@ -128,8 +128,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
             duration: prefersReducedMotion ? 0 : 0.55,
             ease: "easeOut",
             delay: 0.16
-          }}>
-              Members of {clubName} are reviewing your request now.
+          }}>Members of The Arts Club will be reviewing your request.{clubName} are reviewing your request now.
             </motion.p>
 
             <motion.div className="mx-auto mt-6 flex h-[100px] w-[100px] items-center justify-center rounded-full border border-[#F1E4CD3d] bg-[#E8D9C61a] shadow-[0_26px_60px_rgba(7,5,3,0.55)] sm:mt-8 sm:h-[110px] sm:w-[110px] md:mt-10 md:h-[126px] md:w-[126px]" initial={prefersReducedMotion ? {
