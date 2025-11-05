@@ -182,7 +182,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
             ease: "easeOut",
             delay: 0.44
           }}>
-              Members of The Arts Club will be reviewing your request.
+              Members of The Arts Club will review your request.
             </motion.p>
 
             <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent sm:mt-8 md:mt-10" />
