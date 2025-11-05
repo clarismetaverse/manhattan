@@ -149,14 +149,14 @@ export default function MembersgroupDetail() {
     );
   }
 
-  const membersCount = group.members_count?.trim();
   const parsedMembersCount = useMemo(() => {
+    const membersCount = group.members_count?.trim();
     if (!membersCount) return 30;
     const match = membersCount.match(/\d+/);
     if (!match) return 30;
     const numeric = Number.parseInt(match[0], 10);
     return Number.isNaN(numeric) ? 30 : numeric;
-  }, [membersCount]);
+  }, [group.members_count]);
 
   const paletteVars: PaletteVars = {
     "--sand": "#D9CDB8",
@@ -208,9 +208,9 @@ export default function MembersgroupDetail() {
           <h1 className="text-[34px] font-light tracking-[-0.015em] drop-shadow-[0_8px_24px_rgba(0,0,0,0.8)]">
             {group.Name}
           </h1>
-          {membersCount && (
+          {group.members_count && (
             <p className="text-[14px] text-white/75">
-              {membersCount} Members
+              {group.members_count} Members
             </p>
           )}
         </div>
