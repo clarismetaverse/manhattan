@@ -308,10 +308,10 @@ export default function MembersgroupDetail() {
             <div className="mx-auto mb-4 mt-1 h-1.5 w-12 rounded-full bg-[color:var(--sand-border)]/55" />
 
             <header className="pb-4 text-center">
-              <h3 className="text-[18px] font-light tracking-[-0.01em] text-black">
+              <h3 className="text-[20px] font-light tracking-[-0.01em] text-black">
                 Request Guest Access
               </h3>
-              <p className="mt-1 text-[13px] text-black/70">
+              <p className="mt-1 text-[14px] text-black/70">
                 +{parsedMembersCount} members enabling access
               </p>
             </header>
