@@ -302,29 +302,23 @@ export default function MembersgroupDetail() {
           </div>
         ) : (
           <div
-            className="mx-auto flex h-full w-full max-w-[760px] flex-col"
+            className="mx-auto flex h-full w-full max-w-[760px] flex-col justify-start"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Grab handle for UI affordance */}
             <div className="mx-auto mb-4 mt-1 h-1.5 w-12 rounded-full bg-[color:var(--sand-border)]/55" />
 
-            {/* Header: CTA morphs to title */}
-            <header className="text-center pb-2">
-              <h3
-                id="request-access-title"
-                className="text-[18px] font-light tracking-[-0.01em] text-[color:var(--noir)]"
-              >
+            <header className="pb-4 text-center">
+              <h3 className="text-[18px] font-light tracking-[-0.01em] text-black">
                 Request Guest Access
               </h3>
-              <p className="mt-1 text-[13px] text-[color:var(--noir)]/70">
+              <p className="mt-1 text-[13px] text-black/70">
                 +{parsedMembersCount} members enabling access
               </p>
             </header>
 
-            {/* Body */}
-            <div className="mt-4 flex-1 overflow-y-auto px-1">
-              <div className="mx-auto w-full max-w-[560px] space-y-3">
-                {/* GENERAL REQUEST — primary */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="mx-auto w-full max-w-[560px] space-y-4">
+                {/* General Request */}
                 <button
                   type="button"
                   onClick={() => {
@@ -337,74 +331,63 @@ export default function MembersgroupDetail() {
                       },
                     });
                   }}
-                  className="group w-full rounded-2xl border border-[color:var(--sand-border)]/45
-                     bg-white/10 hover:bg-white/14 transition px-5 py-5 text-left
-                     shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]"
+                  className="w-full rounded-[18px] border border-[#BFAF86] bg-[#FFF0D7] px-6 py-5 text-left shadow-sm hover:bg-[#FFE8C7] transition"
                 >
                   <div className="flex items-start gap-3">
-                    {/* keep your ripple/signal icon exactly as before */}
-                    <svg width="28" height="28" viewBox="0 0 64 64" fill="none" className="mt-0.5 shrink-0">
-                      <circle cx="32" cy="42" r="6" fill="white" />
-                      <path d="M16 42c0-8.8 7.2-16 16-16s16 7.2 16 16"
-                        stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-                      <path d="M8 42c0-13.3 10.7-24 24-24s24 10.7 24 24"
-                        stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity=".85" />
+                    {/* Signal icon */}
+                    <svg width="26" height="26" viewBox="0 0 64 64" fill="none" className="mt-0.5 shrink-0">
+                      <circle cx="32" cy="42" r="6" fill="black" />
+                      <path d="M16 42c0-8.8 7.2-16 16-16s16 7.2 16 16" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
+                      <path d="M8 42c0-13.3 10.7-24 24-24s24 10.7 24 24" stroke="black" strokeWidth="2.5" strokeLinecap="round" opacity=".85" />
                     </svg>
 
                     <div>
-                      <div className="text-[15px] font-medium tracking-tight text-[color:var(--noir)]">
+                      <div className="text-[15px] font-medium tracking-tight text-black">
                         General Request
                       </div>
-                      <div className="text-[13px] text-[color:var(--noir)]/80">
+                      <div className="text-[13px] text-black/75">
                         any Member of the selected membersclub can vouch your access
                       </div>
                     </div>
                   </div>
                 </button>
 
-                {/* DIRECT GUEST — premium gradient border */}
+                {/* Direct Guest */}
                 <button
                   type="button"
                   onClick={() => setShowMembersPicker(true)}
-                  className="group w-full rounded-2xl px-5 py-4 text-left transition
-                     bg-white/6 hover:bg-white/10
-                     border-2 [border-image:linear-gradient(135deg,#D9CBA3,#BFAF86)_1]
-                     shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                  aria-describedby="dg-help"
+                  className="w-full rounded-[18px] border border-[#BFAF86] bg-[#1C1C1C] px-6 py-5 text-left hover:bg-[#2A2A2A] transition"
                 >
                   <div className="flex items-start gap-3">
-                    {/* keep your intersecting circles gold icon; unique gradient id */}
+                    {/* Gold icon */}
                     <svg width="26" height="26" viewBox="0 0 64 64" fill="none" className="mt-0.5 shrink-0">
                       <defs>
-                        <linearGradient id="dg-gold-unique" x1="0" x2="1" y1="0" y2="1">
+                        <linearGradient id="dg-gold" x1="0" x2="1" y1="0" y2="1">
                           <stop offset="0%" stopColor="#D9CBA3" />
                           <stop offset="100%" stopColor="#BFAF86" />
                         </linearGradient>
                       </defs>
-                      <circle cx="26" cy="32" r="12" stroke="url(#dg-gold-unique)" strokeWidth="3" />
-                      <circle cx="38" cy="32" r="12" stroke="url(#dg-gold-unique)" strokeWidth="3" />
+                      <circle cx="26" cy="32" r="12" stroke="url(#dg-gold)" strokeWidth="3" />
+                      <circle cx="38" cy="32" r="12" stroke="url(#dg-gold)" strokeWidth="3" />
                     </svg>
 
                     <div>
-                      <div className="text-[15px] font-medium tracking-tight text-[#D9CBA3]">
+                      <div className="text-[15px] font-medium tracking-tight text-[#E5D7BA]">
                         Direct Guest (DG)
                       </div>
-                      <div id="dg-help" className="text-[13px] text-[color:var(--noir)]/80">
+                      <div className="text-[13px] text-[#E5D7BAAA]">
                         Ask a specific member to be your host
                       </div>
                     </div>
                   </div>
                 </button>
 
-                {/* Small etiquette note */}
-                <p className="pt-2 text-center text-[12px] text-[color:var(--noir)]/65">
+                {/* Footer note */}
+                <p className="pt-3 text-center text-[12px] text-black/70">
                   Once sent, you’ll be notified when approved.
                 </p>
               </div>
             </div>
-
-            {/* Bottom safe-space */}
-            <div className="pt-2" />
           </div>
         )}
       </div>
