@@ -100,19 +100,6 @@ export default function MembersgroupDetail() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [showMembersPicker, showRequest]);
 
-  const heroBackground = useMemo<CSSProperties>(() => {
-    if (!group) {
-      return { backgroundImage: FALLBACK_GRADIENT };
-    }
-
-    const coverUrl = group.cover?.url ?? undefined;
-    return {
-      backgroundImage: coverUrl ? `url(${coverUrl})` : FALLBACK_GRADIENT,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    };
-  }, [group]);
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0A0B0C] text-[#E9ECEB]/80">
@@ -148,6 +135,16 @@ export default function MembersgroupDetail() {
       </div>
     );
   }
+
+  // Now we know group exists, safe to use hooks that depend on it
+  const heroBackground = useMemo<CSSProperties>(() => {
+    const coverUrl = group.cover?.url ?? undefined;
+    return {
+      backgroundImage: coverUrl ? `url(${coverUrl})` : FALLBACK_GRADIENT,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    };
+  }, [group]);
 
   const parsedMembersCount = useMemo(() => {
     const membersCount = group.members_count?.trim();
