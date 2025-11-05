@@ -93,7 +93,11 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
       <main className="relative z-10 mx-auto flex min-h-screen max-w-[840px] flex-col px-6 py-16">
         <div className="flex flex-1 items-center justify-center">
           <motion.section
-            className="relative isolate w-full max-w-[640px] overflow-hidden border border-[#E7D9C62e] px-10 pb-14 pt-12 shadow-[0_40px_90px_rgba(4,3,2,0.68)] backdrop-blur-xl [background-color:rgba(18,13,8,0.88)] [clip-path:polygon(0%_18px,18px_0%,calc(100%-18px)_0%,100%_18px,100%_calc(100%-18px),calc(100%-18px)_100%,18px_100%,0%_calc(100%-18px))]
+            className="relative isolate w-full max-w-[640px] overflow-hidden border border-[#E7D9C62e] px-10 pb-14 pt-12 shadow-[0_40px_90px_rgba(4,3,2,0.68)] backdrop-blur-xl"
+            style={{
+              backgroundColor: "rgba(18,13,8,0.88)",
+              clipPath: "polygon(0% 18px, 18px 0%, calc(100% - 18px) 0%, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0% calc(100% - 18px))"
+            }}
             initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: "easeOut" }}
