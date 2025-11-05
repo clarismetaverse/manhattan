@@ -226,13 +226,13 @@ export default function MembersgroupDetail() {
         </section>
 
         <section className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <div className="rounded-[18px] border border-white/10 bg-white/5 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.45)] backdrop-blur-md">
-            <h3 className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/60">Guest Policy</h3>
-            <p className="text-[14px] font-light text-white/80">By invitation only.</p>
+          <div className="rounded-[16px] border p-5 backdrop-blur-sm" style={{ backgroundColor: '#D9CDB830', borderColor: '#D9CDB860' }}>
+            <h3 className="mb-2 text-[11px] uppercase tracking-[0.14em]" style={{ color: '#EAE6DC99' }}>Guest Policy</h3>
+            <p className="text-[13px] font-light" style={{ color: '#EAE6DC' }}>By invitation only.</p>
           </div>
-          <div className="rounded-[18px] border border-white/10 bg-white/5 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.45)] backdrop-blur-md">
-            <h3 className="mb-2 text-[11px] uppercase tracking-[0.14em] text-white/60">Dress Code</h3>
-            <p className="text-[14px] font-light text-white/80">Smart casual elegance.</p>
+          <div className="rounded-[16px] border p-5 backdrop-blur-sm" style={{ backgroundColor: '#D9CDB830', borderColor: '#D9CDB860' }}>
+            <h3 className="mb-2 text-[11px] uppercase tracking-[0.14em]" style={{ color: '#EAE6DC99' }}>Dress Code</h3>
+            <p className="text-[13px] font-light" style={{ color: '#EAE6DC' }}>Smart casual elegance.</p>
           </div>
         </section>
 
