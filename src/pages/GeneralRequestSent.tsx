@@ -201,17 +201,13 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
                 privileges below.
               </p>
 
-              <div className="rounded-[18px] border border-[#E7D9C62f] bg-[#F4E9D6] p-[1px]">
-                <div className="rounded-[16px] bg-[#F7F0E0] p-3">
-                  <Button
-                    aria-label="Open Guest Cards"
-                    onClick={() => navigate("/guest-cards")}
-                    className="h-12 w-full rounded-[12px] border border-[rgba(203,183,154,0.5)] bg-[#F7E8CE] text-[13px] font-medium tracking-[0.08em] text-[#2B1E13] shadow-[0_16px_30px_rgba(21,15,10,0.25)] transition-colors hover:bg-[#FAEDDA] hover:text-[#1C120B]"
-                  >
-                    Open Guest Cards
-                  </Button>
-                </div>
-              </div>
+              <Button
+                aria-label="Open Guest Cards"
+                onClick={() => navigate("/guest-cards")}
+                className="h-12 w-full rounded-[16px] border border-[rgba(203,183,154,0.5)] bg-[#F7E8CE] text-[13px] font-medium tracking-[0.08em] text-[#2B1E13] shadow-[0_16px_30px_rgba(21,15,10,0.25)] transition-colors hover:bg-[#FAEDDA] hover:text-[#1C120B]"
+              >
+                Open Guest Cards
+              </Button>
 
               <div className="flex items-center justify-center gap-3 text-[11px] text-[rgba(231,217,198,0.7)]">
                 <svg
