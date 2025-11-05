@@ -168,7 +168,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
                 </motion.div>}
             </motion.div>
 
-            <motion.p className="mt-4 text-center text-[14px] font-light text-[rgba(231,217,198,0.8)] sm:mt-5 sm:text-[15px]" initial={prefersReducedMotion ? {
+            <motion.p className="mt-8 mb-6 text-center text-[14px] font-light leading-[1.7] text-[rgba(231,217,198,0.8)] sm:mt-10 sm:mb-7 sm:text-[15px] sm:leading-[1.75]" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
           } : {
@@ -182,7 +182,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
             ease: "easeOut",
             delay: 0.44
           }}>
-              Members of The Arts Club will review your request.
+              Members of The Arts Club<br />will review your request.
             </motion.p>
 
             <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent sm:mt-8 md:mt-10" />
