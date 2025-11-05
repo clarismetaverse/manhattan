@@ -187,22 +187,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
                 </motion.div>}
             </motion.div>
 
-            <motion.p className="mt-4 text-center text-[13px] text-[rgba(231,217,198,0.7)]" initial={prefersReducedMotion ? {
-            opacity: 1,
-            y: 0
-          } : {
-            opacity: 0,
-            y: 10
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: prefersReducedMotion ? 0 : 0.45,
-            ease: "easeOut",
-            delay: 0.34
-          }}>
-              Active members from the club are personally processing invitations.
-            </motion.p>
+            
 
             <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent sm:mt-8 md:mt-10" />
 
