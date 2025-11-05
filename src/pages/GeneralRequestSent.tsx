@@ -115,22 +115,6 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               Request Sent
             </motion.h1>
 
-            <motion.p className="mt-2 text-center text-[14px] font-light text-[rgba(231,217,198,0.8)] sm:mt-3 sm:text-[15px]" initial={prefersReducedMotion ? {
-            opacity: 1,
-            y: 0
-          } : {
-            opacity: 0,
-            y: 10
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: prefersReducedMotion ? 0 : 0.55,
-            ease: "easeOut",
-            delay: 0.16
-          }}>Members of The Arts Club will be reviewing your request.{clubName} are reviewing your request now.
-            </motion.p>
-
             <motion.div className="mx-auto mt-6 flex h-[100px] w-[100px] items-center justify-center rounded-full border border-[#F1E4CD3d] bg-[#E8D9C61a] shadow-[0_26px_60px_rgba(7,5,3,0.55)] sm:mt-8 sm:h-[110px] sm:w-[110px] md:mt-10 md:h-[126px] md:w-[126px]" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
@@ -186,7 +170,14 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
                 </motion.div>}
             </motion.div>
 
-            
+            <motion.p
+              className="mt-4 text-center text-[14px] font-light text-[rgba(231,217,198,0.8)] sm:mt-5 sm:text-[15px]"
+              initial={prefersReducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: "easeOut", delay: 0.44 }}
+            >
+              Members of The Arts Club will be reviewing your request.{clubName} are reviewing your request now.
+            </motion.p>
 
             <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent sm:mt-8 md:mt-10" />
 
