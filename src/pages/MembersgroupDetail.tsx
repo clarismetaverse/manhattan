@@ -376,7 +376,7 @@ export default function MembersgroupDetail() {
                         Direct Guest (DG)
                       </div>
                       <div className="text-[13px] text-[#E5D7BAAA]">
-                        Ask a specific member to be your host
+                        Ask a specific member to be their guest
                       </div>
                     </div>
                   </div>
