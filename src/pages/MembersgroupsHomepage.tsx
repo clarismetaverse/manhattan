@@ -81,7 +81,7 @@ export default function MembersgroupsHomepage() {
           return (
             <Link
               key={group.id}
-              to={`/memberspass/${group.id}`}
+              to={`/memberspass/groups/${group.id}`}
               className="group relative block overflow-hidden rounded-[22px] border border-white/10 bg-[#111213]/50 shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out hover:-translate-y-1"
             >
               <div

@@ -20,6 +20,7 @@ import MemberspassHome from "./pages/MemberspassHome";
 import MemberspassDetail from "./pages/MemberspassDetail";
 import MemberspassTickets from "./pages/MemberspassTickets";
 import MembersgroupsHomepage from "./pages/MembersgroupsHomepage";
+import MembersgroupDetail from "./pages/MembersgroupDetail";
 import GeneralRequestSent from "./pages/GeneralRequestSent";
 import GuestMatch from "./pages/GuestMatch";
 
@@ -62,6 +63,7 @@ const App = () => (
               <Route path="/memberspass" element={<MemberspassHome />} />
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
+              <Route path="/memberspass/groups/:id" element={<MembersgroupDetail />} />
               <Route path="/memberspass/:clubId" element={<MemberspassDetail />} />
               <Route path="/memberspass/guest-match" element={<GuestMatch />} />
               <Route path="/general-request-sent" element={<GeneralRequestSent />} />
