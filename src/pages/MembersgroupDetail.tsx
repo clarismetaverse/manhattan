@@ -3,6 +3,14 @@ import type { CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
+interface PaletteVars extends CSSProperties {
+  "--sand"?: string;
+  "--sand-deep"?: string;
+  "--sand-border"?: string;
+  "--noir"?: string;
+  "--ivory"?: string;
+}
+
 interface GroupDetail {
   id: number;
   Name: string;
@@ -22,6 +30,9 @@ export default function MembersgroupDetail() {
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showRequest, setShowRequest] = useState(false);
+  const [showMembersPicker, setShowMembersPicker] = useState(false);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -68,6 +79,26 @@ export default function MembersgroupDetail() {
 
     return () => controller.abort();
   }, [id]);
+
+  useEffect(() => {
+    if (!showRequest && !showMembersPicker) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (showMembersPicker) {
+          setShowMembersPicker(false);
+          return;
+        }
+
+        if (showRequest) {
+          setShowRequest(false);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showMembersPicker, showRequest]);
 
   const heroBackground = useMemo<CSSProperties>(() => {
     if (!group) {
@@ -119,6 +150,45 @@ export default function MembersgroupDetail() {
   }
 
   const membersCount = group.members_count?.trim();
+  const parsedMembersCount = useMemo(() => {
+    if (!membersCount) return 30;
+    const match = membersCount.match(/\d+/);
+    if (!match) return 30;
+    const numeric = Number.parseInt(match[0], 10);
+    return Number.isNaN(numeric) ? 30 : numeric;
+  }, [membersCount]);
+
+  const paletteVars: PaletteVars = {
+    "--sand": "#D9CDB8",
+    "--sand-deep": "#CBB89C",
+    "--sand-border": "#B8A68E",
+    "--noir": "#0A0A0A",
+    "--ivory": "#F4F3EF",
+  };
+
+  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    setTouchStartY(event.touches[0]?.clientY ?? null);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartY == null) return;
+
+    const endY = event.changedTouches[0]?.clientY ?? touchStartY;
+    const delta = touchStartY - endY;
+    const threshold = 48;
+
+    if (!showRequest && delta > threshold) {
+      setShowRequest(true);
+    } else if (showRequest && delta < -threshold) {
+      if (showMembersPicker) {
+        setShowMembersPicker(false);
+      } else {
+        setShowRequest(false);
+      }
+    }
+
+    setTouchStartY(null);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#0A0B0C] text-[#E9ECEB] antialiased">
@@ -146,7 +216,7 @@ export default function MembersgroupDetail() {
         </div>
       </section>
 
-      <main className="mx-auto flex w-full max-w-[760px] flex-col gap-10 px-6 py-12">
+      <main className="mx-auto flex w-full max-w-[760px] flex-col gap-10 px-6 py-12 pb-44">
         <section className="space-y-3">
           <h2 className="text-[12px] uppercase tracking-[0.16em] text-white/55">About Members</h2>
           <p className="text-[15px] font-light leading-relaxed text-white/85">
@@ -178,6 +248,227 @@ export default function MembersgroupDetail() {
           </Button>
         </div>
       </main>
+
+      {showRequest && (
+        <div
+          className="fixed inset-0 z-30 backdrop-blur-xl bg-black/40 transition-opacity"
+          onClick={() => setShowRequest(false)}
+        />
+      )}
+
+      <div
+        className={`fixed inset-x-0 bottom-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+          ${showRequest ? "h-[70vh]" : "h-[120px]"}
+          bg-[color:var(--sand)] ${showRequest ? "bg-[color:var(--sand-deep)]" : ""}
+          border-t border-[color:var(--sand-border)]/50
+          rounded-t-[28px] shadow-[0_-12px_40px_rgba(0,0,0,0.35)]
+          px-5 sm:px-6 ${showRequest ? "pt-6 pb-8" : "py-4"}`}
+        style={paletteVars}
+        onClick={() => {
+          if (!showRequest) {
+            setShowRequest(true);
+          }
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        {!showRequest ? (
+          <div className="mx-auto flex h-full w-full max-w-[760px] items-center justify-between">
+            <div>
+              <div className="mb-2 flex -space-x-2">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-9 w-9 rounded-full border border-white/60 bg-white/30 backdrop-blur"
+                    style={{
+                      backgroundImage:
+                        index === 0
+                          ? "url(https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&auto=format&fit=crop)"
+                          : index === 1
+                          ? "url(https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&auto=format&fit=crop)"
+                          : "url(https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&auto=format&fit=crop)",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                ))}
+              </div>
+              <p className="text-[15px] font-medium text-[#3B2F1C]">
+                +{parsedMembersCount} members
+              </p>
+              <p className="text-[13px] text-[#3B2F1C]/80 italic">
+                enabling guest invitation
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowRequest(true);
+              }}
+              className="bg-[color:var(--noir)] text-[color:var(--ivory)] border border-white/80 rounded-full h-[44px] px-5 shadow-[0_0_12px_rgba(255,255,255,0.12)]"
+            >
+              Book Request
+            </button>
+          </div>
+        ) : (
+          <div
+            className="mx-auto flex h-full w-full max-w-[760px] flex-col justify-start"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="pb-4 text-center">
+              <h3 className="text-[18px] font-light tracking-[-0.01em] text-[color:var(--noir)]">
+                Request Guest Access
+              </h3>
+              <p className="mt-1 text-[13px] text-[color:var(--noir)]/70">
+                +{parsedMembersCount} members enabling access
+              </p>
+            </header>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="mx-auto w-full max-w-[520px]">
+                <div className="rounded-3xl border border-white/10 bg-white/[0.08] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.45)] backdrop-blur-2xl">
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowRequest(false);
+                        navigate("/general-request-sent", {
+                          state: {
+                            clubName: group.Name,
+                            clubImage: group.cover?.url,
+                            membersReviewing: parsedMembersCount,
+                          },
+                        });
+                      }}
+                      className="w-full border border-white/14 bg-white/[0.10] hover:bg-white/[0.14] rounded-2xl px-5 py-8 text-left transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg width="28" height="28" viewBox="0 0 64 64" fill="none" className="shrink-0">
+                          <circle cx="32" cy="42" r="6" fill="white" />
+                          <path
+                            d="M16 42c0-8.8 7.2-16 16-16s16 7.2 16 16"
+                            stroke="white"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M8 42c0-13.3 10.7-24 24-24s24 10.7 24 24"
+                            stroke="white"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            opacity=".85"
+                          />
+                        </svg>
+                        <div>
+                          <div className="text-[15px] font-medium tracking-tight">General Request</div>
+                          <div className="text-[13px] text-white/75">
+                            any Member of the selected membersclub can vouch your access
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowMembersPicker(true);
+                      }}
+                      className="w-full border-2 [border-image:linear-gradient(135deg,#D9CBA3,#BFAF86)_1] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] bg-white/[0.04] hover:bg-white/[0.08] rounded-2xl px-5 py-4 text-left transition"
+                    >
+                      <div className="flex items-center gap-3">
+                        <svg width="26" height="26" viewBox="0 0 64 64" fill="none" className="shrink-0">
+                          <defs>
+                            <linearGradient id="dg-gold" x1="0" x2="1" y1="0" y2="1">
+                              <stop offset="0%" stopColor="#D9CBA3" />
+                              <stop offset="100%" stopColor="#BFAF86" />
+                            </linearGradient>
+                          </defs>
+                          <circle cx="26" cy="32" r="12" stroke="url(#dg-gold)" strokeWidth="3" />
+                          <circle cx="38" cy="32" r="12" stroke="url(#dg-gold)" strokeWidth="3" />
+                        </svg>
+                        <div>
+                          <div className="text-[15px] font-medium tracking-tight text-[#D9CBA3]">Direct Guest (DG)</div>
+                          <div className="text-[13px] text-white/75">Ask a specific member to be your host</div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {showMembersPicker && (
+        <Modal onClose={() => setShowMembersPicker(false)}>
+          <div className="space-y-5 relative">
+            <div className="absolute -top-8 right-0 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm border border-white/10">
+              <span className="text-white/70">Requests left:</span> <span className="font-medium">3</span>
+            </div>
+
+            <header className="text-center">
+              <h3 className="text-[18px] font-light tracking-[-0.01em]">Choose a Member</h3>
+              <p className="mt-1 text-sm text-white/70">
+                Send a Direct Guest request to a door member.
+              </p>
+            </header>
+
+            <ul className="max-h-[46vh] space-y-3 overflow-y-auto pr-1">
+              {["@danielv", "@michaelr", "@emilyp", "@celine", "@andrew", "@marco"].map((username, index) => (
+                <li
+                  key={username}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white/90"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10"
+                      style={{
+                        backgroundImage:
+                          index % 3 === 0
+                            ? "url(https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&auto=format&fit=crop)"
+                            : index % 3 === 1
+                            ? "url(https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&auto=format&fit=crop)"
+                            : "url(https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&auto=format&fit=crop)",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                    <div>
+                      <p className="text-[15px] font-medium tracking-tight">{username}</p>
+                      <p className="text-[13px] text-white/70">Guardian member</p>
+                    </div>
+                  </div>
+                  <Button className="h-9 rounded-full border border-white/20 bg-white/10 px-4 text-xs uppercase tracking-[0.12em] text-white/90">
+                    Request
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative z-10 max-w-full px-4">
+        <div className="mx-auto w-full max-w-[520px] rounded-3xl border border-white/10 bg-white/[0.08] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+          {children}
+        </div>
+      </div>
+      <button
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute right-6 top-6 text-white/80 hover:text-white"
+      >
+        ×
+      </button>
     </div>
   );
 }
