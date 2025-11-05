@@ -64,11 +64,10 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
     }} aria-hidden="true" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-72 bg-gradient-to-t from-[#080705] via-[rgba(8,7,5,0.6)] to-transparent" aria-hidden="true" />
 
-      <main className="relative z-10 mx-auto flex min-h-screen max-w-[840px] flex-col px-6 py-16">
+      <main className="relative z-10 mx-auto flex min-h-screen max-w-[840px] flex-col px-4 py-8 sm:px-6 sm:py-12 md:py-16">
         <div className="flex flex-1 items-center justify-center">
-          <motion.section className="relative isolate w-full max-w-[640px] overflow-hidden border border-[#E7D9C62e] px-10 pb-14 pt-12 shadow-[0_40px_90px_rgba(4,3,2,0.68)] backdrop-blur-xl" style={{
-          backgroundColor: "rgba(18,13,8,0.88)",
-          clipPath: "polygon(0% 18px, 18px 0%, calc(100% - 18px) 0%, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0% calc(100% - 18px))"
+          <motion.section className="relative isolate w-full max-w-[640px] overflow-hidden rounded-[20px] border border-[#E7D9C62e] px-5 pb-10 pt-8 shadow-[0_40px_90px_rgba(4,3,2,0.68)] backdrop-blur-xl sm:rounded-[24px] sm:px-8 sm:pb-12 sm:pt-10 md:px-10 md:pb-14 md:pt-12" style={{
+          backgroundColor: "rgba(18,13,8,0.88)"
         }} initial={prefersReducedMotion ? {
           opacity: 1,
           y: 0
@@ -83,7 +82,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           ease: "easeOut"
         }}>
             <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(248,240,224,0.14),transparent_68%)]" />
-            <motion.div className="mx-auto w-fit rounded-full border border-[#F5E9D33d] bg-[#D9C6AA1f] px-3.5 py-1 text-[12px] uppercase tracking-[0.18em] text-[#E8D7BD]" initial={prefersReducedMotion ? {
+            <motion.div className="mx-auto w-fit rounded-full border border-[#F5E9D33d] bg-[#D9C6AA1f] px-3 py-0.5 text-[11px] uppercase tracking-[0.16em] text-[#E8D7BD] sm:px-3.5 sm:py-1 sm:text-[12px] sm:tracking-[0.18em]" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
           } : {
@@ -99,7 +98,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               General Admission Request
             </motion.div>
 
-            <motion.h1 className="mt-8 text-center font-serif text-[32px] font-light tracking-[-0.02em] text-[#FAF3E5]" initial={prefersReducedMotion ? {
+            <motion.h1 className="mt-5 text-center font-serif text-[26px] font-light tracking-[-0.02em] text-[#FAF3E5] sm:mt-6 sm:text-[28px] md:mt-8 md:text-[32px]" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
           } : {
@@ -116,7 +115,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               Request Sent
             </motion.h1>
 
-            <motion.p className="mt-3 text-center text-[15px] font-light text-[rgba(231,217,198,0.8)]" initial={prefersReducedMotion ? {
+            <motion.p className="mt-2 text-center text-[14px] font-light text-[rgba(231,217,198,0.8)] sm:mt-3 sm:text-[15px]" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
           } : {
@@ -133,14 +132,14 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               Members of {clubName} are reviewing your request now.
             </motion.p>
 
-            <motion.div className="mx-auto mt-10 flex h-[126px] w-[126px] items-center justify-center rounded-full border border-[#F1E4CD3d] bg-[#E8D9C61a] shadow-[0_26px_60px_rgba(7,5,3,0.55)]" initial={prefersReducedMotion ? {
+            <motion.div className="mx-auto mt-6 flex h-[100px] w-[100px] items-center justify-center rounded-full border border-[#F1E4CD3d] bg-[#E8D9C61a] shadow-[0_26px_60px_rgba(7,5,3,0.55)] sm:mt-8 sm:h-[110px] sm:w-[110px] md:mt-10 md:h-[126px] md:w-[126px]" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
           } : avatarInitial} animate={avatarAnimate} transition={avatarTransition}>
-              <img src={userAvatar} alt="Your avatar" loading="lazy" className="h-[104px] w-[104px] rounded-full border border-[#F3E6CF33] object-cover" />
+              <img src={userAvatar} alt="Your avatar" loading="lazy" className="h-[82px] w-[82px] rounded-full border border-[#F3E6CF33] object-cover sm:h-[92px] sm:w-[92px] md:h-[104px] md:w-[104px]" />
             </motion.div>
 
-            <motion.div className="mt-10 flex items-center justify-center" initial={prefersReducedMotion ? {
+            <motion.div className="mt-6 flex items-center justify-center sm:mt-8 md:mt-10" initial={prefersReducedMotion ? {
             opacity: 1,
             y: 0
           } : {
@@ -205,9 +204,9 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               Active members from the club are personally processing invitations.
             </motion.p>
 
-            <div className="mt-10 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent" />
+            <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent sm:mt-8 md:mt-10" />
 
-            <motion.div className="mt-10 space-y-6 text-center" initial={prefersReducedMotion ? {
+            <motion.div className="mt-6 space-y-4 text-center sm:mt-8 sm:space-y-5 md:mt-10 md:space-y-6" initial={prefersReducedMotion ? {
             opacity: 1
           } : {
             opacity: 0
@@ -219,17 +218,17 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
           }}>
               
 
-              <Button aria-label="Open Guest Cards" onClick={() => navigate("/guest-cards")} className="h-12 w-full rounded-[16px] border border-[rgba(203,183,154,0.5)] bg-[#F7E8CE] text-[13px] font-medium tracking-[0.08em] text-[#2B1E13] shadow-[0_16px_30px_rgba(21,15,10,0.25)] transition-colors hover:bg-[#FAEDDA] hover:text-[#1C120B]">
+              <Button aria-label="Open Guest Cards" onClick={() => navigate("/guest-cards")} className="h-11 w-full rounded-[14px] border border-[rgba(203,183,154,0.5)] bg-[#F7E8CE] text-[12px] font-medium tracking-[0.08em] text-[#2B1E13] shadow-[0_16px_30px_rgba(21,15,10,0.25)] transition-colors hover:bg-[#FAEDDA] hover:text-[#1C120B] sm:h-12 sm:rounded-[16px] sm:text-[13px]">
                 Open Guest Cards
               </Button>
 
-              <div className="flex items-center justify-center gap-3 text-[11px] text-[rgba(231,217,198,0.7)]">
-                <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="flex items-start justify-center gap-2 text-[10px] text-[rgba(231,217,198,0.7)] sm:items-center sm:gap-3 sm:text-[11px]">
+                <svg className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 sm:mt-0 sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="15" y1="9" x2="9" y2="15" />
                   <line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
-                <span className="max-w-[360px] text-left leading-relaxed">
+                <span className="max-w-[320px] text-left leading-relaxed sm:max-w-[360px]">
                   Contacting the Membersclub directly may lead to a permanent ban and a notice to
                   the reviewing members.
                 </span>
