@@ -2,21 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle } from "lucide-react";
 
-/**
- * Codex Prompt — GuestMatch (mobile-first)
- *
- * Implement the following React + Tailwind screen for Memberspass (mobile-first).
- * Background: blurred venue photo with dark gradient overlays.
- * Content:
- * • “Dear {firstName},” (small serif italic).
- * • Headline: “Tonight you are a guest at {venue}” (slightly smaller than avatar prominence).
- * • Courtesy row: host avatar + text “As courtesy of {hostName}” + brand logo icon to the side.
- * • Etiquette note: “Wait for your host at the entrance — entry is by invitation only.”
- * Actions: left a minimal chat icon button, right a frosted outline “Guest List Details” button.
- * Remove any page header; ensure the layout is elegant, cinematic, and responsive.
- * Output clean, production-ready JSX + Tailwind only.
- */
-
 export interface GuestMatchProps {
   firstName?: string;
   venue?: string;
@@ -49,7 +34,7 @@ export default function GuestMatch(props: GuestMatchProps) {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-[#F1F2F4] antialiased">
-      {/* BACKDROP */}
+      {/* BACKDROP: blurred venue image + cinematic overlays */}
       <div
         className="absolute inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url(${venueImage})` }}
@@ -57,19 +42,42 @@ export default function GuestMatch(props: GuestMatchProps) {
       />
       <div className="absolute inset-0 -z-10 bg-[rgba(8,9,10,0.55)]" aria-hidden="true" />
       <div className="absolute inset-0 -z-10 backdrop-blur-[8px]" aria-hidden="true" />
-      <div className="absolute inset-x-0 top-0 -z-10 h-48 bg-[radial-gradient(520px_140px_at_50%_0%,rgba(255,255,255,0.12),rgba(255,255,255,0)_70%)]" aria-hidden="true" />
-      <div className="absolute inset-x-0 bottom-0 -z-10 h-56 bg-gradient-to-t from-black/88 via-black/55 to-transparent" aria-hidden="true" />
+      <div
+        className="absolute inset-x-0 top-0 -z-10 h-48
+                   bg-[radial-gradient(520px_140px_at_50%_0%,rgba(255,255,255,0.12),rgba(255,255,255,0)_70%)]"
+        aria-hidden="true"
+      />
+      <div
+        className="absolute inset-x-0 bottom-0 -z-10 h-56
+                   bg-gradient-to-t from-black/88 via-black/55 to-transparent"
+        aria-hidden="true"
+      />
 
       {/* CONTENT */}
       <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-5 pb-16 pt-12 sm:max-w-lg sm:px-6 sm:pt-16">
         <div className="flex flex-1 flex-col items-center text-center">
           {/* Dear */}
-          <p className="text-[13px] font-serif italic text-white/80 sm:text-[14px]">Dear {firstName},</p>
+          <p className="text-[13px] font-serif italic text-white/80 sm:text-[14px]">
+            Dear {firstName},
+          </p>
 
-          {/* Guest avatar hero */}
+          {/* Guest avatar hero with “aura” */}
           <div className="mt-8 flex flex-col items-center gap-6">
             <div className="relative">
-              <div className="absolute -inset-4 rounded-full bg-white/10 blur-xl" aria-hidden="true" />
+              {/* soft white aura */}
+              <div
+                className="absolute inset-0 -z-10 rounded-full
+                           bg-[radial-gradient(closest-side,rgba(255,255,255,0.16),rgba(255,255,255,0.06)_55%,transparent_70%)]
+                           blur-[6px]"
+                aria-hidden="true"
+              />
+              {/* subtle emerald→sand conic glow */}
+              <div
+                className="absolute -inset-4 -z-10 rounded-full
+                           bg-[conic-gradient(from_140deg,rgba(16,185,129,0.12),rgba(217,203,184,0.10),transparent_70%)]
+                           blur-[18px]"
+                aria-hidden="true"
+              />
               <img
                 src={guestAvatar}
                 alt={`${firstName}'s avatar`}
@@ -79,12 +87,12 @@ export default function GuestMatch(props: GuestMatchProps) {
             </div>
 
             {/* Headline */}
-            <h1 className="max-w-[280px] text-[24px] font-light leading-snug tracking-[-0.01em] text-white sm:max-w-[320px] sm:text-[28px]">
+            <h1 className="max-w-[300px] text-[24px] font-light leading-snug tracking-[-0.01em] text-white sm:max-w-[340px] sm:text-[28px]">
               Tonight you are a guest at {venue}
             </h1>
           </div>
 
-          {/* Host courtesy pill */}
+          {/* Host courtesy pill (host name with emerald→sand gradient) */}
           <div className="mt-10 w-full rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:p-5">
             <div className="flex items-center justify-between gap-3 sm:gap-4">
               <div className="flex flex-1 items-center gap-3 sm:gap-4">
@@ -95,14 +103,29 @@ export default function GuestMatch(props: GuestMatchProps) {
                   loading="lazy"
                 />
                 <div className="text-left">
-                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/60">As courtesy of</p>
-                  <p className="text-[14px] font-light text-white">{hostName}</p>
+                  <p className="text-[11px] uppercase tracking-[0.16em] text-white/60">
+                    As courtesy of
+                  </p>
+                  <p
+                    className="text-[16px] font-medium leading-tight
+                               bg-gradient-to-r from-emerald-200 via-emerald-100 to-[#D9CBA3]
+                               bg-clip-text text-transparent"
+                  >
+                    {hostName}
+                  </p>
                 </div>
               </div>
               {/* Brand logo token (placeholder) */}
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white">
                 <svg viewBox="0 0 32 32" aria-hidden="true" className="h-6 w-6 text-white/90">
-                  <path d="M22.4 9.2c-1.6-1.6-3.6-2.4-6-2.4-4.8 0-8.2 3.6-8.2 9.2s3.4 9.2 8.2 9.2c2.4 0 4.4-.8 6-2.4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  <path
+                    d="M22.4 9.2c-1.6-1.6-3.6-2.4-6-2.4-4.8 0-8.2 3.6-8.2 9.2s3.4 9.2 8.2 9.2c2.4 0 4.4-.8 6-2.4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                   <circle cx="20.6" cy="11.4" r="1.4" fill="currentColor" className="text-white" />
                 </svg>
               </div>
@@ -132,7 +155,7 @@ export default function GuestMatch(props: GuestMatchProps) {
             Open Guest Experiences
           </button>
         </div>
-        
+
         {/* Route description */}
         <p className="mt-4 text-center text-[11px] text-white/50">
           Access your exclusive guest tickets and experiences
