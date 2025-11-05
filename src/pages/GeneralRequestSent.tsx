@@ -176,7 +176,7 @@ export default function GeneralRequestSent(props: GeneralRequestSentProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.55, ease: "easeOut", delay: 0.44 }}
             >
-              Members of The Arts Club will be reviewing your request.{clubName} are reviewing your request now.
+              Members of The Arts Club will be reviewing your request.
             </motion.p>
 
             <div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-[#E5D3BA33] to-transparent sm:mt-8 md:mt-10" />
