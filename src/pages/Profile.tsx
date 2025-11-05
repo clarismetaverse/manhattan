@@ -57,7 +57,15 @@ const Profile = () => {
                 </div>
               )}
               
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t space-y-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/memberspass/groups')}
+                  className="w-full"
+                >
+                  View Membersgroups
+                </Button>
+                
                 <Button 
                   variant="destructive" 
                   onClick={handleLogout}
