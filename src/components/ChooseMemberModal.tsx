@@ -106,7 +106,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
           .cmm-panel {
             position: relative;
             width: 100%;
-            max-width: 440px;
+            max-width: 480px;
             max-height: 90vh;
             background: #FFEDBC;
             border-radius: 20px;
@@ -219,14 +219,14 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             display: grid;
             grid-template-columns: auto 1fr auto;
             align-items: center;
-            gap: 14px;
-            background: linear-gradient(180deg, #f6ecdc 0%, #e9d9bd 100%);
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 12px;
-            padding: 14px 16px;
+            gap: 16px;
+            background: linear-gradient(135deg, #FFF8E8 0%, #FFE8C7 100%);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            border-radius: 14px;
+            padding: 18px 20px;
             margin-bottom: 10px;
             position: relative;
-            transition: border 0.2s ease, box-shadow 0.2s ease;
+            transition: all 0.2s ease;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
           }
@@ -241,7 +241,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
           }
 
           .cmm-member-card:active::after {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.25);
           }
 
           .cmm-avatar {
@@ -279,15 +279,15 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
           }
 
           .cmm-dg-button {
-            width: 80px;
-            height: 38px;
+            width: 68px;
+            height: 34px;
             border-radius: 8px;
             background: linear-gradient(180deg, #1c1c1c 0%, #000000 100%);
             border: 1px solid rgba(0, 0, 0, 0.6);
             color: #eae3d2;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
             cursor: pointer;
             display: inline-flex;
@@ -361,18 +361,19 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
 
             .cmm-member-card {
               gap: 20px;
-              border-radius: 14px;
-              padding: 18px 20px;
+              border-radius: 16px;
+              padding: 22px 24px;
               margin-bottom: 12px;
             }
 
             .cmm-member-card:hover {
-              border-color: rgba(0, 0, 0, 0.12);
-              box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+              border-color: rgba(0, 0, 0, 0.1);
+              box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+              transform: translateY(-1px);
             }
 
             .cmm-member-card:hover::after {
-              background: rgba(255, 255, 255, 0.25);
+              background: rgba(255, 255, 255, 0.35);
             }
 
             .cmm-avatar {
@@ -395,9 +396,9 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             }
 
             .cmm-dg-button {
-              width: 90px;
-              height: 42px;
-              font-size: 12px;
+              width: 76px;
+              height: 36px;
+              font-size: 11px;
             }
 
             .cmm-dg-button:hover,
