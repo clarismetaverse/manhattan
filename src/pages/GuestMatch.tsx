@@ -36,11 +36,12 @@ export default function GuestMatch(props: GuestMatchProps) {
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-[#F1F2F4] antialiased">
       {/* BACKDROP: blurred venue image + cinematic overlays */}
       <div
-        className="absolute inset-0 z-0 bg-cover bg-center backdrop-blur-[8px]"
+        className="absolute inset-0 -z-10 bg-cover bg-center"
         style={{ backgroundImage: `url(${venueImage})` }}
         aria-hidden="true"
       />
-      <div className="absolute inset-0 z-0 bg-[rgba(8,9,10,0.55)]" aria-hidden="true" />
+      <div className="absolute inset-0 -z-10 bg-[rgba(8,9,10,0.55)]" aria-hidden="true" />
+      <div className="absolute inset-0 -z-10 backdrop-blur-[8px]" aria-hidden="true" />
       <div
         className="absolute inset-x-0 top-0 -z-10 h-48
                    bg-[radial-gradient(520px_140px_at_50%_0%,rgba(255,255,255,0.12),rgba(255,255,255,0)_70%)]"
