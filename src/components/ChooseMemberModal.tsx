@@ -283,7 +283,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
 
           .cmm-caption {
             margin: 0;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: rgba(0, 0, 0, 0.58);
             letter-spacing: 0.1px;
@@ -405,7 +405,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             }
 
             .cmm-caption {
-              font-size: 13px;
+              font-size: 12px;
               letter-spacing: 0.2px;
             }
 
