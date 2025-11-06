@@ -435,28 +435,30 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
         </div>
 
         <div className="cmm-members-list" aria-label="Members list">
-          {members.map((member) => (
-            <article className="cmm-member-card" key={member.id}>
-              <img
-                src={member.avatar}
-                alt={`${member.handle} avatar`}
-                className="cmm-avatar"
-                loading="lazy"
-              />
-              <div className="cmm-member-info">
-                <h3 className="cmm-handle">{member.handle}</h3>
-                <p className="cmm-caption">{member.caption}</p>
-              </div>
-              <button
-                type="button"
-                className="cmm-dg-button"
-                onClick={() => onDG(member.id)}
-                aria-label={`Send Direct Guest request to ${member.handle}`}
-              >
-                DG
-              </button>
-            </article>
-          ))}
+          {members
+            .filter((member) => !member.handle.toLowerCase().includes('celine') && !member.caption.toLowerCase().includes('celine'))
+            .map((member) => (
+              <article className="cmm-member-card" key={member.id}>
+                <img
+                  src={member.avatar}
+                  alt={`${member.handle} avatar`}
+                  className="cmm-avatar"
+                  loading="lazy"
+                />
+                <div className="cmm-member-info">
+                  <h3 className="cmm-handle">{member.handle}</h3>
+                  <p className="cmm-caption">{member.caption}</p>
+                </div>
+                <button
+                  type="button"
+                  className="cmm-dg-button"
+                  onClick={() => onDG(member.id)}
+                  aria-label={`Send Direct Guest request to ${member.handle}`}
+                >
+                  DG
+                </button>
+              </article>
+            ))}
         </div>
 
         <p className="cmm-footer-note">Once sent, you’ll be notified when approved.</p>
