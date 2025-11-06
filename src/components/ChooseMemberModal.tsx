@@ -1,28 +1,24 @@
 import React, { useEffect, useRef } from "react";
-
 export type Member = {
   id: string;
   handle: string;
   caption: string;
   avatar: string;
 };
-
 export type ChooseMemberModalProps = {
   members: Member[];
   requestsLeft: number;
   onClose: () => void;
   onDG: (memberId: string) => void;
 };
-
 const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
   members,
   requestsLeft,
   onClose,
-  onDG,
+  onDG
 }) => {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -30,27 +26,17 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
         onClose();
         return;
       }
-
       if (event.key === "Tab") {
-        const focusableElements = panelRef.current?.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-
+        const focusableElements = panelRef.current?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
         if (!focusableElements || focusableElements.length === 0) {
           return;
         }
-
-        const focusables = Array.from(focusableElements).filter(
-          (el) => !el.hasAttribute("disabled") && !el.getAttribute("aria-hidden")
-        );
-
+        const focusables = Array.from(focusableElements).filter(el => !el.hasAttribute("disabled") && !el.getAttribute("aria-hidden"));
         if (focusables.length === 0) {
           return;
         }
-
         const first = focusables[0];
         const last = focusables[focusables.length - 1];
-
         if (!event.shiftKey && document.activeElement === last) {
           event.preventDefault();
           first.focus();
@@ -60,34 +46,21 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
         }
       }
     };
-
     document.addEventListener("keydown", handleKeyDown);
-
     if (closeButtonRef.current) {
       closeButtonRef.current.focus();
     }
-
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-
   const handleOverlayMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
       onClose();
     }
   };
-
-  return (
-    <div className="cmm-overlay" role="presentation" onMouseDown={handleOverlayMouseDown}>
-      <div
-        className="cmm-panel"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="choose-member-title"
-        ref={panelRef}
-        onClick={(event) => event.stopPropagation()}
-      >
+  return <div className="cmm-overlay" role="presentation" onMouseDown={handleOverlayMouseDown}>
+      <div className="cmm-panel" role="dialog" aria-modal="true" aria-labelledby="choose-member-title" ref={panelRef} onClick={event => event.stopPropagation()}>
         <style>{`
           /* MOBILE-FIRST BASE STYLES */
           .cmm-overlay {
@@ -414,20 +387,15 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
           }
         `}</style>
 
-        <button
-          type="button"
-          className="cmm-close"
-          onClick={onClose}
-          aria-label="Close choose member modal"
-          ref={closeButtonRef}
-        >
+        <button type="button" className="cmm-close" onClick={onClose} aria-label="Close choose member modal" ref={closeButtonRef}>
           ×
         </button>
 
         <div className="cmm-header">
           <div className="cmm-title-row">
             <div className="cmm-title-block">
-              <h2 id="choose-member-title">Choose a Member</h2>
+              <h2 id="choose-member-title">
+Send a Direct Guest to be granted access at Cipriani membersclub</h2>
               <p className="cmm-subtitle">Send a Direct Guest request to a door member.</p>
             </div>
             <div className="cmm-requests-chip">Requests left: {requestsLeft}</div>
@@ -435,36 +403,22 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
         </div>
 
         <div className="cmm-members-list" aria-label="Members list">
-          {members.map((member) => (
-            <article className="cmm-member-card" key={member.id}>
-              <img
-                src={member.avatar}
-                alt={`${member.handle} avatar`}
-                className="cmm-avatar"
-                loading="lazy"
-              />
+          {members.map(member => <article className="cmm-member-card" key={member.id}>
+              <img src={member.avatar} alt={`${member.handle} avatar`} className="cmm-avatar" loading="lazy" />
               <div className="cmm-member-info">
                 <h3 className="cmm-handle">{member.handle}</h3>
                 <p className="cmm-caption">{member.caption}</p>
               </div>
-              <button
-                type="button"
-                className="cmm-dg-button"
-                onClick={() => onDG(member.id)}
-                aria-label={`Send Direct Guest request to ${member.handle}`}
-              >
+              <button type="button" className="cmm-dg-button" onClick={() => onDG(member.id)} aria-label={`Send Direct Guest request to ${member.handle}`}>
                 DG
               </button>
-            </article>
-          ))}
+            </article>)}
         </div>
 
         <p className="cmm-footer-note">Once sent, you’ll be notified when approved.</p>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ChooseMemberModal;
 
 /*
