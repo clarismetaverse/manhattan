@@ -89,6 +89,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
         onClick={(event) => event.stopPropagation()}
       >
         <style>{`
+          /* MOBILE-FIRST BASE STYLES */
           .cmm-overlay {
             position: fixed;
             inset: 0;
@@ -97,43 +98,45 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 24px;
+            padding: 16px;
             z-index: 999;
             font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
           }
 
           .cmm-panel {
             position: relative;
-            width: min(92vw, 440px);
+            width: 100%;
+            max-width: 440px;
             max-height: 90vh;
             background: linear-gradient(180deg, #eae3d2 0%, #dccbb2 100%);
             border-radius: 20px;
             box-shadow: 0 14px 50px rgba(0, 0, 0, 0.45);
-            padding: 28px 28px 24px;
+            padding: 24px 20px 20px;
             color: #121212;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 22px;
+            gap: 18px;
           }
 
           .cmm-close {
             position: absolute;
-            top: 16px;
-            right: 16px;
-            width: 34px;
-            height: 34px;
+            top: 14px;
+            right: 14px;
+            width: 32px;
+            height: 32px;
             border: none;
             border-radius: 8px;
             background: transparent;
             color: #121212;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             transition: background 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
           }
 
           .cmm-close:hover,
@@ -142,18 +145,23 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             outline: none;
           }
 
+          .cmm-close:active {
+            background: rgba(0, 0, 0, 0.1);
+          }
+
           .cmm-header {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            padding-right: 54px;
+            padding-right: 48px;
           }
 
           .cmm-title-row {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
           }
 
           .cmm-title-block {
@@ -164,16 +172,18 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
 
           #choose-member-title {
             margin: 0;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             letter-spacing: 0.3px;
+            line-height: 1.3;
           }
 
           .cmm-subtitle {
             margin: 0;
-            font-size: 14px;
+            font-size: 13px;
             color: rgba(0, 0, 0, 0.68);
             letter-spacing: 0.1px;
+            line-height: 1.4;
           }
 
           .cmm-requests-chip {
@@ -181,7 +191,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             background: #e1d5c1;
             color: #121212;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 0.3px;
             padding: 6px 10px;
             border-radius: 999px;
@@ -191,32 +201,34 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
           .cmm-members-list {
             flex: 1;
             overflow-y: auto;
-            max-height: 56vh;
-            padding-right: 6px;
+            max-height: 60vh;
+            padding-right: 4px;
+            -webkit-overflow-scrolling: touch;
           }
 
           .cmm-members-list::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
           }
 
           .cmm-members-list::-webkit-scrollbar-thumb {
             background: rgba(18, 18, 18, 0.22);
-            border-radius: 6px;
+            border-radius: 4px;
           }
 
           .cmm-member-card {
             display: grid;
             grid-template-columns: auto 1fr auto;
             align-items: center;
-            gap: 20px;
+            gap: 14px;
             background: linear-gradient(180deg, #f6ecdc 0%, #e9d9bd 100%);
             border: 1px solid rgba(0, 0, 0, 0.08);
-            border-radius: 14px;
-            padding: 18px 20px;
-            margin-bottom: 12px;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
             position: relative;
             transition: border 0.2s ease, box-shadow 0.2s ease;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
           }
 
           .cmm-member-card::after {
@@ -228,54 +240,52 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             pointer-events: none;
           }
 
-          .cmm-member-card:hover {
-            border-color: rgba(0, 0, 0, 0.12);
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-          }
-
-          .cmm-member-card:hover::after {
-            background: rgba(255, 255, 255, 0.25);
+          .cmm-member-card:active::after {
+            background: rgba(255, 255, 255, 0.15);
           }
 
           .cmm-avatar {
-            width: 80px;
-            height: 80px;
+            width: 72px;
+            height: 72px;
             border-radius: 12px;
             object-fit: cover;
             border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
           }
 
           .cmm-member-info {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
+            min-width: 0;
           }
 
           .cmm-handle {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: #121212;
             margin: 0;
+            line-height: 1.3;
           }
 
           .cmm-caption {
             margin: 0;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 500;
             color: rgba(0, 0, 0, 0.58);
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
             font-style: italic;
+            line-height: 1.3;
           }
 
           .cmm-dg-button {
-            width: 90px;
-            height: 42px;
+            width: 80px;
+            height: 38px;
             border-radius: 8px;
             background: linear-gradient(180deg, #1c1c1c 0%, #000000 100%);
             border: 1px solid rgba(0, 0, 0, 0.6);
             color: #eae3d2;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.6px;
             text-transform: uppercase;
@@ -284,13 +294,8 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             align-items: center;
             justify-content: center;
             transition: box-shadow 0.2s ease, border 0.2s ease, transform 0.1s ease;
-          }
-
-          .cmm-dg-button:hover,
-          .cmm-dg-button:focus-visible {
-            border: 1px solid #dec9a3;
-            box-shadow: 0 0 8px rgba(222, 201, 163, 0.4);
-            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            flex-shrink: 0;
           }
 
           .cmm-dg-button:active {
@@ -303,39 +308,107 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             font-size: 12px;
             color: rgba(0, 0, 0, 0.6);
             margin-top: 4px;
+            line-height: 1.4;
+            padding: 0 8px;
           }
 
-          @media (max-width: 820px) {
+          /* TABLET & DESKTOP ENHANCEMENTS (min-width) */
+          @media (min-width: 640px) {
+            .cmm-overlay {
+              padding: 24px;
+            }
+
             .cmm-panel {
-              padding: 24px 22px 20px;
-              gap: 18px;
+              padding: 28px 28px 24px;
+              gap: 22px;
+            }
+
+            .cmm-close {
+              width: 34px;
+              height: 34px;
+              top: 16px;
+              right: 16px;
+            }
+
+            .cmm-header {
+              padding-right: 54px;
+            }
+
+            .cmm-title-row {
+              gap: 16px;
             }
 
             #choose-member-title {
-              font-size: 18px;
+              font-size: 20px;
             }
 
             .cmm-subtitle {
-              font-size: 13px;
-            }
-
-            .cmm-avatar {
-              width: 72px;
-              height: 72px;
-            }
-
-            .cmm-handle {
-              font-size: 16px;
-            }
-
-            .cmm-caption {
               font-size: 14px;
             }
 
+            .cmm-requests-chip {
+              font-size: 13px;
+            }
+
+            .cmm-members-list {
+              padding-right: 6px;
+              max-height: 56vh;
+            }
+
+            .cmm-members-list::-webkit-scrollbar {
+              width: 6px;
+            }
+
+            .cmm-member-card {
+              gap: 20px;
+              border-radius: 14px;
+              padding: 18px 20px;
+              margin-bottom: 12px;
+            }
+
+            .cmm-member-card:hover {
+              border-color: rgba(0, 0, 0, 0.12);
+              box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+            }
+
+            .cmm-member-card:hover::after {
+              background: rgba(255, 255, 255, 0.25);
+            }
+
+            .cmm-avatar {
+              width: 80px;
+              height: 80px;
+              box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+            }
+
+            .cmm-member-info {
+              gap: 6px;
+            }
+
+            .cmm-handle {
+              font-size: 18px;
+            }
+
+            .cmm-caption {
+              font-size: 15px;
+              letter-spacing: 0.2px;
+            }
+
             .cmm-dg-button {
-              width: 84px;
-              height: 40px;
-              font-size: 11px;
+              width: 90px;
+              height: 42px;
+              font-size: 12px;
+            }
+
+            .cmm-dg-button:hover,
+            .cmm-dg-button:focus-visible {
+              border: 1px solid #dec9a3;
+              box-shadow: 0 0 8px rgba(222, 201, 163, 0.4);
+              outline: none;
+            }
+
+            .cmm-footer-note {
+              padding: 0;
             }
           }
         `}</style>
