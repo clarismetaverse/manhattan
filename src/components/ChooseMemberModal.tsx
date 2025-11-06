@@ -108,7 +108,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             width: 100%;
             max-width: 440px;
             max-height: 90vh;
-            background: linear-gradient(180deg, #eae3d2 0%, #dccbb2 100%);
+            background: #FFEDBC;
             border-radius: 20px;
             box-shadow: 0 14px 50px rgba(0, 0, 0, 0.45);
             padding: 24px 20px 20px;
