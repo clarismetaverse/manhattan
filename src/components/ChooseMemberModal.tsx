@@ -188,7 +188,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
 
           .cmm-requests-chip {
             align-self: flex-start;
-            background: #e1d5c1;
+            background: #E1D5C1;
             color: #121212;
             font-weight: 700;
             font-size: 12px;
@@ -204,6 +204,19 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             max-height: 60vh;
             padding-right: 4px;
             -webkit-overflow-scrolling: touch;
+            position: relative;
+          }
+
+          .cmm-members-list::after {
+            content: "";
+            position: sticky;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(to top, rgba(255, 237, 188, 0.95) 0%, rgba(255, 237, 188, 0) 100%);
+            pointer-events: none;
+            z-index: 1;
           }
 
           .cmm-members-list::-webkit-scrollbar {
@@ -249,7 +262,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             height: 72px;
             border-radius: 12px;
             object-fit: cover;
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
           }
 
@@ -379,6 +392,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             .cmm-avatar {
               width: 80px;
               height: 80px;
+              border: 1px solid rgba(255, 255, 255, 0.5);
               box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
             }
 
