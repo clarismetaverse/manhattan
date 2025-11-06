@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import ChooseMemberModal, { type Member } from "@/components/ChooseMemberModal";
 
 interface PaletteVars extends CSSProperties {
   "--sand"?: string;
@@ -33,6 +34,63 @@ export default function MembersgroupDetail() {
   const [showRequest, setShowRequest] = useState(false);
   const [showMembersPicker, setShowMembersPicker] = useState(false);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
+
+  // Mock members data for ChooseMemberModal
+  const mockMembers: Member[] = [
+    { 
+      id: "1", 
+      handle: "@danielv", 
+      caption: "Estate investor", 
+      avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&auto=format&fit=crop&w=200&h=200" 
+    },
+    { 
+      id: "2", 
+      handle: "@michaelr", 
+      caption: "Startupper", 
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&auto=format&fit=crop&w=200&h=200" 
+    },
+    { 
+      id: "3", 
+      handle: "@emilyp", 
+      caption: "Pro athlete", 
+      avatar: "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&auto=format&fit=crop&w=200&h=200" 
+    },
+    { 
+      id: "4", 
+      handle: "@celine", 
+      caption: "Gallery curator", 
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&auto=format&fit=crop&w=200&h=200" 
+    },
+    { 
+      id: "5", 
+      handle: "@andrew", 
+      caption: "Film producer", 
+      avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&auto=format&fit=crop&w=200&h=200" 
+    },
+    { 
+      id: "6", 
+      handle: "@marco", 
+      caption: "Guardian member", 
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&auto=format&fit=crop&w=200&h=200" 
+    },
+  ];
+
+  const handleDGRequest = (memberId: string) => {
+    const selectedMember = mockMembers.find((m) => m.id === memberId);
+    setShowMembersPicker(false);
+    // Navigate to a confirmation page or show success toast
+    console.log("DG request sent to member:", selectedMember?.handle);
+    // You can navigate to a success page similar to general request
+    navigate("/general-request-sent", {
+      state: {
+        clubName: group?.Name,
+        clubImage: group?.cover?.url,
+        membersReviewing: 1,
+        isDirect: true,
+        memberName: selectedMember?.handle,
+      },
+    });
+  };
 
   useEffect(() => {
     if (!id) {
@@ -393,73 +451,14 @@ export default function MembersgroupDetail() {
       </div>
 
       {showMembersPicker && (
-        <Modal onClose={() => setShowMembersPicker(false)}>
-          <div className="space-y-5 relative">
-            <div className="absolute -top-8 right-0 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm border border-white/10">
-              <span className="text-white/70">Requests left:</span> <span className="font-medium">3</span>
-            </div>
-
-            <header className="text-center">
-              <h3 className="text-[18px] font-light tracking-[-0.01em]">Choose a Member</h3>
-              <p className="mt-1 text-sm text-white/70">
-                Send a Direct Guest request to a door member.
-              </p>
-            </header>
-
-            <ul className="max-h-[46vh] space-y-3 overflow-y-auto pr-1">
-              {["@danielv", "@michaelr", "@emilyp", "@celine", "@andrew", "@marco"].map((username, index) => (
-                <li
-                  key={username}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-white/90"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/10"
-                      style={{
-                        backgroundImage:
-                          index % 3 === 0
-                            ? "url(https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&auto=format&fit=crop)"
-                            : index % 3 === 1
-                            ? "url(https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&auto=format&fit=crop)"
-                            : "url(https://images.unsplash.com/photo-1544723795-3fb6469f5b39?q=80&auto=format&fit=crop)",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    />
-                    <div>
-                      <p className="text-[15px] font-medium tracking-tight">{username}</p>
-                      <p className="text-[13px] text-white/70">Guardian member</p>
-                    </div>
-                  </div>
-                  <Button className="h-9 rounded-full border border-white/20 bg-white/10 px-4 text-xs uppercase tracking-[0.12em] text-white/90">
-                    Request
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </Modal>
+        <ChooseMemberModal
+          members={mockMembers}
+          requestsLeft={3}
+          onClose={() => setShowMembersPicker(false)}
+          onDG={handleDGRequest}
+        />
       )}
     </div>
   );
 }
 
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
-      <div className="relative z-10 max-w-full px-4">
-        <div className="mx-auto w-full max-w-[520px] rounded-3xl border border-white/10 bg-white/[0.08] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
-          {children}
-        </div>
-      </div>
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute right-6 top-6 text-white/80 hover:text-white"
-      >
-        ×
-      </button>
-    </div>
-  );
-}
