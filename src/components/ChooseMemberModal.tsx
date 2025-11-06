@@ -276,7 +276,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
           .cmm-handle {
             font-size: 16px;
             font-weight: 700;
-            color: #121212;
+            color: #D9CBA3;
             margin: 0;
             line-height: 1.3;
           }

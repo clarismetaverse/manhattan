@@ -430,10 +430,10 @@ export default function MembersgroupDetail() {
                     </svg>
 
                     <div>
-                      <div className="text-[15px] font-medium tracking-tight text-[#E5D7BA]">
+                      <div className="text-[15px] font-medium tracking-tight text-[#D9CBA3]">
                         Direct Guest (DG)
                       </div>
-                      <div className="text-[13px] text-[#E5D7BAAA]">
+                      <div className="text-[13px] text-[#D9CBA3]/70">
                         Ask a specific member to be their guest
                       </div>
                     </div>
