@@ -233,7 +233,7 @@ const ChooseMemberModal: React.FC<ChooseMemberModalProps> = ({
             grid-template-columns: auto 1fr auto;
             align-items: center;
             gap: 16px;
-            background: linear-gradient(135deg, #FFF8E8 0%, #FFE8C7 100%);
+            background: #FFEFD4;
             border: 1px solid rgba(0, 0, 0, 0.06);
             border-radius: 14px;
             padding: 18px 20px;
