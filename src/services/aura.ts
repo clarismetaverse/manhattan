@@ -35,5 +35,30 @@ export async function fetchAuraProfile(id: string | number) {
 }
 
 export async function fetchAuraSelf() {
-  return request<AuraProfileRecord>("https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/Muser");
+  const raw = await request<any>(
+    "https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/Muser"
+  );
+
+  // The endpoint may return `{ result1, membe }`. Normalize it to AuraProfileRecord shape.
+  if (raw && typeof raw === "object") {
+    const r1 = (raw as any).result1 ?? raw;
+    const membe = (raw as any).membe ?? {};
+
+    const mapped: AuraProfileRecord = {
+      ...(r1 as Record<string, unknown>),
+      // Prefer top-level image fields if present; otherwise, tiles/galleries below
+      Profile_pic: (r1 as any)?.Profile_pic ?? undefined,
+      cover: (r1 as any)?.cover ?? undefined,
+      Cover: (r1 as any)?.Cover ?? undefined,
+      Hero: (r1 as any)?.Hero ?? undefined,
+      // Map pictures list so UI can build tiles/carousel
+      gallery: Array.isArray(membe?.Pictures) ? (membe.Pictures as any[]) : undefined,
+      // Map credits fallback from xp if available
+      AuraCredits: typeof (r1 as any)?.xp === "number" ? (r1 as any).xp : undefined,
+    } as AuraProfileRecord;
+
+    return mapped;
+  }
+
+  return raw as AuraProfileRecord;
 }
