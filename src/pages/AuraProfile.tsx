@@ -89,7 +89,7 @@ function HeaderCard({
   return (
     <header className="rounded-3xl bg-[#1E1A18] p-3 shadow-[0_6px_16px_rgba(0,0,0,0.40)] border border-[#2A2522]">
       <div className="relative overflow-hidden rounded-3xl">
-        <img src={coverUrl} alt={name} className="h-80 w-full object-cover" />
+        <img src={coverUrl} alt={name} className="h-96 w-full object-cover" />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
         <div className="absolute left-4 bottom-6 flex items-center gap-3 text-[14px] text-white/90">
