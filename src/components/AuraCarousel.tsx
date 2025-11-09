@@ -62,7 +62,7 @@ export const AuraCarousel: React.FC<AuraCarouselProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-6 right-6 z-10 text-white/90 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
+          className="absolute top-6 right-6 z-20 text-white/90 transition hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70"
           aria-label="Close carousel"
         >
           <X size={28} />
