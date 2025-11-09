@@ -1,8 +1,10 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
 
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { AuraCarousel } from "@/components/AuraCarousel";
 import { fetchAuraSelf, type AuraProfileRecord } from "@/services/aura";
 
 /**
@@ -25,6 +27,7 @@ export interface AuraProfileProps {
   subtitle?: string;
   ctaLabel?: string;
   tiles: AuraProfileTile[];
+  pictures: string[];
   bio: string;
   career: string;
   personal: string;
@@ -54,14 +57,55 @@ function MiniTile({
   type = "photo",
   label,
   badge,
+  onClick,
 }: {
   url: string;
   type?: "photo" | "glass";
   label?: string;
   badge?: string;
+  onClick?: () => void;
 }) {
+  const baseClassName =
+    "relative h-24 w-20 overflow-hidden rounded-xl border border-[#E3D3BB] bg-[#E9DEC9] shadow-[0_4px_10px_rgba(0,0,0,0.08)]";
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${baseClassName} cursor-pointer transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300`}
+        aria-label={label ? `View ${label} photo` : "View profile photo"}
+      >
+        <img
+          src={url}
+          alt={label ? `${label} preview` : "Aura gallery tile"}
+          className="absolute inset-0 size-full object-cover"
+          loading="lazy"
+        />
+
+        {type === "glass" ? (
+          <div className="absolute inset-0 rounded-xl bg-white/15 backdrop-blur-xl border border-white/25" />
+        ) : null}
+
+        {badge ? (
+          <div className="absolute left-2 top-2">
+            <span className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/15 backdrop-blur-md px-2.5 py-1 text-[11px] text-white/90">
+              {badge}
+            </span>
+          </div>
+        ) : null}
+
+        {label ? (
+          <div className="absolute bottom-2 right-2">
+            <span className="text-[11px] text-white/90">{label}</span>
+          </div>
+        ) : null}
+      </button>
+    );
+  }
+
   return (
-    <div className="relative h-24 w-20 rounded-xl overflow-hidden border border-[#E3D3BB] bg-[#E9DEC9] shadow-[0_4px_10px_rgba(0,0,0,0.08)]">
+    <div className={baseClassName}>
       <img
         src={url}
         alt={label ? `${label} preview` : "Aura gallery tile"}
@@ -96,26 +140,53 @@ function HeaderCard({
   name,
   subtitle,
   ctaLabel = "Polas",
+  onPrimaryImageClick,
 }: {
   coverUrl: string;
   credits?: number;
   name: string;
   subtitle?: string;
   ctaLabel?: string;
+  onPrimaryImageClick?: () => void;
 }) {
+  const isClickable = typeof onPrimaryImageClick === "function";
+
   return (
     <header className="rounded-3xl bg-[#1E1A18] p-3 shadow-[0_6px_16px_rgba(0,0,0,0.40)] border border-[#2A2522]">
-      <div className="relative overflow-hidden rounded-3xl">
-        <img src={coverUrl} alt={name} className="h-[26rem] w-full object-cover" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+      {isClickable ? (
+        <button
+          type="button"
+          onClick={onPrimaryImageClick}
+          className="group relative block h-[26rem] w-full overflow-hidden rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-200"
+          aria-label="Open profile photos"
+        >
+          <img
+            src={coverUrl}
+            alt={name}
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-        <div className="absolute left-4 bottom-6 flex items-center gap-3 text-[14px] text-white/90">
-          <Dot />
-          <span className="tracking-wide">
-            Aura Credits <strong className="pl-1">{credits}</strong>
-          </span>
+          <div className="absolute left-4 bottom-6 flex items-center gap-3 text-[14px] text-white/90">
+            <Dot />
+            <span className="tracking-wide">
+              Aura Credits <strong className="pl-1">{credits}</strong>
+            </span>
+          </div>
+        </button>
+      ) : (
+        <div className="relative overflow-hidden rounded-3xl">
+          <img src={coverUrl} alt={name} className="h-[26rem] w-full object-cover" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+          <div className="absolute left-4 bottom-6 flex items-center gap-3 text-[14px] text-white/90">
+            <Dot />
+            <span className="tracking-wide">
+              Aura Credits <strong className="pl-1">{credits}</strong>
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex items-center justify-between gap-3 px-2 pt-4 pb-1">
         <div className="min-w-0">
@@ -142,10 +213,34 @@ export function AuraProfile({
   subtitle = "Finding a new life in UAE",
   ctaLabel = "Polas",
   tiles,
+  pictures,
   bio,
   career,
   personal,
-}: AuraProfileProps) {
+  onOpenCarousel,
+}: AuraProfileProps & { onOpenCarousel?: (index: number) => void }) {
+  const pictureIndexByUrl = useMemo(() => {
+    const map = new Map<string, number>();
+    pictures.forEach((url, idx) => {
+      if (!map.has(url)) map.set(url, idx);
+    });
+    return map;
+  }, [pictures]);
+
+  const canOpenCarousel = Boolean(onOpenCarousel && pictures.length);
+
+  const openCarouselAt = (url: string | undefined) => {
+    if (!canOpenCarousel || !onOpenCarousel) return;
+    if (!url) {
+      onOpenCarousel(0);
+      return;
+    }
+    const index = pictureIndexByUrl.get(url) ?? 0;
+    onOpenCarousel(index);
+  };
+
+  const coverIndex = pictureIndexByUrl.get(coverUrl) ?? 0;
+
   return (
     <div className="min-h-screen w-full bg-[#E9DEC9] p-3">
       <Helmet>
@@ -154,11 +249,25 @@ export function AuraProfile({
         <link rel="canonical" href={window.location.href} />
       </Helmet>
       <div className="mx-auto max-w-sm space-y-3">
-        <HeaderCard coverUrl={coverUrl} credits={credits} name={name} subtitle={subtitle} ctaLabel={ctaLabel} />
+        <HeaderCard
+          coverUrl={coverUrl}
+          credits={credits}
+          name={name}
+          subtitle={subtitle}
+          ctaLabel={ctaLabel}
+          onPrimaryImageClick={canOpenCarousel ? () => openCarouselAt(pictures[coverIndex] ?? coverUrl) : undefined}
+        />
 
         <div className="rounded-2xl border border-[#E3D3BB] bg-[#E3D3BB]/50 p-3 flex items-center justify-between gap-3 shadow-[0_4px_10px_rgba(0,0,0,0.10)]">
           {tiles.slice(0, 3).map((tile, index) => (
-            <MiniTile key={`${tile.url}-${index}`} url={tile.url} type={tile.type} label={tile.label} badge={tile.badge} />
+            <MiniTile
+              key={`${tile.url}-${index}`}
+              url={tile.url}
+              type={tile.type}
+              label={tile.label}
+              badge={tile.badge}
+              onClick={canOpenCarousel ? () => openCarouselAt(tile.url) : undefined}
+            />
           ))}
         </div>
 
@@ -169,6 +278,8 @@ export function AuraProfile({
     </div>
   );
 }
+
+const fallbackCoverUrl = "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80";
 
 const sampleTiles: AuraProfileTile[] = [
   {
@@ -192,12 +303,13 @@ type TileCandidate = Partial<AuraProfileTile> & { url?: string | null | undefine
 const fallbackTiles: AuraProfileTile[] = sampleTiles;
 
 const fallbackProfile: AuraProfileProps = {
-  coverUrl: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80",
+  coverUrl: fallbackCoverUrl,
   name: "Johanna Mika",
   credits: 350,
   subtitle: "Finding a new life in UAE",
   ctaLabel: "Polas",
   tiles: fallbackTiles,
+  pictures: Array.from(new Set([fallbackCoverUrl, ...sampleTiles.map((tile) => tile.url)])),
   bio: "I’m a solar, relatable personality with moderate ambition and interest to discover more of the world.",
   career:
     "Currently a student at the academy of journalism, I’d like to try some experience as TV anchor. I’m also exploring options in real estate.",
@@ -258,6 +370,42 @@ function normalizeTile(candidate: unknown): TileCandidate | undefined {
   else if (typeof badgeRaw === "string" && badgeRaw.trim()) badge = badgeRaw.trim();
 
   return { url, type, label, badge };
+}
+
+function collectPictures(record: AuraProfileRecord | null | undefined): string[] {
+  if (!record) return [];
+
+  const urls: string[] = [];
+  const seen = new Set<string>();
+  const add = (value?: string) => {
+    if (!value || seen.has(value)) return;
+    urls.push(value);
+    seen.add(value);
+  };
+
+  const recordMap = record as unknown as Record<string, unknown>;
+
+  add(getImageUrl(record.cover));
+  add(getImageUrl(record.Hero));
+  add(getImageUrl(record.Cover));
+  add(getImageUrl(recordMap.Profile_pic));
+
+  if (Array.isArray(record?.tiles)) {
+    for (const item of record.tiles) {
+      const normalized = normalizeTile(item);
+      if (normalized?.url) add(normalized.url);
+    }
+  }
+
+  const galleryLike: unknown[] = [record?.gallery, record?.Work_Body, record?.Polas, record?.Polaroids]
+    .filter(Array.isArray)
+    .flat() as unknown[];
+
+  for (const item of galleryLike) {
+    add(getImageUrl(item));
+  }
+
+  return urls;
 }
 
 function collectTiles(record: AuraProfileRecord | null | undefined): AuraProfileTile[] {
@@ -348,6 +496,14 @@ function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfi
 
   const ctaLabel = firstNonEmptyString([recordMap.ctaLabel]) ?? fallbackProfile.ctaLabel;
 
+  const rawPictures = collectPictures(record);
+  const pictures = (() => {
+    const ordered = coverUrl
+      ? [coverUrl, ...rawPictures.filter((url) => url !== coverUrl)]
+      : rawPictures;
+    return ordered.length ? ordered : fallbackProfile.pictures;
+  })();
+
   return {
     coverUrl,
     credits,
@@ -355,6 +511,7 @@ function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfi
     subtitle,
     ctaLabel,
     tiles: collectTiles(record),
+    pictures,
     bio,
     career,
     personal,
@@ -362,6 +519,9 @@ function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfi
 }
 
 const AuraProfilePage = () => {
+  const [showCarousel, setShowCarousel] = useState(false);
+  const [index, setIndex] = useState(0);
+
   const { data, isLoading, isError } = useQuery<AuraProfileProps, Error>({
     queryKey: ["aura-profile"],
     queryFn: async () => mapAuraProfile(await fetchAuraSelf()),
@@ -372,6 +532,12 @@ const AuraProfilePage = () => {
     if (data) return data;
     return fallbackProfile;
   }, [data]);
+
+  const handleOpenCarousel = (startIndex: number) => {
+    if (!profile.pictures.length) return;
+    setIndex(startIndex);
+    setShowCarousel(true);
+  };
 
   if (isLoading && !data) {
     return (
@@ -386,7 +552,7 @@ const AuraProfilePage = () => {
 
   return (
     <>
-      <AuraProfile {...profile} />
+      <AuraProfile {...profile} onOpenCarousel={handleOpenCarousel} />
       {isError ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center px-4">
           <div className="pointer-events-auto rounded-full bg-stone-900/90 px-4 py-2 text-xs text-stone-100 shadow-lg">
@@ -394,6 +560,16 @@ const AuraProfilePage = () => {
           </div>
         </div>
       ) : null}
+      <AnimatePresence>
+        {showCarousel && profile.pictures.length > 0 ? (
+          <AuraCarousel
+            pics={profile.pictures}
+            index={index}
+            setIndex={setIndex}
+            onClose={() => setShowCarousel(false)}
+          />
+        ) : null}
+      </AnimatePresence>
     </>
   );
 };
