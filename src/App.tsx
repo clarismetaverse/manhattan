@@ -23,6 +23,7 @@ import MembersgroupsHomepage from "./pages/MembersgroupsHomepage";
 import MembersgroupDetail from "./pages/MembersgroupDetail";
 import GeneralRequestSent from "./pages/GeneralRequestSent";
 import GuestMatch from "./pages/GuestMatch";
+import AuraProfile from "./pages/AuraProfile";
 
 
 
@@ -60,6 +61,7 @@ const App = () => (
               <Route path="/ugc" element={<UGCViewPage />} />
               <Route path="/case/:id" element={<CaseShowcasePage />} />
               <Route path="/portfolio/new" element={<PortfolioNewPage />} />
+              <Route path="/aura-profile" element={<AuraProfile />} />
               <Route path="/memberspass" element={<MemberspassHome />} />
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
