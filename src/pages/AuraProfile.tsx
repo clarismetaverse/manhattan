@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Helmet } from "react-helmet-async";
 
 /**
  * Aura Profile — mobile-first card stack
@@ -6,13 +7,20 @@ import type { ReactNode } from "react";
  * Drop this component anywhere; swap props as needed.
  */
 
+export type AuraProfileTile = {
+  url: string;
+  type?: "photo" | "glass";
+  label?: string;
+  badge?: string;
+};
+
 export interface AuraProfileProps {
   coverUrl: string;
   credits?: number;
   name: string;
   subtitle?: string;
   ctaLabel?: string;
-  tiles: Array<{ url: string; type?: "photo" | "glass"; label?: string; badge?: string }>;
+  tiles: AuraProfileTile[];
   bio: string;
   career: string;
   personal: string;
@@ -50,7 +58,12 @@ function MiniTile({
 }) {
   return (
     <div className="relative h-24 w-20 rounded-xl overflow-hidden border border-[#E3D3BB] bg-[#E9DEC9] shadow-[0_4px_10px_rgba(0,0,0,0.08)]">
-      <img src={url} alt={label ?? "tile"} className="absolute inset-0 size-full object-cover" />
+      <img
+        src={url}
+        alt={label ? `${label} preview` : "Aura gallery tile"}
+        className="absolute inset-0 size-full object-cover"
+        loading="lazy"
+      />
 
       {type === "glass" ? (
         <div className="absolute inset-0 rounded-xl bg-white/15 backdrop-blur-xl border border-white/25" />
@@ -131,6 +144,10 @@ export function AuraProfile({
 }: AuraProfileProps) {
   return (
     <div className="min-h-screen w-full bg-[#E9DEC9] p-3">
+      <Helmet>
+        <title>{`${name} · Aura Profile`}</title>
+        <meta name="description" content={`Aura profile for ${name}. Explore credits, work highlights, and personal projects.`} />
+      </Helmet>
       <div className="mx-auto max-w-sm space-y-3">
         <HeaderCard coverUrl={coverUrl} credits={credits} name={name} subtitle={subtitle} ctaLabel={ctaLabel} />
 
@@ -148,14 +165,14 @@ export function AuraProfile({
   );
 }
 
-const sampleTiles = [
+const sampleTiles: AuraProfileTile[] = [
   {
     url: "https://images.unsplash.com/photo-1475180098004-ca77a66827be?auto=format&fit=crop&w=320&q=80",
     label: "Studio",
   },
   {
     url: "https://images.unsplash.com/photo-1499955085172-a104c9463ece?auto=format&fit=crop&w=320&q=80",
-    type: "glass" as const,
+    type: "glass",
     label: "Aura IV",
     badge: "5",
   },
