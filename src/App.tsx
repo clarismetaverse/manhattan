@@ -62,6 +62,7 @@ const App = () => (
               <Route path="/case/:id" element={<CaseShowcasePage />} />
               <Route path="/portfolio/new" element={<PortfolioNewPage />} />
               <Route path="/aura-profile" element={<AuraProfile />} />
+              <Route path="/aura-profile/:id" element={<AuraProfile />} />
               <Route path="/memberspass" element={<MemberspassHome />} />
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
