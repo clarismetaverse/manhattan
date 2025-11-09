@@ -1,9 +1,9 @@
 import { useMemo, type ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
-import { useParams, useSearchParams } from "react-router-dom";
+
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { fetchAuraProfile, type AuraProfileRecord } from "@/services/aura";
+import { fetchAuraSelf, type AuraProfileRecord } from "@/services/aura";
 
 /**
  * Aura Profile — mobile-first card stack
@@ -151,6 +151,7 @@ export function AuraProfile({
       <Helmet>
         <title>{`${name} · Aura Profile`}</title>
         <meta name="description" content={`Aura profile for ${name}. Explore credits, work highlights, and personal projects.`} />
+        <link rel="canonical" href={window.location.href} />
       </Helmet>
       <div className="mx-auto max-w-sm space-y-3">
         <HeaderCard coverUrl={coverUrl} credits={credits} name={name} subtitle={subtitle} ctaLabel={ctaLabel} />
@@ -293,8 +294,8 @@ function collectTiles(record: AuraProfileRecord | null | undefined): AuraProfile
     if (url) sources.push({ url });
   }
 
-  if (record?.Profile_pic?.url) {
-    sources.push({ url: record.Profile_pic.url });
+  if ((record as any)?.Profile_pic?.url) {
+    sources.push({ url: (record as any).Profile_pic.url });
   }
 
   for (const candidate of sources) {
@@ -314,13 +315,13 @@ function collectTiles(record: AuraProfileRecord | null | undefined): AuraProfile
 function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfileProps {
   if (!record) return fallbackProfile;
 
-  const recordMap = record as Record<string, unknown>;
+  const recordMap = record as unknown as Record<string, unknown>;
 
   const coverUrl =
     getImageUrl(record.cover) ||
     getImageUrl(record.Hero) ||
     getImageUrl(record.Cover) ||
-    getImageUrl(record.Profile_pic) ||
+    getImageUrl(recordMap.Profile_pic) ||
     fallbackProfile.coverUrl;
 
   const credits =
@@ -328,14 +329,16 @@ function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfi
 
   const subtitle =
     firstNonEmptyString([
-      toHandle(record.IG_account),
-      record.City && record.countryCode ? `${record.City}, ${record.countryCode}` : undefined,
-      record.City,
-      record.countryCode,
-      record.Profession,
+      toHandle(recordMap.IG_account as string | undefined),
+      (recordMap.City && recordMap.countryCode)
+        ? `${String(recordMap.City)}, ${String(recordMap.countryCode)}`
+        : undefined,
+      recordMap.City as string | undefined,
+      recordMap.countryCode as string | undefined,
+      recordMap.Profession as string | undefined,
     ]) ?? fallbackProfile.subtitle;
 
-  const bio = firstNonEmptyString([record.bio, recordMap.Bio]) ?? fallbackProfile.bio;
+  const bio = firstNonEmptyString([recordMap.bio, recordMap.Bio] as unknown[]) ?? fallbackProfile.bio;
 
   const career =
     firstNonEmptyString([recordMap.career, recordMap.CareerProjects, recordMap.Career]) ?? fallbackProfile.career;
@@ -359,15 +362,9 @@ function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfi
 }
 
 const AuraProfilePage = () => {
-  const { id: pathId } = useParams<{ id?: string }>();
-  const [searchParams] = useSearchParams();
-  const searchId = searchParams.get("id");
-  const profileId = pathId ?? searchId ?? undefined;
-
-  const { data, isLoading, isError } = useQuery<AuraProfileRecord, Error, AuraProfileProps>({
-    queryKey: ["aura-profile", profileId],
-    queryFn: async () => mapAuraProfile(await fetchAuraProfile(profileId!)),
-    enabled: Boolean(profileId),
+  const { data, isLoading, isError } = useQuery<AuraProfileProps, Error>({
+    queryKey: ["aura-profile"],
+    queryFn: async () => mapAuraProfile(await fetchAuraSelf()),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -376,7 +373,7 @@ const AuraProfilePage = () => {
     return fallbackProfile;
   }, [data]);
 
-  if (profileId && isLoading && !data) {
+  if (isLoading && !data) {
     return (
       <div className="min-h-screen w-full bg-[#E9DEC9] flex items-center justify-center">
         <div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm text-stone-700 shadow-lg">
@@ -390,7 +387,7 @@ const AuraProfilePage = () => {
   return (
     <>
       <AuraProfile {...profile} />
-      {profileId && isError ? (
+      {isError ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center px-4">
           <div className="pointer-events-auto rounded-full bg-stone-900/90 px-4 py-2 text-xs text-stone-100 shadow-lg">
             Unable to load aura profile. Showing preview data.

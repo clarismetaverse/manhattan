@@ -98,7 +98,8 @@ export async function request<T>(path: string, options: RequestInit = {}) {
     }
   }
 
-  const res = await fetch(`${API}${path}`, {
+  const url = /^https?:\/\//i.test(path) ? path : `${API}${path}`;
+  const res = await fetch(url, {
     ...options,
     headers,
   });

@@ -33,3 +33,7 @@ export async function fetchAuraProfile(id: string | number) {
   const encodedId = encodeURIComponent(identifier);
   return request<AuraProfileRecord>(`/user_turbo/${encodedId}`);
 }
+
+export async function fetchAuraSelf() {
+  return request<AuraProfileRecord>("https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/Muser");
+}
