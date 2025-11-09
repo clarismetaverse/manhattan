@@ -1,5 +1,9 @@
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Helmet } from "react-helmet-async";
+import { useParams, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { fetchAuraProfile, type AuraProfileRecord } from "@/services/aura";
 
 /**
  * Aura Profile — mobile-first card stack
@@ -182,19 +186,220 @@ const sampleTiles: AuraProfileTile[] = [
   },
 ];
 
-const AuraProfilePage = () => (
-  <AuraProfile
-    coverUrl="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80"
-    name="Johanna Mika"
-    credits={350}
-    subtitle="Finding a new life in UAE"
-    ctaLabel="Polas"
-    tiles={sampleTiles}
-    bio="I’m a solar, relatable personality with moderate ambition and interest to discover more of the world."
-    career="Currently a student at the academy of journalism, I’d like to try some experience as TV anchor. I’m also exploring options in real estate."
-    personal="I’m learning drawing and painting as self taught. I dream to make a family here in the UAE and move here."
-  />
-);
+type TileCandidate = Partial<AuraProfileTile> & { url?: string | null | undefined };
+
+const fallbackTiles: AuraProfileTile[] = sampleTiles;
+
+const fallbackProfile: AuraProfileProps = {
+  coverUrl: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80",
+  name: "Johanna Mika",
+  credits: 350,
+  subtitle: "Finding a new life in UAE",
+  ctaLabel: "Polas",
+  tiles: fallbackTiles,
+  bio: "I’m a solar, relatable personality with moderate ambition and interest to discover more of the world.",
+  career:
+    "Currently a student at the academy of journalism, I’d like to try some experience as TV anchor. I’m also exploring options in real estate.",
+  personal: "I’m learning drawing and painting as self taught. I dream to make a family here in the UAE and move here.",
+};
+
+function toHandle(url?: string | null) {
+  if (!url) return undefined;
+  try {
+    const value = new URL(url);
+    const segments = value.pathname.split("/").filter(Boolean);
+    if (segments[0]) return `@${segments[0]}`;
+  } catch {
+    if (url.startsWith("@")) return url;
+  }
+  return undefined;
+}
+
+function firstNonEmptyString(values: Array<unknown>) {
+  for (const value of values) {
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed) return trimmed;
+    }
+  }
+  return undefined;
+}
+
+function firstValidNumber(values: Array<unknown>) {
+  for (const value of values) {
+    const num = typeof value === "number" ? value : Number(value);
+    if (Number.isFinite(num)) return num;
+  }
+  return undefined;
+}
+
+function getImageUrl(input: unknown): string | undefined {
+  if (!input) return undefined;
+  if (typeof input === "string") return input;
+  if (typeof input === "object" && "url" in (input as Record<string, unknown>)) {
+    const maybe = (input as Record<string, unknown>).url;
+    return typeof maybe === "string" && maybe ? maybe : undefined;
+  }
+  return undefined;
+}
+
+function normalizeTile(candidate: unknown): TileCandidate | undefined {
+  if (!candidate || typeof candidate !== "object") return undefined;
+  const record = candidate as Record<string, unknown>;
+  const url = getImageUrl(record) ?? getImageUrl(record.image);
+  if (!url) return undefined;
+
+  const type = record.type === "glass" ? "glass" : record.type === "photo" ? "photo" : undefined;
+  const label = typeof record.label === "string" ? record.label : undefined;
+  const badgeRaw = record.badge;
+  let badge: string | undefined;
+  if (typeof badgeRaw === "number" && Number.isFinite(badgeRaw)) badge = String(badgeRaw);
+  else if (typeof badgeRaw === "string" && badgeRaw.trim()) badge = badgeRaw.trim();
+
+  return { url, type, label, badge };
+}
+
+function collectTiles(record: AuraProfileRecord | null | undefined): AuraProfileTile[] {
+  const tiles: AuraProfileTile[] = [];
+  const seen = new Set<string>();
+
+  const push = (candidate?: TileCandidate) => {
+    const url = candidate?.url;
+    if (!url || seen.has(url)) return;
+    tiles.push({
+      url,
+      type: candidate?.type === "glass" ? "glass" : "photo",
+      label: candidate?.label,
+      badge: candidate?.badge,
+    });
+    seen.add(url);
+  };
+
+  const sources: TileCandidate[] = [];
+
+  if (Array.isArray(record?.tiles)) {
+    for (const item of record.tiles) {
+      const normalized = normalizeTile(item);
+      if (normalized) sources.push(normalized);
+    }
+  }
+
+  const galleryLike: unknown[] = [record?.gallery, record?.Work_Body, record?.Polas, record?.Polaroids]
+    .filter(Array.isArray)
+    .flat() as unknown[];
+
+  for (const item of galleryLike) {
+    const url = getImageUrl(item);
+    if (url) sources.push({ url });
+  }
+
+  if (record?.Profile_pic?.url) {
+    sources.push({ url: record.Profile_pic.url });
+  }
+
+  for (const candidate of sources) {
+    push(candidate);
+  }
+
+  if (tiles.length < 3) {
+    for (const fallback of fallbackTiles) {
+      push(fallback);
+      if (tiles.length >= 3) break;
+    }
+  }
+
+  return tiles.slice(0, 3);
+}
+
+function mapAuraProfile(record: AuraProfileRecord | null | undefined): AuraProfileProps {
+  if (!record) return fallbackProfile;
+
+  const recordMap = record as Record<string, unknown>;
+
+  const coverUrl =
+    getImageUrl(record.cover) ||
+    getImageUrl(record.Hero) ||
+    getImageUrl(record.Cover) ||
+    getImageUrl(record.Profile_pic) ||
+    fallbackProfile.coverUrl;
+
+  const credits =
+    firstValidNumber([record.credits, record.AuraCredits]) ?? fallbackProfile.credits ?? 0;
+
+  const subtitle =
+    firstNonEmptyString([
+      toHandle(record.IG_account),
+      record.City && record.countryCode ? `${record.City}, ${record.countryCode}` : undefined,
+      record.City,
+      record.countryCode,
+      record.Profession,
+    ]) ?? fallbackProfile.subtitle;
+
+  const bio = firstNonEmptyString([record.bio, recordMap.Bio]) ?? fallbackProfile.bio;
+
+  const career =
+    firstNonEmptyString([recordMap.career, recordMap.CareerProjects, recordMap.Career]) ?? fallbackProfile.career;
+
+  const personal =
+    firstNonEmptyString([recordMap.personal, recordMap.PersonalProjects, recordMap.Personal]) ?? fallbackProfile.personal;
+
+  const ctaLabel = firstNonEmptyString([recordMap.ctaLabel]) ?? fallbackProfile.ctaLabel;
+
+  return {
+    coverUrl,
+    credits,
+    name: firstNonEmptyString([record.name, recordMap.NickName]) ?? fallbackProfile.name,
+    subtitle,
+    ctaLabel,
+    tiles: collectTiles(record),
+    bio,
+    career,
+    personal,
+  };
+}
+
+const AuraProfilePage = () => {
+  const { id: pathId } = useParams<{ id?: string }>();
+  const [searchParams] = useSearchParams();
+  const searchId = searchParams.get("id");
+  const profileId = pathId ?? searchId ?? undefined;
+
+  const { data, isLoading, isError } = useQuery<AuraProfileRecord, Error, AuraProfileProps>({
+    queryKey: ["aura-profile", profileId],
+    queryFn: async () => mapAuraProfile(await fetchAuraProfile(profileId!)),
+    enabled: Boolean(profileId),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const profile = useMemo(() => {
+    if (data) return data;
+    return fallbackProfile;
+  }, [data]);
+
+  if (profileId && isLoading && !data) {
+    return (
+      <div className="min-h-screen w-full bg-[#E9DEC9] flex items-center justify-center">
+        <div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm text-stone-700 shadow-lg">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Loading aura profile…</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <AuraProfile {...profile} />
+      {profileId && isError ? (
+        <div className="pointer-events-none fixed inset-x-0 bottom-4 flex justify-center px-4">
+          <div className="pointer-events-auto rounded-full bg-stone-900/90 px-4 py-2 text-xs text-stone-100 shadow-lg">
+            Unable to load aura profile. Showing preview data.
+          </div>
+        </div>
+      ) : null}
+    </>
+  );
+};
 
 export default AuraProfilePage;
 
