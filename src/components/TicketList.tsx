@@ -1,5 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Calendar,
   Clock,
@@ -142,7 +143,7 @@ export default function TicketList() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#E9DEC9] flex items-center justify-center">
+      <div className="min-h-screen bg-[#E9DEC9] flex items-center justify-center text-stone-900 font-[SF Pro Display,Inter,sans-serif]">
         <div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm text-stone-700 shadow">
           <Loader2 className="h-5 w-5 animate-spin" />
           <span>Loading tickets…</span>
@@ -166,9 +167,28 @@ export default function TicketList() {
         </div>
 
         <div className="grid gap-4">
-          {items.map((item) => (
-            <TicketCard key={item.id} item={item} />
-          ))}
+          {items.length > 0 ? (
+            <AnimatePresence>
+              {items.map((item) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <TicketCard item={item} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          ) : (
+            <div className="rounded-3xl border border-[#E3D3BB] bg-white/70 px-6 py-10 text-center text-stone-600 shadow-inner">
+              <p className="text-sm font-medium tracking-wide uppercase text-stone-500">No tickets yet</p>
+              <p className="mt-2 text-sm text-stone-600">
+                When you receive an invitation, it will appear here.
+              </p>
+            </div>
+          )}
         </div>
 
         {isError && (
