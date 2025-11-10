@@ -94,18 +94,21 @@ export function mapBooking(b: ApiBooking): TicketItem {
 }
 
 export async function fetchBookings(): Promise<TicketItem[]> {
-  const token = localStorage.getItem('auth_token');
-  const res = await fetch(
-    "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/get_bookings/Upgrade",
-    {
-      credentials: "include",
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
-    }
+  const token = localStorage.getItem("auth_token") ?? "";
+  const url = new URL(
+    "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/get_bookings/Bridge"
   );
+  if (token) {
+    url.searchParams.set("t", token);
+  }
+
+  const res = await fetch(url.toString(), {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache",
+    },
+  });
   if (!res.ok) throw new Error(`Bookings fetch failed: ${res.status}`);
   const json: ApiBooking[] = await res.json();
   return (json ?? []).map(mapBooking);
