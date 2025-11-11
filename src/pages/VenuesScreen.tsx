@@ -134,19 +134,19 @@ export default function VenuesScreen() {
   const content = useMemo(() => {
     if (loading)
       return (
-        <div className="flex items-center justify-center py-20 text-sm text-[#E9ECEB]/60">
+        <div className="flex items-center justify-center py-20 text-sm text-gray-500">
           Loading Venues…
         </div>
       );
     if (error)
       return (
-        <div className="flex items-center justify-center py-20 text-sm text-[#E9ECEB]/60">
+        <div className="flex items-center justify-center py-20 text-sm text-gray-500">
           {error}
         </div>
       );
     if (!venues.length)
       return (
-        <div className="flex items-center justify-center py-20 text-sm text-[#E9ECEB]/60">
+        <div className="flex items-center justify-center py-20 text-sm text-gray-500">
           No venues found.
         </div>
       );
@@ -200,10 +200,10 @@ export default function VenuesScreen() {
   }, [error, venues, loading]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0A0B0C] via-[#0C0D0E] to-[#0A0B0C] px-5 pb-24 pt-12 text-[#E9ECEB]">
+    <div className="min-h-screen bg-white px-5 pb-24 pt-12">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-10">
-          <h1 className="text-center text-2xl font-light text-[#F4F5F3]">
+          <h1 className="text-center text-2xl font-light text-gray-900">
             Dive into the guest experience
           </h1>
         </div>
