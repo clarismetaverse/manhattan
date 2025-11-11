@@ -23,6 +23,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (profile) {
         setUser(profile);
         localStorage.setItem('user_data', JSON.stringify(profile));
+      } else {
+        // Clear invalid token
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_data');
       }
       setIsLoading(false);
     };
