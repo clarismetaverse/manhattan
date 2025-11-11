@@ -78,9 +78,18 @@ export default function VenuesScreen() {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
         const json = (await res.json()) as any;
         
-        // Handle grouped response format like Index.tsx does
+        // Handle grouped response format
         let merged: Venue[] = [];
-        if (json.filt) {
+        if (json.categoryfilter && Array.isArray(json.categoryfilter)) {
+          // Deduplicate by restaurant_turbo_id
+          const restaurantMap = new Map<number, Venue>();
+          json.categoryfilter.forEach((restaurant: any) => {
+            if (restaurant?.restaurant_turbo_id) {
+              restaurantMap.set(restaurant.restaurant_turbo_id, restaurant);
+            }
+          });
+          merged = Array.from(restaurantMap.values());
+        } else if (json.filt) {
           const restaurantMap = new Map<number, Venue>();
           Object.values(json.filt).forEach((group: any) => {
             if (Array.isArray(group)) {
@@ -96,7 +105,6 @@ export default function VenuesScreen() {
           merged = json;
         } else {
           merged = [
-            ...(json.categoryfilter ?? []),
             ...(json.area ?? []),
           ];
         }
