@@ -61,18 +61,45 @@ export default function VenuesScreen() {
     const controller = new AbortController();
 
     fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        city_id: 3,
+        page: 1,
+        search: "",
+        area: [],
+        category: [],
+        content: [],
+        booking: [],
+      }),
       signal: controller.signal,
     })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const data = (await res.json()) as VenuesResponse | Venue[];
-        const merged: Venue[] = Array.isArray(data)
-          ? data
-          : [
-              ...(data.categoryfilter ?? []),
-              ...(data.area ?? []),
-              ...(data.filt ?? []),
-            ];
+        const json = (await res.json()) as any;
+        
+        // Handle grouped response format like Index.tsx does
+        let merged: Venue[] = [];
+        if (json.filt) {
+          const restaurantMap = new Map<number, Venue>();
+          Object.values(json.filt).forEach((group: any) => {
+            if (Array.isArray(group)) {
+              group.forEach((restaurant: any) => {
+                if (restaurant?.restaurant_turbo_id) {
+                  restaurantMap.set(restaurant.restaurant_turbo_id, restaurant);
+                }
+              });
+            }
+          });
+          merged = Array.from(restaurantMap.values());
+        } else if (Array.isArray(json)) {
+          merged = json;
+        } else {
+          merged = [
+            ...(json.categoryfilter ?? []),
+            ...(json.area ?? []),
+          ];
+        }
 
         const seen = new Set<number>();
         const filtered = merged.filter((v) => {
