@@ -174,8 +174,8 @@ export default function VenuesScreen() {
                 aria-hidden="true"
               />
 
-              <div className="relative flex h-[220px] flex-col justify-end p-6">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
+              <div className="relative flex h-[220px] flex-col justify-between p-6">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex max-w-max items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
                     Featured Venue
                   </span>
@@ -185,10 +185,12 @@ export default function VenuesScreen() {
                     </span>
                   )}
                 </div>
-                <h2 className="text-[22px] font-light text-[#E9ECEB] drop-shadow-[0_4px_16px_rgba(0,0,0,0.65)]">
-                  {venue.Name}
-                </h2>
-                <p className="mt-2 text-[13px] font-light text-white/70">#{i + 1} Venue</p>
+                <div>
+                  <h2 className="text-[22px] font-light text-[#E9ECEB] drop-shadow-[0_4px_16px_rgba(0,0,0,0.65)]">
+                    {venue.Name}
+                  </h2>
+                  <p className="mt-2 text-[13px] font-light text-white/70">#{i + 1} Venue</p>
+                </div>
               </div>
             </Link>
           );
