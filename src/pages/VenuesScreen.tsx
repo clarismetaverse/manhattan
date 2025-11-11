@@ -200,7 +200,7 @@ export default function VenuesScreen() {
   }, [error, venues, loading]);
 
   return (
-    <div className="min-h-screen bg-[#0A0B0C] px-5 pb-24 pt-12 text-[#E9ECEB]">
+    <div className="min-h-screen bg-gradient-to-b from-[#0A0B0C] via-[#0C0D0E] to-[#0A0B0C] px-5 pb-24 pt-12 text-[#E9ECEB]">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-10">
           <h1 className="text-center text-2xl font-light text-[#F4F5F3]">
