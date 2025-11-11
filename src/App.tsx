@@ -70,6 +70,7 @@ const App = () => (
               <Route path="/memberspass" element={<MemberspassHome />} />
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/venues" element={<VenuesScreen />} />
+              <Route path="/memberpass/venues" element={<VenuesScreen />} />
               <Route path="/memberspass/bookings" element={<BookingsScreen />} />
               <Route path="/memberspass/booking/:id" element={<BookingDetails />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
