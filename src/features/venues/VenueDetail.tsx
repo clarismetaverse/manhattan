@@ -189,7 +189,7 @@ export default function VenueDetail({
             color: "#ffffff",
             borderColor: "transparent",
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-          }} disabled={!enabled} aria-disabled={!enabled} className="w-full rounded-[15px] px-5 py-3 font-medium border-[3px] disabled:cursor-not-allowed transition-all">
+          }} disabled={!enabled} aria-disabled={!enabled} className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all">
               Select date & time
             </motion.button>
           </div>
