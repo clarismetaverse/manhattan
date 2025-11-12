@@ -71,6 +71,7 @@ const App = () => (
               <Route path="/memberspass" element={<MemberspassHome />} />
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/venues" element={<VenuesScreen />} />
+              <Route path="/memberspass/venues/:id" element={<RestaurantDetail />} />
               <Route path="/memberpass/venues" element={<VenuesScreen />} />
               <Route path="/app/venues" element={<VenuesPage />} />
               <Route path="/memberspass/bookings" element={<BookingsScreen />} />
