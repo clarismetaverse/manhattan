@@ -186,11 +186,11 @@ function OfferCard({
       whileTap={{ scale: 0.98 }}
       animate={
         isSelected
-          ? { boxShadow: "0 0 12px rgba(224,201,163,.5)", backgroundColor: "rgba(250,247,240,.15)" }
-          : { boxShadow: "0 0 0 rgba(0,0,0,0)", backgroundColor: "rgba(250,247,240,0)" }
+          ? { boxShadow: "0 8px 32px rgba(224,201,163,.4)", backgroundColor: "rgba(255,255,255,.25)" }
+          : { boxShadow: "0 4px 16px rgba(0,0,0,.06)", backgroundColor: "rgba(255,255,255,.15)" }
       }
       transition={{ duration: 0.3 }}
-      className="relative w-full text-left rounded-3xl ring-1 ring-[#E3D3BB] bg-[#FAF7F0]/60 px-5 py-5"
+      className="relative w-full text-left rounded-3xl ring-1 ring-white/40 bg-white/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,.08)] px-5 py-5"
     >
       {isSelected && (
         <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
