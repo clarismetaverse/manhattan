@@ -114,7 +114,12 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
           />
           <motion.div
             key={activeTab}
-            className="pointer-events-none absolute bottom-0 left-1/4 h-0.5 w-1/2 rounded-full bg-gradient-to-r from-[#FF5A7A] to-[#FF3A6E]"
+            className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF5A7A] to-[#FF3A6E]"
+            style={{
+              left: `calc(${(100 / venue.offers.length) * activeTab}% + 0.25rem)`,
+              width: `calc(${100 / venue.offers.length}% - 0.5rem)`,
+            }}
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
             layout
           />
         </div>
