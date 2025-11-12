@@ -101,7 +101,7 @@ export default function VenuePage() {
           "radial-gradient(1100px 650px at 65% -10%, #FFF9F0 0%, #F7F1E6 38%, #E9DEC9 68%, #E5D6C2 100%)",
       }}
     >
-      <LayoutGroup>
+      <LayoutGroup id="venues">
         <div className="mx-auto flex min-h-screen max-w-sm flex-col px-4 pb-32 pt-16 font-[SF Pro Display,Inter,sans-serif] text-stone-900">
           <header className="space-y-3 text-center">
             <p className="text-xs uppercase tracking-[0.32em] text-stone-500">Influencer Flow</p>

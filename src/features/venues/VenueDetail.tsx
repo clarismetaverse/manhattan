@@ -28,9 +28,27 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
       <div className="mx-auto max-w-sm pb-28">
         {/* Hero morph */}
         <div className="relative">
-          <motion.div layoutId={`card-${venue.id}`} className="relative overflow-hidden rounded-b-3xl">
-            <img src={venue.image} alt={venue.name} className="h-64 w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+          <motion.div
+            layoutId={`card-${venue.id}`}
+            className="relative overflow-hidden"
+            style={{ borderRadius: 24 }}
+            transition={{ type: "spring", stiffness: 420, damping: 34 }}
+          >
+            <img
+              src={venue.image}
+              alt={venue.name}
+              className="h-64 w-full object-cover"
+              style={{ borderRadius: 24 }}
+            />
+            <motion.div
+              layoutId={`card-grad-${venue.id}`}
+              className="absolute inset-0"
+              style={{
+                borderRadius: 24,
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,.40), rgba(0,0,0,.10), rgba(0,0,0,0))",
+              }}
+            />
             <h1 className="absolute bottom-5 left-4 right-4 text-3xl font-semibold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,.5)]">
               {venue.name}
             </h1>
