@@ -178,7 +178,7 @@ export default function VenueDetail({
           }} animate={enabled ? {
             opacity: 1,
             scale: 1,
-            boxShadow: "0 0 18px rgba(255,90,122,0.45)",
+            boxShadow: "0 4px 12px rgba(255,90,122,0.25), 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
             background: "linear-gradient(135deg, #fefefe 0%, #f5f5f5 100%)",
             color: "#FF5A7A",
             borderColor: "#FF5A7A"
@@ -187,8 +187,9 @@ export default function VenueDetail({
             scale: 1,
             background: "linear-gradient(to right, #FF5A7A, #FF3A6E)",
             color: "#ffffff",
-            borderColor: "transparent"
-          }} disabled={!enabled} aria-disabled={!enabled} className="w-full rounded-[15px] px-5 py-3 font-medium border-2 disabled:cursor-not-allowed transition-colors">
+            borderColor: "transparent",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+          }} disabled={!enabled} aria-disabled={!enabled} className="w-full rounded-[15px] px-5 py-3 font-medium border-[3px] disabled:cursor-not-allowed transition-all">
               Select date & time
             </motion.button>
           </div>
