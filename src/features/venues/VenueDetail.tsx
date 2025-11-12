@@ -24,7 +24,7 @@ export default function VenueDetail({
   }} exit={{
     opacity: 0
   }} className="fixed inset-0 z-50 overflow-y-auto" style={{
-    background: "radial-gradient(1200px 600px at 70% -10%, #FFFFFF 0%, #F7F1E6 35%, #E9DEC9 70%, #E5D6C2 100%)"
+    background: "radial-gradient(1200px 600px at 70% -10%, #fffaf4 0%, #f7f1e6 40%, #e9dec9 75%, #e5d6c2 100%)"
   }}>
       <div className="mx-auto max-w-sm pb-28">
         {/* Hero morph */}
@@ -106,7 +106,7 @@ export default function VenueDetail({
         <AnimatePresence initial={false}>
           {!selectedOfferId && <motion.div initial={{
           opacity: 0,
-          y: 8
+          y: 4
         }} animate={{
           opacity: 1,
           y: 0
@@ -114,13 +114,14 @@ export default function VenueDetail({
           opacity: 0,
           y: -6
         }} transition={{
-          duration: 0.28
-        }} className="mx-4 mt-5 flex items-center justify-between" aria-live="polite">
-              <h3 className="text-stone-900 text-[15px] font-semibold">
+          duration: 0.3,
+          delay: 0.15
+        }} className="mx-4 mt-6 mb-2 flex items-baseline justify-between" aria-live="polite">
+              <h3 className="text-[15px] font-semibold text-stone-900 tracking-tight">
                 Select a collab option
               </h3>
               <span className="text-[12px] text-stone-500">
-                Compare perks and content requirements
+                Compare perks & requirements
               </span>
             </motion.div>}
         </AnimatePresence>
