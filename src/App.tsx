@@ -28,6 +28,7 @@ import AuraProfile from "./pages/AuraProfile";
 import BookingsScreen from "./pages/BookingsScreen";
 import BookingDetails from "./pages/BookingDetails";
 import VenuesScreen from "./pages/VenuesScreen";
+import VenuesPage from "./app/venues/Page";
 
 
 
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/venues" element={<VenuesScreen />} />
               <Route path="/memberpass/venues" element={<VenuesScreen />} />
+              <Route path="/app/venues" element={<VenuesPage />} />
               <Route path="/memberspass/bookings" element={<BookingsScreen />} />
               <Route path="/memberspass/booking/:id" element={<BookingDetails />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
