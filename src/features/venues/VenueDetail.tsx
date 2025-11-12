@@ -121,7 +121,7 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
                 Select a collab option
               </h3>
               <span className="text-[12px] text-stone-500">
-                Compare perks & requirements
+                Compare collab perks and content requirements
               </span>
             </motion.div>
           )}
