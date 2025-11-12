@@ -114,14 +114,13 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.28 }}
-              className="mx-4 mt-5 flex items-center justify-between"
+              className="mx-4 mt-5 rounded-full bg-white/70 backdrop-blur-xl ring-1 ring-white/60 px-4 py-2
+                         shadow-[0_4px_12px_rgba(0,0,0,0.06)] text-center"
+              role="status"
               aria-live="polite"
             >
-              <h3 className="text-stone-900 text-[15px] font-semibold">
-                Select a collab option
-              </h3>
-              <span className="text-[12px] text-stone-500">
-                Compare perks & requirements
+              <span className="text-[13px] font-medium text-stone-700">
+                Select a collab option to continue ↓
               </span>
             </motion.div>
           )}
