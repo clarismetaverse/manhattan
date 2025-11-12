@@ -106,6 +106,27 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
           </div>
         </motion.section>
 
+        {/* Bridge CTA between About and Tabs */}
+        <AnimatePresence initial={false}>
+          {!selectedOfferId && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.28 }}
+              className="mx-4 mt-5 flex items-center justify-between"
+              aria-live="polite"
+            >
+              <h3 className="text-stone-900 text-[15px] font-semibold">
+                Select a collab option
+              </h3>
+              <span className="text-[12px] text-stone-500">
+                Compare perks & requirements
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Tabs (glass segmented) */}
         <div className="mx-4 mt-4 relative rounded-2xl p-1 bg-white/45 backdrop-blur-xl ring-1 ring-white/50 flex">
           {venue.offers.map((o, i) => (
