@@ -100,9 +100,6 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
               }`}
             >
               {o.title}
-              <span className="absolute right-2 top-2 text-stone-400">
-                <Info className="h-4 w-4" />
-              </span>
             </button>
           ))}
           <motion.div
