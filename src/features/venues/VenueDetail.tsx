@@ -95,7 +95,7 @@ export default function VenueDetail({ venue, onClose }: { venue: Venue; onClose:
               key={o.id}
               onClick={() => setActiveTab(i)}
               aria-pressed={i === activeTab}
-              className="relative flex-1 py-2 text-sm font-medium text-stone-700"
+              className="relative z-10 flex-1 py-2 text-sm font-medium text-stone-700"
             >
               {o.title}
               <span className="absolute right-2 top-2 text-stone-400">
