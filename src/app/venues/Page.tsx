@@ -1,134 +1,250 @@
-"use client";
+import React, { useEffect, useMemo, useState } from "react";
+import { LayoutGroup, AnimatePresence, motion } from "framer-motion";
+import VenueDetail from "@/features/venues/VenueDetail"; // ← you already created this
 
-import { useState } from "react";
-import { AnimatePresence, LayoutGroup } from "framer-motion";
-import VenueCard from "@/features/venues/VenueCard";
-import VenueDetail from "@/features/venues/VenueDetail";
-import type { Venue } from "@/features/venues/VenueTypes";
+interface Venue {
+  restaurant_turbo_id: number;
+  Name: string;
+  Cover?: { url?: string | null } | null;
+  visible?: boolean;
+  Visible?: boolean;
+  display?: boolean;
+  hidden?: boolean;
+  Hidden?: boolean;
+  status?: string;
+  city?: string | null;
+  City?: string | null;
+  category?: string | null;
+  Category?: string | null;
+  [k: string]: any;
+}
 
-const venues: Venue[] = [
-  {
-    id: "hygge",
-    name: "Hygge Cafe",
-    city: "Bali, Indonesia",
-    image:
-      "https://images.unsplash.com/photo-1559339352-11d035aa65de?q=80&w=1600&auto=format&fit=crop",
-    brief:
-      "Scandinavian vibes in the heart of Seminyak. Everything is organized to feel warm and light.",
-    offers: [
-      {
-        id: "story3",
-        title: "3 × Story",
-        plates: 1,
-        drinks: 2,
-        mission:
-          "Publish 3 Stories showcasing ambience, hero dishes, and yourself. Tag @venue + #clarisapp with one hidden @claris.app mention after posting.",
-      },
-      {
-        id: "reel",
-        title: "Reel",
-        plates: 3,
-        drinks: 2,
-        mission:
-          "Post 1 Reel blending ambience and signature dishes. Keep transitions smooth, add trending audio, and tag the venue + #clarisapp.",
-      },
-    ],
-  },
-  {
-    id: "aura",
-    name: "Aura Lounge",
-    city: "Lisbon, Portugal",
-    image:
-      "https://images.unsplash.com/photo-1529255490-3e84c5dcad7a?q=80&w=1600&auto=format&fit=crop",
-    brief:
-      "Sunset cocktails overlooking Alfama rooftops. Warm brass, blush velvets, and a live vinyl set every weekend.",
-    offers: [
-      {
-        id: "story",
-        title: "Story Set",
-        plates: 2,
-        drinks: 3,
-        mission:
-          "Capture golden-hour drinks and the lounge energy. Include a personal voiceover and tag @aura.lounge + #clarisapp.",
-      },
-      {
-        id: "carousel",
-        title: "Photo Carousel",
-        plates: 3,
-        drinks: 3,
-        mission:
-          "Deliver 6 bright edits highlighting cocktails, DJ booth, and your look. Mention the new terrace opening in captions.",
-      },
-    ],
-  },
-  {
-    id: "solaris",
-    name: "Solaris by the Sea",
-    city: "Amalfi Coast, Italy",
-    image:
-      "https://images.unsplash.com/photo-1543353071-10c8ba85a904?q=80&w=1600&auto=format&fit=crop",
-    brief:
-      "Terracotta terraces, citrus groves, and candlelit dinners cascading down to the sea.",
-    offers: [
-      {
-        id: "reel-duo",
-        title: "Reel + Story",
-        plates: 4,
-        drinks: 2,
-        mission:
-          "Film a dreamy reel from arrival to dessert with voiceover. Add a follow-up story tagging @solaris.amalfi + #clarisapp.",
-      },
-      {
-        id: "tiktok",
-        title: "TikTok Feature",
-        plates: 3,
-        drinks: 2,
-        mission:
-          "Create a POV TikTok covering the tasting menu with emphasis on textures, waves, and sunset lighting.",
-      },
-    ],
-  },
-];
+interface VenuesResponse {
+  categoryfilter?: Venue[];
+  area?: Venue[];
+  filt?: Venue[];
+  [k: string]: any;
+}
 
-export default function VenuePage() {
-  const [activeVenue, setActiveVenue] = useState<Venue | null>(null);
+const FALLBACK_GRADIENT =
+  "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, rgba(10,11,12,0.92) 55%, rgba(10,11,12,1) 100%)";
+
+function isHiddenVenue(venue: Venue): boolean {
+  if (!venue) return true;
+  const status = typeof venue.status === "string" ? venue.status.toLowerCase() : "";
+  return (
+    venue.visible === false ||
+    (venue as { Visible?: boolean }).Visible === false ||
+    venue.display === false ||
+    venue.hidden === true ||
+    (venue as { Hidden?: boolean }).Hidden === true ||
+    status === "hidden"
+  );
+}
+
+function getBadgeLabel(venue: Venue): string | null {
+  const rawLabel =
+    (typeof venue.city === "string" && venue.city.trim()) ||
+    (typeof venue.City === "string" && venue.City.trim()) ||
+    (typeof venue.category === "string" && venue.category.trim()) ||
+    (typeof venue.Category === "string" && venue.Category.trim()) ||
+    (typeof (venue as any).area === "string" && String((venue as any).area).trim());
+
+  return rawLabel && rawLabel.length ? rawLabel : null;
+}
+
+// --- Minimal shape the detail expects (matches your VenueDetail usage) ---
+type DetailVenue = {
+  id: string;
+  name: string;
+  image: string;
+  city?: string;
+  brief: string;
+  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
+};
+
+export default function VenuesScreen() {
+  const [venues, setVenues] = useState<Venue[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState<DetailVenue | null>(null); // ← overlay state
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        city_id: 3,
+        page: 1,
+        search: "",
+        area: [],
+        category: [],
+        content: [],
+        booking: [],
+      }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
+        const json = (await res.json()) as VenuesResponse | Venue[];
+
+        let merged: Venue[] = [];
+        if ((json as any).categoryfilter && Array.isArray((json as any).categoryfilter)) {
+          const restaurantMap = new Map<number, Venue>();
+          (json as any).categoryfilter.forEach((r: any) => {
+            if (r?.restaurant_turbo_id) restaurantMap.set(r.restaurant_turbo_id, r);
+          });
+          merged = Array.from(restaurantMap.values());
+        } else if ((json as any).filt) {
+          const restaurantMap = new Map<number, Venue>();
+          Object.values((json as any).filt).forEach((group: any) => {
+            if (Array.isArray(group)) {
+              group.forEach((r: any) => {
+                if (r?.restaurant_turbo_id) restaurantMap.set(r.restaurant_turbo_id, r);
+              });
+            }
+          });
+          merged = Array.from(restaurantMap.values());
+        } else if (Array.isArray(json)) {
+          merged = json as Venue[];
+        } else {
+          merged = [ ...(((json as any).area ?? []) as Venue[]) ];
+        }
+
+        const seen = new Set<number>();
+        const filtered = merged.filter((v) => {
+          const id = Number(v?.restaurant_turbo_id ?? 0);
+          if (!id || seen.has(id)) return false;
+          if (isHiddenVenue(v)) return false;
+          seen.add(id);
+          return true;
+        });
+
+        setVenues(filtered);
+      })
+      .catch((err) => {
+        if ((err as any).name !== "AbortError") {
+          console.error("Error fetching venues:", err);
+          setError("Unable to load venues. Please try again later.");
+        }
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, []);
+
+  const content = useMemo(() => {
+    if (loading)
+      return <div className="flex items-center justify-center py-20 text-sm text-gray-500">Loading Venues…</div>;
+    if (error)
+      return <div className="flex items-center justify-center py-20 text-sm text-gray-500">{error}</div>;
+    if (!venues.length)
+      return <div className="flex items-center justify-center py-20 text-sm text-gray-500">No venues found.</div>;
+
+    return (
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {venues.map((venue, i) => {
+          const id = String(venue.restaurant_turbo_id);
+          const coverUrl = venue.Cover?.url ?? "";
+          const badgeLabel = getBadgeLabel(venue);
+
+          return (
+            <motion.button
+              key={id}
+              onClick={async () => {
+                if (coverUrl) {
+                  const img = new Image();
+                  img.src = coverUrl;
+                  try { await img.decode(); } catch {}
+                }
+                // Shape data for the detail
+                const detail: DetailVenue = {
+                  id,
+                  name: venue.Name,
+                  image: coverUrl,
+                  city: badgeLabel ?? undefined,
+                  brief:
+                    "Scandinavian vibes in the heart of Seminyak. Everything is organized to feel warm and light.",
+                  offers: [
+                    {
+                      id: "story3",
+                      title: "3 × Story",
+                      plates: 1,
+                      drinks: 2,
+                      mission:
+                        "Publish 3 Stories showcasing ambience, hero dishes, and yourself. Tag @venue + #clarisapp with one hidden @claris.app mention after posting.",
+                    },
+                    {
+                      id: "reel",
+                      title: "Reel",
+                      plates: 3,
+                      drinks: 2,
+                      mission:
+                        "Post 1 Reel with yourself, ambience and dishes. Tag @venue and #clarisapp in caption.",
+                    },
+                  ],
+                };
+                setOpen(detail);
+              }}
+              className="group relative block overflow-hidden rounded-[22px] border border-white/10 bg-[#111213]/50 shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out hover:-translate-y-1"
+            >
+              {/* Shared layout for hero morph */}
+              <motion.div layoutId={`card-${id}`} className="relative">
+                <div
+                  className="h-[220px] w-full bg-cover bg-center rounded-[22px]"
+                  style={{ backgroundImage: coverUrl ? `url(${coverUrl})` : FALLBACK_GRADIENT }}
+                />
+                <motion.div
+                  layoutId={`card-grad-${id}`}
+                  className="pointer-events-none absolute inset-0 rounded-[22px] bg-gradient-to-t from-black/85 via-black/40 to-transparent"
+                />
+              </motion.div>
+
+              {/* Text overlays */}
+              <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex max-w-max items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
+                    Featured Venue
+                  </span>
+                  {badgeLabel && (
+                    <span className="inline-flex max-w-max items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
+                      {badgeLabel}
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-[22px] font-light text-[#E9ECEB] drop-shadow-[0_4px_16px_rgba(0,0,0,0.65)]">
+                    {venue.Name}
+                  </h2>
+                  <p className="mt-2 text-[13px] font-light text-white/70">#{i + 1} Venue</p>
+                </div>
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    );
+  }, [error, venues, loading]);
 
   return (
-    <div
-      className="min-h-screen w-full"
-      style={{
-        background:
-          "radial-gradient(1100px 650px at 65% -10%, #FFF9F0 0%, #F7F1E6 38%, #E9DEC9 68%, #E5D6C2 100%)",
-      }}
-    >
-      <LayoutGroup id="venues">
-        <div className="mx-auto flex min-h-screen max-w-sm flex-col px-4 pb-32 pt-16 font-[SF Pro Display,Inter,sans-serif] text-stone-900">
-          <header className="space-y-3 text-center">
-            <p className="text-xs uppercase tracking-[0.32em] text-stone-500">Influencer Flow</p>
-            <h1 className="text-3xl font-semibold text-stone-900">
-              Choose your next luminous venue
+    <LayoutGroup id="venues">
+      <div className="min-h-screen bg-white px-5 pb-24 pt-12">
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="mb-10">
+            <h1 className="text-center text-2xl font-light text-gray-900">
+              Dive into the guest experience
             </h1>
-            <p className="text-sm text-stone-600">
-              Tap a card to glide into the full brief with offers made for your storytelling style.
-            </p>
-          </header>
-
-          <div className="mt-10 flex flex-1 flex-col space-y-6">
-            {venues.map((venue) => (
-              <VenueCard key={venue.id} venue={venue} onOpen={setActiveVenue} />
-            ))}
           </div>
+          {content}
         </div>
+      </div>
 
-        <AnimatePresence>
-          {activeVenue && (
-            <VenueDetail
-              venue={activeVenue}
-              onClose={() => setActiveVenue(null)}
-            />
-          )}
-        </AnimatePresence>
-      </LayoutGroup>
-    </div>
+      {/* Overlay detail (morph target) */}
+      <AnimatePresence>
+        {open && <VenueDetail venue={open as any} onClose={() => setOpen(null)} />}
+      </AnimatePresence>
+    </LayoutGroup>
   );
 }
