@@ -331,7 +331,7 @@ function OfferCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="text-sm font-semibold text-stone-900">{title}</div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
               by venue approval
             </span>
           </div>
@@ -355,7 +355,7 @@ function OfferCard({
             <div className="text-xl font-semibold text-stone-900">{title}</div>
           </div>
           <div className="absolute left-3 bottom-3">
-            <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200">
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
               by venue approval
             </span>
           </div>
