@@ -309,16 +309,18 @@ function OfferCard({
       animate={
         isSelected
           ? {
-              boxShadow: "0 0 12px rgba(224,201,163,.5)",
-              backgroundColor: "rgba(250,247,240,.15)",
+              boxShadow: "0 8px 24px rgba(255,90,122,0.15), 0 4px 12px rgba(224,201,163,0.3), inset 0 1px 0 rgba(255,255,255,0.8)",
+              backgroundColor: "rgba(255,255,255,0.85)",
+              borderColor: "#FF5A7A",
             }
           : {
-              boxShadow: "0 0 0 rgba(0,0,0,0)",
-              backgroundColor: "rgba(250,247,240,0)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)",
+              backgroundColor: "rgba(255,255,255,0.65)",
+              borderColor: "#E3D3BB",
             }
       }
-      transition={{ duration: 0.3 }}
-      className={`relative w-full text-left ring-1 ring-[#E3D3BB] bg-[#FAF7F0]/60 ${
+      transition={{ duration: 0.35, ease: "easeOut" }}
+      className={`relative w-full text-left border-2 backdrop-blur-md ${
         pinned ? "rounded-xl px-3 py-3" : "rounded-3xl px-5 py-5"
       }`}
     >
