@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Info, MapPin, Instagram, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MapPin, Instagram } from "lucide-react";
+import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import type { Venue } from "./VenueTypes";
 export default function VenueDetail({
   venue,
@@ -12,8 +13,48 @@ export default function VenueDetail({
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [briefOpen, setBriefOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [confirmedSlot, setConfirmedSlot] = useState<{
+    iso: string;
+    date: string;
+    timeLabel: string;
+    offerId: string;
+    timeframeId?: string;
+  } | null>(null);
   const offer = venue.offers[activeTab] ?? venue.offers[0];
   const enabled = !!selectedOfferId;
+  const activeConfirmed = confirmedSlot && confirmedSlot.offerId === selectedOfferId ? confirmedSlot : null;
+
+  const weeklyTimeframes = useMemo<Record<number, Timeframe[]>>(
+    () => ({
+      0: [],
+      1: [
+        { id: "mon-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "mon-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+      ],
+      2: [
+        { id: "tue-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "tue-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+      ],
+      3: [
+        { id: "wed-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "wed-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+      ],
+      4: [
+        { id: "thu-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "thu-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+      ],
+      5: [
+        { id: "fri-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "fri-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 23, m: 0 }, stepMins: 30 },
+      ],
+      6: [
+        { id: "sat-brunch", label: "Brunch", start: { h: 11, m: 0 }, end: { h: 14, m: 0 }, stepMins: 30 },
+        { id: "sat-dinner", label: "Dinner", start: { h: 17, m: 30 }, end: { h: 23, m: 0 }, stepMins: 30 },
+      ],
+    }),
+    []
+  );
   if (!offer) {
     return null;
   }
@@ -102,6 +143,30 @@ export default function VenueDetail({
           </div>
         </motion.section>
 
+        {/* Pinned offer while sheet is open */}
+        <AnimatePresence>
+          {sheetOpen && selectedOfferId === offer.id && (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="sticky top-2 z-40 mx-4 mt-3"
+            >
+              <OfferCard
+                offerId={offer.id}
+                title={offer.title}
+                plates={offer.plates ?? 0}
+                drinks={offer.drinks ?? 0}
+                mission={offer.mission}
+                isSelected
+                onToggle={() => setSheetOpen(false)}
+                pinned
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Bridge CTA between About and Tabs */}
         <AnimatePresence initial={false}>
           {!selectedOfferId && <motion.div initial={{
@@ -151,27 +216,33 @@ export default function VenueDetail({
 
         {/* Offer card (selectable) */}
         <AnimatePresence mode="wait">
-          <motion.section key={offer.id} initial={{
-          opacity: 0,
-          y: 14
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} exit={{
-          opacity: 0,
-          y: -10
-        }} transition={{
-          duration: 0.25
-        }} className="mx-4 mt-4">
-            <OfferCard title={offer.title} plates={offer.plates ?? 0} drinks={offer.drinks ?? 0} mission={offer.mission} isSelected={selectedOfferId === offer.id} onToggle={() => setSelectedOfferId(prev => prev === offer.id ? null : offer.id)} />
-          </motion.section>
+          {!sheetOpen && (
+            <motion.section key={offer.id} initial={{
+            opacity: 0,
+            y: 14
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} exit={{
+            opacity: 0,
+            y: -10
+          }} transition={{
+            duration: 0.25
+          }} className="mx-4 mt-4">
+              <OfferCard offerId={offer.id} title={offer.title} plates={offer.plates ?? 0} drinks={offer.drinks ?? 0} mission={offer.mission} isSelected={selectedOfferId === offer.id} onToggle={() => setSelectedOfferId(prev => prev === offer.id ? null : offer.id)} />
+            </motion.section>
+          )}
         </AnimatePresence>
 
         {/* Sticky CTA */}
         <div className="fixed inset-x-0 bottom-3 px-4">
           <div className="mx-auto max-w-sm rounded-2xl bg-white/70 backdrop-blur-lg ring-1 ring-white/50 p-2">
             <div className="px-2 pb-2 text-center text-xs text-stone-600">
-              {enabled ? offer.title : "Pick an offer to continue"}
+              {enabled
+                ? activeConfirmed
+                  ? `${offer.title} · ${activeConfirmed.timeLabel}`
+                  : offer.title
+                : "Pick an offer to continue"}
             </div>
             <motion.button whileTap={{
             scale: 0.98
@@ -189,12 +260,22 @@ export default function VenueDetail({
             color: "#ffffff",
             borderColor: "transparent",
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
-          }} disabled={!enabled} aria-disabled={!enabled} className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all">
-              Select date & time
+          }} disabled={!enabled} aria-disabled={!enabled} className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all" onClick={() => enabled && setSheetOpen(true)}>
+              {activeConfirmed?.timeLabel ? `Confirm ${activeConfirmed.timeLabel}` : "Select date & time"}
             </motion.button>
           </div>
         </div>
       </div>
+      <DateTimeSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        offerId={selectedOfferId ?? offer.id}
+        venueId={venue.id}
+        timeframesByDow={weeklyTimeframes}
+        onConfirm={payload => {
+          setConfirmedSlot(payload);
+        }}
+      />
     </motion.div>;
 }
 
@@ -205,7 +286,9 @@ function OfferCard({
   drinks,
   mission,
   isSelected,
-  onToggle
+  onToggle,
+  offerId,
+  pinned = false,
 }: {
   title: string;
   plates: number;
@@ -213,44 +296,69 @@ function OfferCard({
   mission: string;
   isSelected: boolean;
   onToggle: () => void;
+  offerId: string;
+  pinned?: boolean;
 }) {
-  return <motion.button onClick={onToggle} aria-pressed={isSelected} whileTap={{
-    scale: 0.98
-  }} animate={isSelected ? {
-    boxShadow: "0 8px 32px rgba(224,201,163,.4)",
-    backgroundColor: "rgba(255,255,255,.25)"
-  } : {
-    boxShadow: "0 4px 16px rgba(0,0,0,.06)",
-    backgroundColor: "rgba(255,255,255,.15)"
-  }} transition={{
-    duration: 0.3
-  }} className="relative w-full text-left rounded-3xl ring-1 ring-white/40 bg-white/20 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,.08)] px-5 py-5">
-      {isSelected && <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Selected
-        </span>}
-
-      <div className="text-xl font-semibold text-stone-900">{title}</div>
-
-      <div className="mt-4 grid grid-cols-2 gap-4 text-stone-700">
-        <div>
-          <div className="text-xs tracking-wide">PLATES</div>
-          <div className="text-2xl font-semibold">{plates}</div>
+  return (
+    <motion.button
+      layout
+      layoutId={`offer-${offerId}`}
+      onClick={onToggle}
+      aria-pressed={isSelected}
+      whileTap={{ scale: 0.98 }}
+      animate={
+        isSelected
+          ? {
+              boxShadow: "0 0 12px rgba(224,201,163,.5)",
+              backgroundColor: "rgba(250,247,240,.15)",
+            }
+          : {
+              boxShadow: "0 0 0 rgba(0,0,0,0)",
+              backgroundColor: "rgba(250,247,240,0)",
+            }
+      }
+      transition={{ duration: 0.3 }}
+      className={`relative w-full text-left ring-1 ring-[#E3D3BB] bg-[#FAF7F0]/60 ${
+        pinned ? "rounded-xl px-3 py-3" : "rounded-3xl px-5 py-5"
+      }`}
+    >
+      {pinned ? (
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold text-stone-900">{title}</div>
+          <div className="text-[11px] text-stone-600">
+            {plates} plates · {drinks} drinks
+          </div>
         </div>
-        <div>
-          <div className="text-xs tracking-wide">DRINKS</div>
-          <div className="text-2xl font-semibold">{drinks}</div>
-        </div>
-      </div>
-
-      <motion.div initial={false} animate={{
-      height: isSelected ? "auto" : 0,
-      opacity: isSelected ? 1 : 0
-    }} className="overflow-hidden">
-        <p className="mt-4 text-sm text-stone-600">{mission}</p>
-      </motion.div>
-
-      <div className="mt-3 text-right">
-        <span className="text-sm underline text-stone-700">Content Instructions</span>
-      </div>
-    </motion.button>;
+      ) : (
+        <>
+          {isSelected && (
+            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
+              Selected
+            </span>
+          )}
+          <div className="text-xl font-semibold text-stone-900">{title}</div>
+          <div className="mt-4 grid grid-cols-2 gap-4 text-stone-700">
+            <div>
+              <div className="text-xs tracking-wide">PLATES</div>
+              <div className="text-2xl font-semibold">{plates}</div>
+            </div>
+            <div>
+              <div className="text-xs tracking-wide">DRINKS</div>
+              <div className="text-2xl font-semibold">{drinks}</div>
+            </div>
+          </div>
+          <motion.div
+            initial={false}
+            animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
+            className="overflow-hidden"
+          >
+            <p className="mt-4 text-sm text-stone-600">{mission}</p>
+          </motion.div>
+          <div className="mt-3 text-right">
+            <span className="text-sm underline text-stone-700">Content Instructions</span>
+          </div>
+        </>
+      )}
+    </motion.button>
+  );
 }
