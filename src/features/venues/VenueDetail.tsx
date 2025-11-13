@@ -192,11 +192,6 @@ export default function VenueDetail({
             </motion.div>}
         </AnimatePresence>
 
-        {/* Section title */}
-        <h2 className="mt-6 mb-2 px-2 text-base font-semibold text-stone-800">
-          Select a Collaboration
-        </h2>
-
         {/* Tabs (glass segmented) */}
         <div className="mx-4 mt-4 relative rounded-2xl p-1 bg-white/45 backdrop-blur-xl ring-1 ring-white/50 flex">
           {venue.offers.map((o, i) => <button key={o.id} onClick={() => setActiveTab(i)} aria-pressed={i === activeTab} className={`relative z-10 flex-1 py-2 text-sm font-medium transition-colors ${i === activeTab ? "text-[#FF5A7A]" : "text-stone-700"}`}>
@@ -239,11 +234,6 @@ export default function VenueDetail({
             </motion.section>
           )}
         </AnimatePresence>
-
-        {/* Helper text explaining the exchange */}
-        <p className="mt-3 px-2 text-sm text-stone-500">
-          Choose the high-quality content you’ll craft in return for the complimentary experience
-        </p>
 
         {/* Sticky CTA */}
         <div className="fixed inset-x-0 bottom-3 px-4">
