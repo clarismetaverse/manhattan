@@ -162,6 +162,7 @@ export default function VenueDetail({
                 isSelected
                 onToggle={() => setSheetOpen(false)}
                 pinned
+                collabsLeft={3}
               />
             </motion.div>
           )}
@@ -229,7 +230,7 @@ export default function VenueDetail({
           }} transition={{
             duration: 0.25
           }} className="mx-4 mt-4">
-              <OfferCard offerId={offer.id} title={offer.title} plates={offer.plates ?? 0} drinks={offer.drinks ?? 0} mission={offer.mission} isSelected={selectedOfferId === offer.id} onToggle={() => setSelectedOfferId(prev => prev === offer.id ? null : offer.id)} />
+              <OfferCard offerId={offer.id} title={offer.title} plates={offer.plates ?? 0} drinks={offer.drinks ?? 0} mission={offer.mission} isSelected={selectedOfferId === offer.id} onToggle={() => setSelectedOfferId(prev => prev === offer.id ? null : offer.id)} collabsLeft={3} />
             </motion.section>
           )}
         </AnimatePresence>
@@ -289,6 +290,7 @@ function OfferCard({
   onToggle,
   offerId,
   pinned = false,
+  collabsLeft = 5,
 }: {
   title: string;
   plates: number;
@@ -298,6 +300,7 @@ function OfferCard({
   onToggle: () => void;
   offerId: string;
   pinned?: boolean;
+  collabsLeft?: number;
 }) {
   return (
     <motion.button
@@ -326,19 +329,34 @@ function OfferCard({
     >
       {pinned ? (
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold text-stone-900">{title}</div>
+          <div className="flex items-center gap-2">
+            <div className="text-sm font-semibold text-stone-900">{title}</div>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200">
+              by venue approval
+            </span>
+          </div>
           <div className="text-[11px] text-stone-600">
             {plates} plates · {drinks} drinks
           </div>
         </div>
       ) : (
         <>
-          {isSelected && (
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
-              Selected
+          <div className="absolute right-3 top-3 flex items-center gap-2">
+            {isSelected && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
+                Selected
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/10 px-2 py-1 text-[11px] font-medium text-[#FF5A7A]">
+              {collabsLeft} left
             </span>
-          )}
-          <div className="text-xl font-semibold text-stone-900">{title}</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="text-xl font-semibold text-stone-900">{title}</div>
+            <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200">
+              by venue approval
+            </span>
+          </div>
           <div className="mt-4 grid grid-cols-2 gap-4 text-stone-700">
             <div>
               <div className="text-xs tracking-wide">PLATES</div>
