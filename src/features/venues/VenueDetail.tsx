@@ -353,6 +353,8 @@ function OfferCard({
           </div>
           <div className="flex items-center gap-2">
             <div className="text-xl font-semibold text-stone-900">{title}</div>
+          </div>
+          <div className="absolute left-3 bottom-3">
             <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200">
               by venue approval
             </span>
