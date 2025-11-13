@@ -1,5 +1,72 @@
+/**
+ * Codex Prompt — Venues Home (Pinned + Sticky Filters + Motion)
+ *
+ * Goal:
+ * Implement a mobile-first Venues home screen with AURA-style light UI, subtle silver notch
+ * header, controlled red accents, and a mixed scroll behavior:
+ *
+ * 1) Top “notch” hero:
+ *    - Title + subtitle + search bar + calendar icon.
+ *    - White / silver card, rounded 3XL, light shadow, NO red inside the notch.
+ *    - Title: “Discover where your presence matters”
+ *    - Subtitle: “Find curated creator experiences across the city.”
+ *    - Search input full width, calendar icon pill on the right.
+ *    - The hero gently FADES and COMPRESSES on scroll (opacity / scale / y
+ *      animated with Framer Motion based on scrollY).
+ *
+ * 2) Pinned This Week:
+ *    - Horizontal scrollable carousel of venue cards.
+ *    - Cards: rounded 22px, full-bleed image with dark gradient overlay,
+ *      red “Pinned This Week” badge, optional city/category badge, white text.
+ *    - This section scrolls away normally (not sticky).
+ *    - Each pinned card has a PHYSICS FEEL: spring transition + subtle 3D tilt
+ *      on hover/tap (rotateX/rotateY + y).
+ *
+ * 3) Sticky Category Filters:
+ *    - Row of round chips (Sport, Cocktail, Beauty, Lunch, Breakfast).
+ *    - Entire filter bar is position: sticky; top: 0; with a subtle background and blur.
+ *    - First chip (Sport) highlighted in red; others white with gray border.
+ *    - Once user scrolls, notch + pinned disappear but this filter row remains anchored,
+ *      so the vertical venue list uses almost the whole screen.
+ *
+ * 4) All Venues:
+ *    - Vertical list of full-width venue cards (same visual language as pinned).
+ *    - Scrolls under the sticky filter bar.
+ *    - Cards have a softer lift on hover/tap (no 3D tilt, just y/scale).
+ *
+ * Data / Logic:
+ * - Fetch venues from the provided Xano endpoint (POST).
+ * - Deduplicate venues by restaurant_turbo_id; hide venues with hidden/Visible flags.
+ * - Use first 5 venues as “Pinned This Week”; remaining ones as “All Venues”.
+ * - Search:
+ *   • Text input filters venues by name and badge label (city/category).
+ *   • Filtering affects both pinned and all venues.
+ *
+ * - Detail Overlay:
+ *   • On card tap, open existing <VenueDetail /> overlay.
+ *   • Pass a simplified DetailVenue object with id, name, image, city, brief, offers.
+ *
+ * Styling:
+ * - Use TailwindCSS utility classes; no external CSS.
+ * - Keep the brand language:
+ *      background: light gradient (from #f7f7f8 to white),
+ *      text: gray/black,
+ *      accents: controlled red (#ef4444 range),
+ *      occasional black for badges.
+ * - Use framer-motion LayoutGroup + motion for subtle card animations
+ *   (hero scroll animation + pinned 3D tilt).
+ */
+
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import {
+  LayoutGroup,
+  AnimatePresence,
+  motion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
+import { Search, Calendar } from "lucide-react";
+import VenueDetail from "@/features/venues/VenueDetail"; // ← already created
 
 interface Venue {
   restaurant_turbo_id: number;
@@ -47,15 +114,32 @@ function getBadgeLabel(venue: Venue): string | null {
     (typeof venue.City === "string" && venue.City.trim()) ||
     (typeof venue.category === "string" && venue.category.trim()) ||
     (typeof venue.Category === "string" && venue.Category.trim()) ||
-    (typeof venue.area === "string" && (venue.area as string).trim());
+    (typeof (venue as any).area === "string" && String((venue as any).area).trim());
 
   return rawLabel && rawLabel.length ? rawLabel : null;
 }
+
+type DetailVenue = {
+  id: string;
+  name: string;
+  image: string;
+  city?: string;
+  brief: string;
+  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
+};
 
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState<DetailVenue | null>(null);
+  const [search, setSearch] = useState("");
+
+  // Scroll-based hero animation (fade + compress)
+  const { scrollY } = useScroll();
+  const heroOpacity = useTransform(scrollY, [0, 140], [1, 0]);
+  const heroScale = useTransform(scrollY, [0, 140], [1, 0.93]);
+  const heroTranslateY = useTransform(scrollY, [0, 140], [0, -26]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -76,37 +160,29 @@ export default function VenuesScreen() {
     })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const json = (await res.json()) as any;
-        
-        // Handle grouped response format
+        const json = (await res.json()) as VenuesResponse | Venue[];
+
         let merged: Venue[] = [];
-        if (json.categoryfilter && Array.isArray(json.categoryfilter)) {
-          // Deduplicate by restaurant_turbo_id
+        if ((json as any).categoryfilter && Array.isArray((json as any).categoryfilter)) {
           const restaurantMap = new Map<number, Venue>();
-          json.categoryfilter.forEach((restaurant: any) => {
-            if (restaurant?.restaurant_turbo_id) {
-              restaurantMap.set(restaurant.restaurant_turbo_id, restaurant);
-            }
+          (json as any).categoryfilter.forEach((r: any) => {
+            if (r?.restaurant_turbo_id) restaurantMap.set(r.restaurant_turbo_id, r);
           });
           merged = Array.from(restaurantMap.values());
-        } else if (json.filt) {
+        } else if ((json as any).filt) {
           const restaurantMap = new Map<number, Venue>();
-          Object.values(json.filt).forEach((group: any) => {
+          Object.values((json as any).filt).forEach((group: any) => {
             if (Array.isArray(group)) {
-              group.forEach((restaurant: any) => {
-                if (restaurant?.restaurant_turbo_id) {
-                  restaurantMap.set(restaurant.restaurant_turbo_id, restaurant);
-                }
+              group.forEach((r: any) => {
+                if (r?.restaurant_turbo_id) restaurantMap.set(r.restaurant_turbo_id, r);
               });
             }
           });
           merged = Array.from(restaurantMap.values());
         } else if (Array.isArray(json)) {
-          merged = json;
+          merged = json as Venue[];
         } else {
-          merged = [
-            ...(json.area ?? []),
-          ];
+          merged = [...(((json as any).area ?? []) as Venue[])];
         }
 
         const seen = new Set<number>();
@@ -121,7 +197,7 @@ export default function VenuesScreen() {
         setVenues(filtered);
       })
       .catch((err) => {
-        if (err.name !== "AbortError") {
+        if ((err as any).name !== "AbortError") {
           console.error("Error fetching venues:", err);
           setError("Unable to load venues. Please try again later.");
         }
@@ -134,81 +210,234 @@ export default function VenuesScreen() {
   const content = useMemo(() => {
     if (loading)
       return (
-        <div className="flex items-center justify-center py-20 text-sm text-gray-500">
-          Loading Venues…
+        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
+          Loading venues…
         </div>
       );
     if (error)
       return (
-        <div className="flex items-center justify-center py-20 text-sm text-gray-500">
+        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
           {error}
         </div>
       );
     if (!venues.length)
       return (
-        <div className="flex items-center justify-center py-20 text-sm text-gray-500">
+        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
           No venues found.
         </div>
       );
 
-    return (
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {venues.map((venue, i) => {
-          const coverUrl = venue.Cover?.url ?? undefined;
-          const badgeLabel = getBadgeLabel(venue);
-          return (
-            <Link
-              key={venue.restaurant_turbo_id}
-              to={`/memberspass/venues/${venue.restaurant_turbo_id}`}
-              className="group relative block overflow-hidden rounded-[22px] border border-white/10 bg-[#111213]/50 shadow-[0_20px_40px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out hover:-translate-y-1"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{
-                  backgroundImage: coverUrl ? `url(${coverUrl})` : FALLBACK_GRADIENT,
-                }}
-                aria-hidden="true"
-              />
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent"
-                aria-hidden="true"
-              />
+    const normalizedSearch = search.trim().toLowerCase();
+    const visibleVenues = normalizedSearch
+      ? venues.filter((v) => {
+          const name = (v.Name ?? "").toLowerCase();
+          const badge = (getBadgeLabel(v) ?? "").toLowerCase();
+          return name.includes(normalizedSearch) || badge.includes(normalizedSearch);
+        })
+      : venues;
 
-              <div className="relative flex h-[220px] flex-col justify-between p-6">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex max-w-max items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
-                    Featured Venue
-                  </span>
-                  {badgeLabel && (
-                    <span className="inline-flex max-w-max items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/70 backdrop-blur-sm">
-                      {badgeLabel}
-                    </span>
-                  )}
-                </div>
-                <div>
-                  <h2 className="text-[22px] font-light text-[#E9ECEB] drop-shadow-[0_4px_16px_rgba(0,0,0,0.65)]">
-                    {venue.Name}
-                  </h2>
-                  <p className="mt-2 text-[13px] font-light text-white/70">#{i + 1} Venue</p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+    const pinnedVenues = visibleVenues.slice(0, 5);
+    const pinnedIds = new Set(pinnedVenues.map((v) => v.restaurant_turbo_id));
+    const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.restaurant_turbo_id));
+
+    const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
+      const id = String(venue.restaurant_turbo_id);
+      const coverUrl = venue.Cover?.url ?? "";
+      const badgeLabel = getBadgeLabel(venue);
+      const rankNumber = index + 1;
+      const baseHeight = size === "compact" ? 190 : 230;
+      const isPinned = size === "compact";
+
+      return (
+        <motion.button
+          key={id}
+          onClick={async () => {
+            if (coverUrl) {
+              const img = new Image();
+              img.src = coverUrl;
+              try {
+                await img.decode();
+              } catch {
+                // ignore
+              }
+            }
+
+            const detail: DetailVenue = {
+              id,
+              name: venue.Name,
+              image: coverUrl,
+              city: badgeLabel ?? undefined,
+              brief:
+                "Scandinavian vibes in the heart of Seminyak. Everything is organized to feel warm and light.",
+              offers: [
+                {
+                  id: "story3",
+                  title: "3 × Story",
+                  plates: 1,
+                  drinks: 2,
+                  mission:
+                    "Publish 3 Stories showcasing ambience, hero dishes, and yourself. Tag @venue + #clarisapp with one hidden @claris.app mention after posting.",
+                },
+                {
+                  id: "reel",
+                  title: "Reel",
+                  plates: 3,
+                  drinks: 2,
+                  mission:
+                    "Post 1 Reel with yourself, ambience and dishes. Tag @venue and #clarisapp in caption.",
+                },
+              ],
+            };
+            setOpen(detail);
+          }}
+          whileHover={
+            isPinned
+              ? { y: -8, rotateX: -4, rotateY: 4 }
+              : { y: -4 }
+          }
+          whileTap={isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22, mass: 0.9 }}
+          className={`group relative block overflow-hidden rounded-[22px] bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out ${
+            size === "compact" ? "min-w-[260px] max-w-[280px]" : "w-full"
+          }`}
+        >
+          <motion.div layoutId={`card-${id}`} className="relative">
+            <div
+              className="w-full rounded-[22px] bg-cover bg-center"
+              style={{
+                height: baseHeight,
+                backgroundImage: coverUrl ? `url(${coverUrl})` : FALLBACK_GRADIENT,
+              }}
+            />
+            <motion.div
+              layoutId={`card-grad-${id}`}
+              className="pointer-events-none absolute inset-0 rounded-[22px] bg-gradient-to-t from-black/80 via-black/40 to-transparent"
+            />
+          </motion.div>
+
+          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4 sm:p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex max-w-max items-center rounded-full bg-red-600/90 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white shadow-sm">
+                {isPinned ? "Pinned This Week" : "Featured Venue"}
+              </span>
+              {badgeLabel && (
+                <span className="inline-flex max-w-max items-center rounded-full bg-black/40 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/80 backdrop-blur">
+                  {badgeLabel}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <h2 className="text-[18px] sm:text-[20px] font-light text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
+                {venue.Name}
+              </h2>
+              <p className="mt-1 text-xs font-light text-white/80">#{rankNumber} Venue</p>
+            </div>
+          </div>
+        </motion.button>
+      );
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Pinned section - normal scroll, goes away when user scrolls down */}
+        {pinnedVenues.length > 0 && (
+          <section>
+            <h2 className="mb-3 text-base font-semibold text-gray-900">
+              Pinned This Week
+            </h2>
+            <div className="-mx-5 overflow-x-auto pb-1">
+              <motion.div
+                className="flex gap-4 px-5"
+                layout
+                transition={{ type: "spring", stiffness: 260, damping: 26 }}
+              >
+                {pinnedVenues.map((venue, index) =>
+                  renderVenueCard(venue, index, "compact")
+                )}
+              </motion.div>
+            </div>
+          </section>
+        )}
+
+        {/* STICKY FILTER BAR – remains anchored while list scrolls */}
+        <section
+          className="
+            sticky top-0 z-30 -mx-5
+            bg-gradient-to-b from-[#f7f7f8] via-[#f7f7f8] to-transparent
+            px-5 pb-3 pt-2
+            backdrop-blur
+          "
+        >
+          <div className="flex flex-wrap gap-2">
+            {["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"].map((label, i) => (
+              <button
+                key={label}
+                className={`inline-flex items-center rounded-full border px-4 py-2 text-sm ${
+                  i === 0
+                    ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
+                    : "border-gray-200 bg-white text-gray-800"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* All venues - vertical list taking full screen height under sticky filters */}
+        <section>
+          <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
+          <div className="space-y-4">
+            {allVenues.map((venue, index) =>
+              renderVenueCard(venue, index, "full")
+            )}
+          </div>
+        </section>
       </div>
     );
-  }, [error, venues, loading]);
+  }, [error, loading, venues, search]);
 
   return (
-    <div className="min-h-screen bg-white px-5 pb-24 pt-12">
-      <div className="mx-auto w-full max-w-6xl">
-        <div className="mb-10">
-          <h1 className="text-center text-2xl font-light text-gray-900">
-            Dive into the guest experience
-          </h1>
+    <LayoutGroup id="venues">
+      <div className="min-h-screen bg-gradient-to-b from-[#f7f7f8] to-white px-5 pb-24 pt-8">
+        <div className="mx-auto w-full max-w-5xl space-y-8">
+          {/* Notch header – fades & compresses on scroll */}
+          <motion.section
+            style={{ opacity: heroOpacity, scale: heroScale, y: heroTranslateY }}
+            transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
+            className="rounded-3xl border border-slate-100 bg-white/90 px-6 pb-5 pt-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur"
+          >
+            <h1 className="text-center text-[24px] sm:text-[28px] font-light text-gray-900">
+              Discover where your presence matters
+            </h1>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Find curated creator experiences across the city.
+            </p>
+
+            <div className="mt-5 flex items-center gap-3">
+              <div className="flex-1 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search venues or areas"
+                  className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                />
+              </div>
+              <button className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+                <Calendar className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.section>
+
+          {content}
         </div>
-        {content}
       </div>
-    </div>
+
+      <AnimatePresence>
+        {open && <VenueDetail venue={open as any} onClose={() => setOpen(null)} />}
+      </AnimatePresence>
+    </LayoutGroup>
   );
 }
