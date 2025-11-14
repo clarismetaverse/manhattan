@@ -128,12 +128,16 @@ type DetailVenue = {
   offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
 };
 
+const CATEGORY_FILTERS = ["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"];
+const DISTRICT_FILTERS = ["Seminyak", "Canggu", "Uluwatu", "Kerobokan", "Pererenan"];
+
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<DetailVenue | null>(null);
   const [search, setSearch] = useState("");
+  const [districtOpen, setDistrictOpen] = useState(false);
 
   // Scroll-based hero animation (fade + compress)
   const { scrollY } = useScroll();
@@ -360,7 +364,7 @@ export default function VenuesScreen() {
           </section>
         )}
 
-        {/* STICKY FILTER BAR – remains anchored while list scrolls */}
+        {/* STICKY FILTER BAR – icons + categories always, districts collapsable */}
         <section
           className="
             sticky top-0 z-30 -mx-5
@@ -369,11 +373,47 @@ export default function VenuesScreen() {
             backdrop-blur
           "
         >
-          <div className="flex flex-wrap gap-2">
-            {["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"].map((label, i) => (
+          {/* Row 0 — global controls + districts toggle */}
+          <div className="mb-2 flex items-center justify-between">
+            <div className="inline-flex gap-2">
+              <button
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.08)]"
+                // TODO: scroll to top / open search sheet
+              >
+                <Search className="h-4 w-4 text-gray-500" />
+              </button>
+              <button
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_8px_20px_rgba(15,23,42,0.12)]"
+                // TODO: open calendar sheet
+              >
+                <Calendar className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* District toggle pill */}
+            <button
+              onClick={() => setDistrictOpen((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
+            >
+              <span>Districts</span>
+              <span className="h-[3px] w-[3px] rounded-full bg-gray-400" />
+              <span className="text-gray-700">All</span>
+              <span
+                className={`ml-1 text-[10px] transition-transform ${
+                  districtOpen ? "rotate-180" : ""
+                }`}
+              >
+                ▾
+              </span>
+            </button>
+          </div>
+
+          {/* Row 1 — categories (always visible) */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {CATEGORY_FILTERS.map((label, i) => (
               <button
                 key={label}
-                className={`inline-flex items-center rounded-full border px-4 py-2 text-sm ${
+                className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-sm ${
                   i === 0
                     ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
                     : "border-gray-200 bg-white text-gray-800"
@@ -383,6 +423,32 @@ export default function VenuesScreen() {
               </button>
             ))}
           </div>
+
+          {/* Row 2 — districts (collapsable) */}
+          <motion.div
+            initial={false}
+            animate={districtOpen ? "open" : "closed"}
+            variants={{
+              open: { height: "auto", opacity: 1, marginTop: 8 },
+              closed: { height: 0, opacity: 0, marginTop: 0 },
+            }}
+            className="overflow-hidden"
+          >
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {DISTRICT_FILTERS.map((label) => (
+                <button
+                  key={label}
+                  className="
+                    inline-flex flex-shrink-0 items-center rounded-full
+                    border border-gray-200 bg-white/90 px-4 py-2
+                    text-xs font-medium text-gray-600
+                  "
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </motion.div>
         </section>
 
         {/* All venues - vertical list taking full screen height under sticky filters */}
