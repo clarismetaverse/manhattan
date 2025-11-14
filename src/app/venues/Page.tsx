@@ -1,27 +1,30 @@
 /**
- * Venues Home — wired to RestaurantUpgradeTop
+ * Venues Home — dynamic filters from category_venues_turbo
  *
- * - Endpoint:
- *      POST https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop
- * - Body:
+ * - GET filters from:
+ *      https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo
+ *      → [{ id, CategoryName, filter_type }]
+ *
+ * - Build two chip lists:
+ *      • categories:  filter_type === "category"
+ *      • districts:   filter_type === "area"
+ *
+ * - On chip toggle:
+ *      • push/remove chip.id into selectedCategoryIds / selectedDistrictIds
+ * - POST body to RestaurantUpgradeTop:
  *      {
- *        page: number,
+ *        page: 1,
  *        search: string,
  *        category_ids: number[],
  *        district_ids: number[],
- *        date: string | null   // "YYYY-MM-DD"
+ *        date: string | null
  *      }
  *
- * - Response:
- *      { items: Venue[], curPage: number, nextPage: number | null, ... }
+ * - Extra:
+ *      • “Clear” button on districts row → clears all selectedDistrictIds
  */
 
-import React, {
-  useEffect,
-  useMemo,
-  useState,
-  useRef,
-} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   LayoutGroup,
   AnimatePresence,
@@ -59,7 +62,7 @@ interface RestaurantUpgradeTopResponse {
 interface TurboFilterItem {
   id: number;
   CategoryName: string;
-  filter_type: string;
+  filter_type: "area" | "category" | "content" | string;
 }
 
 type DetailVenue = {
@@ -68,52 +71,24 @@ type DetailVenue = {
   image: string;
   city?: string;
   brief: string;
-  offers: Array<{
-    id: string;
-    title: string;
-    plates?: number;
-    drinks?: number;
-    mission: string;
-  }>;
+  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
 };
 
 type ChipDefinition = {
+  id: number;
   label: string;
-  id: number | null;
 };
 
 const FALLBACK_GRADIENT =
   "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, rgba(10,11,12,0.92) 55%, rgba(10,11,12,1) 100%)";
 
-// For now we don't get a badge label from backend
+// placeholder for future city/tag badge if backend sends it
 function getBadgeLabel(_venue: Venue): string | null {
   return null;
 }
 
-const STATIC_CATEGORY_LABELS = [
-  "Sport",
-  "Cocktail",
-  "Beauty",
-  "Lunch",
-  "Breakfast",
-] as const;
-const STATIC_DISTRICT_LABELS = [
-  "Seminyak",
-  "Canggu",
-  "Uluwatu",
-  "Kerobokan",
-  "Pererenan",
-] as const;
-
 const FILTER_ENDPOINT =
   "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo";
-
-const normalize = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
 
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -134,20 +109,9 @@ export default function VenuesScreen() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [selectedDistrictIds, setSelectedDistrictIds] = useState<number[]>([]);
 
-  const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>(
-    STATIC_CATEGORY_LABELS.map((label) => ({ label, id: null }))
-  );
-  const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>(
-    STATIC_DISTRICT_LABELS.map((label) => ({ label, id: null }))
-  );
+  const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>([]);
+  const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>([]);
   const [filtersError, setFiltersError] = useState<string | null>(null);
-
-  // Pagination state (wired to Xano curPage / nextPage)
-  const [page, setPage] = useState(1);
-  const [nextPage, setNextPage] = useState<number | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Scroll-based hero animation
   const { scrollY } = useScroll();
@@ -155,7 +119,7 @@ export default function VenuesScreen() {
   const heroScale = useTransform(scrollY, [0, 140], [1, 0.93]);
   const heroTranslateY = useTransform(scrollY, [0, 140], [0, -26]);
 
-  // ---- FETCH FILTER LOOKUPS ----
+  // ---- FETCH FILTER LOOKUPS (category_venues_turbo) ----
   useEffect(() => {
     const controller = new AbortController();
     setFiltersError(null);
@@ -166,165 +130,83 @@ export default function VenuesScreen() {
         return (await res.json()) as TurboFilterItem[];
       })
       .then((items) => {
-        const categoryMap = new Map<string, TurboFilterItem>();
-        const districtMap = new Map<string, TurboFilterItem>();
+        const categories = items
+          .filter((i) => i.filter_type === "category")
+          .sort((a, b) => a.CategoryName.localeCompare(b.CategoryName));
 
-        for (const item of items) {
-          if (!item?.CategoryName) continue;
-          const key = normalize(item.CategoryName);
-          if (item.filter_type === "category" && !categoryMap.has(key)) {
-            categoryMap.set(key, item);
-          }
-          if (item.filter_type === "area" && !districtMap.has(key)) {
-            districtMap.set(key, item);
-          }
-        }
+        const areas = items
+          .filter((i) => i.filter_type === "area")
+          .sort((a, b) => a.CategoryName.localeCompare(b.CategoryName));
 
-        setCategoryFilters((prev) =>
-          prev.map((chip) => {
-            const match = categoryMap.get(normalize(chip.label));
-            return { ...chip, id: match?.id ?? null };
-          })
+        setCategoryFilters(
+          categories.map((c) => ({ id: c.id, label: c.CategoryName }))
         );
-        setDistrictFilters((prev) =>
-          prev.map((chip) => {
-            const match = districtMap.get(normalize(chip.label));
-            return { ...chip, id: match?.id ?? null };
-          })
+        setDistrictFilters(
+          areas.map((a) => ({ id: a.id, label: a.CategoryName }))
         );
       })
       .catch((err) => {
         if ((err as { name?: string }).name === "AbortError") return;
         console.error("Failed to load filter IDs", err);
-        setFiltersError("Unable to load filters. Chips may be disabled.");
+        setFiltersError("Unable to load filters.");
       });
 
     return () => controller.abort();
   }, []);
 
-  // When search / filters / date change → reset pagination to page 1
-  useEffect(() => {
-    setPage(1);
-    setNextPage(null);
-    setHasMore(true);
-    setVenues([]);
-  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
-
-  // ---- FETCH FROM RestaurantUpgradeTop WITH PAGINATION ----
+  // ---- FETCH FROM RestaurantUpgradeTop ----
   useEffect(() => {
     const controller = new AbortController();
-    const isFirstPage = page === 1;
-
-    if (isFirstPage) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+    setLoading(true);
     setError(null);
 
     const body = {
-      page,
+      page: 1,
       search: search.trim(),
       category_ids: selectedCategoryIds,
       district_ids: selectedDistrictIds,
       date: selectedDate,
     };
 
-    (async () => {
-      try {
-        const res = await fetch(
-          "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-            signal: controller.signal,
-          }
-        );
-
-        if (!res.ok) {
-          const text = await res.text();
-          console.error("Xano error:", res.status, text);
-          setError(`Unable to load venues (code ${res.status}).`);
-          setVenues([]);
-          setHasMore(false);
-          return;
-        }
-
-        const json = (await res.json()) as
-          | RestaurantUpgradeTopResponse
-          | Venue[];
+    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
+        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
 
         let items: Venue[] = [];
-        let metaNextPage: number | null = null;
-
         if (Array.isArray(json)) {
           items = json;
-        } else {
-          items = Array.isArray(json.items) ? json.items : [];
-          metaNextPage =
-            typeof json.nextPage === "number" ? json.nextPage : null;
+        } else if (Array.isArray(json.items)) {
+          items = json.items;
         }
 
-        if (isFirstPage) {
-          setVenues(items);
-        } else {
-          setVenues((prev) => [...prev, ...items]);
+        setVenues(items);
+      })
+      .catch((err) => {
+        if ((err as any).name !== "AbortError") {
+          console.error("Error fetching venues:", err);
+          setError("Unable to load venues. Please try again later.");
         }
-
-        setNextPage(metaNextPage);
-        setHasMore(!!metaNextPage);
-      } catch (err: any) {
-        if (err?.name === "AbortError") return;
-        console.error("Network error calling RestaurantUpgradeTop:", err);
-        setError("Network error. Please try again.");
-        setHasMore(false);
-      } finally {
-        if (isFirstPage) setLoading(false);
-        else setLoadingMore(false);
-      }
-    })();
+      })
+      .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [
-    page,
-    search,
-    selectedCategoryIds,
-    selectedDistrictIds,
-    selectedDate,
-  ]);
+  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
 
-  // ---- Infinite scroll: observe sentinel ----
-  useEffect(() => {
-    if (!hasMore || loadingMore || loading) return;
-
-    const node = loadMoreRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first.isIntersecting && nextPage) {
-          setPage(nextPage);
-        }
-      },
-      { root: null, rootMargin: "200px", threshold: 0 }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, loadingMore, loading, nextPage]);
-
-  // ---- LOCAL VIEW MODEL ----
-
+  // ---- CONTENT (pinned + list) ----
   const content = useMemo(() => {
-    if (loading && !venues.length)
+    if (loading)
       return (
         <div className="flex items-center justify-center py-16 text-sm text-gray-500">
           Loading venues…
         </div>
       );
-    if (error && !venues.length)
+    if (error)
       return (
         <div className="flex items-center justify-center py-16 text-sm text-gray-500">
           {error}
@@ -346,11 +228,7 @@ export default function VenuesScreen() {
     const pinnedIds = new Set(pinnedVenues.map((v) => v.id));
     const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.id));
 
-    const renderVenueCard = (
-      venue: Venue,
-      index: number,
-      size: "compact" | "full"
-    ) => {
+    const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
       const id = String(venue.id);
       const coverUrl = venue.Cover?.url ?? venue.Background?.url ?? "";
       const badgeLabel = getBadgeLabel(venue);
@@ -401,9 +279,7 @@ export default function VenuesScreen() {
             setOpen(detail);
           }}
           whileHover={isPinned ? { y: -8, rotateX: -4, rotateY: 4 } : { y: -4 }}
-          whileTap={
-            isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }
-          }
+          whileTap={isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }}
           transition={{ type: "spring", stiffness: 260, damping: 22, mass: 0.9 }}
           className={`group relative block overflow-hidden rounded-[22px] bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out ${
             size === "compact" ? "min-w-[260px] max-w-[280px]" : "w-full"
@@ -439,9 +315,7 @@ export default function VenuesScreen() {
               <h2 className="text-[18px] sm:text-[20px] font-light text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
                 {venue.Name}
               </h2>
-              <p className="mt-1 text-xs font-light text-white/80">
-                #{rankNumber} Venue
-              </p>
+              <p className="mt-1 text-xs font-light text-white/80">#{rankNumber} Venue</p>
             </div>
           </div>
         </motion.button>
@@ -453,9 +327,7 @@ export default function VenuesScreen() {
         {/* Pinned section */}
         {pinnedVenues.length > 0 && (
           <section>
-            <h2 className="mb-3 text-base font-semibold text-gray-900">
-              Pinned This Week
-            </h2>
+            <h2 className="mb-3 text-base font-semibold text-gray-900">Pinned This Week</h2>
             <div className="-mx-5 overflow-x-auto pb-1">
               <motion.div
                 className="flex gap-4 px-5"
@@ -514,30 +386,22 @@ export default function VenuesScreen() {
             </button>
           </div>
 
-          {/* Row 1 — categories */}
+          {/* Row 1 — categories (from API) */}
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {categoryFilters.map((item, index) => {
-              const isActive =
-                item.id != null && selectedCategoryIds.includes(item.id);
-              const isDisabled = item.id == null;
+            {categoryFilters.map((item) => {
+              const isActive = selectedCategoryIds.includes(item.id);
               return (
                 <button
-                  key={item.label}
-                  onClick={() => {
-                    if (isDisabled) return;
+                  key={item.id}
+                  onClick={() =>
                     setSelectedCategoryIds((prev) =>
-                      prev.includes(item.id as number)
+                      isActive
                         ? prev.filter((id) => id !== item.id)
-                        : [...prev, item.id as number]
-                    );
-                  }}
-                  disabled={isDisabled}
+                        : [...prev, item.id]
+                    )
+                  }
                   className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-sm transition-colors ${
-                    isDisabled
-                      ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                      : isActive
-                      ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
-                      : index === 0 && selectedCategoryIds.length === 0
+                    isActive
                       ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
                       : "border-gray-200 bg-white text-gray-800"
                   }`}
@@ -546,9 +410,12 @@ export default function VenuesScreen() {
                 </button>
               );
             })}
+            {!categoryFilters.length && (
+              <span className="text-xs text-gray-400">Loading categories…</span>
+            )}
           </div>
 
-          {/* Row 2 — districts (collapsable) */}
+          {/* Row 2 — districts (collapsable) + CLEAR */}
           <motion.div
             initial={false}
             animate={districtOpen ? "open" : "closed"}
@@ -558,27 +425,21 @@ export default function VenuesScreen() {
             }}
             className="overflow-hidden"
           >
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
               {districtFilters.map((item) => {
-                const isActive =
-                  item.id != null && selectedDistrictIds.includes(item.id);
-                const isDisabled = item.id == null;
+                const isActive = selectedDistrictIds.includes(item.id);
                 return (
                   <button
-                    key={item.label}
-                    onClick={() => {
-                      if (isDisabled) return;
+                    key={item.id}
+                    onClick={() =>
                       setSelectedDistrictIds((prev) =>
-                        prev.includes(item.id as number)
+                        isActive
                           ? prev.filter((id) => id !== item.id)
-                          : [...prev, item.id as number]
-                      );
-                    }}
-                    disabled={isDisabled}
+                          : [...prev, item.id]
+                      )
+                    }
                     className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
-                      isDisabled
-                        ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                        : isActive
+                      isActive
                         ? "border-red-500 bg-red-50 text-red-600"
                         : "border-gray-200 bg-white/90 text-gray-600"
                     }`}
@@ -587,36 +448,34 @@ export default function VenuesScreen() {
                   </button>
                 );
               })}
+
+              {/* CLEAR all district filters */}
+              {selectedDistrictIds.length > 0 && (
+                <button
+                  onClick={() => setSelectedDistrictIds([])}
+                  className="ml-auto inline-flex flex-shrink-0 items-center rounded-full border border-gray-300 bg-white/80 px-3 py-1.5 text-[11px] font-medium text-gray-600"
+                >
+                  Clear
+                </button>
+              )}
+
+              {!districtFilters.length && (
+                <span className="text-xs text-gray-400">Loading districts…</span>
+              )}
             </div>
             {filtersError && (
-              <p className="px-1 pb-1 text-[10px] text-red-500/80">
-                {filtersError}
-              </p>
+              <p className="px-1 pb-1 text-[10px] text-red-500/80">{filtersError}</p>
             )}
           </motion.div>
         </section>
 
         {/* All venues */}
         <section>
-          <h2 className="mb-3 text-base font-semibold text-gray-900">
-            All Venues
-          </h2>
+          <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
           <div className="space-y-4">
             {allVenues.map((venue, index) =>
               renderVenueCard(venue, index, "full")
             )}
-          </div>
-
-          {/* Infinite scroll sentinel */}
-          <div
-            ref={loadMoreRef}
-            className="flex h-10 items-center justify-center text-xs text-gray-400"
-          >
-            {loadingMore
-              ? "Loading more…"
-              : !hasMore && allVenues.length > 0
-              ? "No more venues"
-              : null}
           </div>
         </section>
       </div>
@@ -624,15 +483,14 @@ export default function VenuesScreen() {
   }, [
     error,
     loading,
-    loadingMore,
     venues,
     search,
     selectedCategoryIds,
     selectedDistrictIds,
     districtOpen,
     categoryFilters,
+    districtFilters,
     filtersError,
-    hasMore,
   ]);
 
   // ---- RENDER ----
@@ -747,9 +605,7 @@ export default function VenuesScreen() {
             >
               <div className="mb-4 flex items-start justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    Select date
-                  </h2>
+                  <h2 className="text-sm font-semibold text-gray-900">Select date</h2>
                   <p className="mt-1 text-xs text-gray-500">
                     Choose a day to refine your experiences.
                   </p>
