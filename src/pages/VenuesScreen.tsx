@@ -48,14 +48,6 @@ interface Venue {
   [k: string]: any;
 }
 
-interface RestaurantUpgradeTopResponse {
-  items?: Venue[];
-  itemsReceived?: number;
-  curPage?: number;
-  nextPage?: number | null;
-  [k: string]: any;
-}
-
 interface TurboFilterItem {
   id: number;
   CategoryName: string;
@@ -124,6 +116,10 @@ export default function VenuesScreen() {
   );
   const [filtersError, setFiltersError] = useState<string | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // Scroll-based hero animation
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 140], [1, 0]);
@@ -181,35 +177,47 @@ export default function VenuesScreen() {
 
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
+
+    if (page === 1) {
+      setLoading(true);
+      setVenues([]);
+    } else {
+      setIsLoadingMore(true);
+    }
     setError(null);
 
     const body = {
-      page: 1,
-      search: search.trim(),
-      category_ids: selectedCategoryIds,
+      page,
+      search: "",
       district_ids: selectedDistrictIds,
-      date: selectedDate,
+      category_ids: selectedCategoryIds,
     };
 
-    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    })
+    fetch(
+      "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      }
+    )
       .then(async (res) => {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
+        const json = (await res.json()) as {
+          items?: Venue[];
+          curPage?: number;
+          nextPage?: number | null;
+          itemsReceived?: number;
+        };
 
-        let items: Venue[] = [];
-        if (Array.isArray(json)) {
-          items = json;
-        } else if (Array.isArray(json.items)) {
-          items = json.items;
-        }
+        const items = Array.isArray(json.items) ? json.items : [];
 
-        setVenues(items);
+        setVenues((prev) => (page === 1 ? items : [...prev, ...items]));
+
+        const hasNext =
+          typeof json.nextPage === "number" ? json.nextPage > page : items.length > 0;
+        setHasMore(hasNext);
       })
       .catch((err) => {
         if ((err as any).name !== "AbortError") {
@@ -217,10 +225,13 @@ export default function VenuesScreen() {
           setError("Unable to load venues. Please try again later.");
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setIsLoadingMore(false);
+      });
 
     return () => controller.abort();
-  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
+  }, [page, selectedCategoryIds, selectedDistrictIds]);
 
   // ---- LOCAL SEARCH (client-side) ----
 
@@ -425,6 +436,7 @@ export default function VenuesScreen() {
                   key={item.label}
                   onClick={() => {
                     if (isDisabled) return;
+                    setPage(1);
                     setSelectedCategoryIds((prev) =>
                       prev.includes(item.id as number)
                         ? prev.filter((id) => id !== item.id)
@@ -467,6 +479,7 @@ export default function VenuesScreen() {
                     key={item.label}
                     onClick={() => {
                       if (isDisabled) return;
+                      setPage(1);
                       setSelectedDistrictIds((prev) =>
                         prev.includes(item.id as number)
                           ? prev.filter((id) => id !== item.id)
@@ -502,9 +515,37 @@ export default function VenuesScreen() {
             )}
           </div>
         </section>
+
+        {hasMore && (
+          <div className="mt-4 flex justify-center pb-8">
+            <button
+              disabled={isLoadingMore}
+              onClick={() => {
+                if (!isLoadingMore && hasMore) {
+                  setPage((p) => p + 1);
+                }
+              }}
+              className="inline-flex items-center rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-800 shadow-[0_10px_30px_rgba(15,23,42,0.08)] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoadingMore ? "Loading more…" : "Load more experiences"}
+            </button>
+          </div>
+        )}
       </div>
     );
-  }, [error, loading, venues, search, selectedCategoryIds, selectedDistrictIds, districtOpen, categoryFilters, filtersError]);
+  }, [
+    error,
+    loading,
+    venues,
+    search,
+    selectedCategoryIds,
+    selectedDistrictIds,
+    districtOpen,
+    categoryFilters,
+    filtersError,
+    hasMore,
+    isLoadingMore,
+  ]);
 
   // ---- RENDER ----
 
