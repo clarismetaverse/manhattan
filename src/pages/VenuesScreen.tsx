@@ -1,60 +1,24 @@
 /**
- * Codex Prompt — Venues Home (Pinned + Sticky Filters + Motion)
+ * Venues Home — wired to RestaurantUpgradeTop
  *
- * Goal:
- * Implement a mobile-first Venues home screen with AURA-style light UI, subtle silver notch
- * header, controlled red accents, and a mixed scroll behavior:
+ * - Usa l'endpoint:
+ *      POST https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop
+ * - Body di default:
+ *      {
+ *        page: 1,
+ *        search: "",
+ *        category_ids: number[],
+ *        district_ids: number[],
+ *        date: string | null   // "YYYY-MM-DD"
+ *      }
  *
- * 1) Top “notch” hero:
- *    - Title + subtitle + search bar + calendar icon.
- *    - White / silver card, rounded 3XL, light shadow, NO red inside the notch.
- *    - Title: “Discover where your presence matters”
- *    - Subtitle: “Find curated creator experiences across the city.”
- *    - Search input full width, calendar icon pill on the right.
- *    - The hero gently FADES and COMPRESSES on scroll (opacity / scale / y
- *      animated with Framer Motion based on scrollY).
+ * - La risposta è del tipo:
+ *      { items: Venue[], curPage: number, nextPage: number | null, ... }
  *
- * 2) Pinned This Week:
- *    - Horizontal scrollable carousel of venue cards.
- *    - Cards: rounded 22px, full-bleed image with dark gradient overlay,
- *      red “Pinned This Week” badge, optional city/category badge, white text.
- *    - This section scrolls away normally (not sticky).
- *    - Each pinned card has a PHYSICS FEEL: spring transition + subtle 3D tilt
- *      on hover/tap (rotateX/rotateY + y).
- *
- * 3) Sticky Category Filters:
- *    - Row of round chips (Sport, Cocktail, Beauty, Lunch, Breakfast).
- *    - Entire filter bar is position: sticky; top: 0; with a subtle background and blur.
- *    - First chip (Sport) highlighted in red; others white with gray border.
- *    - Once user scrolls, notch + pinned disappear but this filter row remains anchored,
- *      so the vertical venue list uses almost the whole screen.
- *
- * 4) All Venues:
- *    - Vertical list of full-width venue cards (same visual language as pinned).
- *    - Scrolls under the sticky filter bar.
- *    - Cards have a softer lift on hover/tap (no 3D tilt, just y/scale).
- *
- * Data / Logic:
- * - Fetch venues from the provided Xano endpoint (POST).
- * - Deduplicate venues by restaurant_turbo_id; hide venues with hidden/Visible flags.
- * - Use first 5 venues as “Pinned This Week”; remaining ones as “All Venues”.
- * - Search:
- *   • Text input filters venues by name and badge label (city/category).
- *   • Filtering affects both pinned and all venues.
- *
- * - Detail Overlay:
- *   • On card tap, open existing <VenueDetail /> overlay.
- *   • Pass a simplified DetailVenue object with id, name, image, city, brief, offers.
- *
- * Styling:
- * - Use TailwindCSS utility classes; no external CSS.
- * - Keep the brand language:
- *      background: light gradient (from #f7f7f8 to white),
- *      text: gray/black,
- *      accents: controlled red (#ef4444 range),
- *      occasional black for badges.
- * - Use framer-motion LayoutGroup + motion for subtle card animations
- *   (hero scroll animation + pinned 3D tilt).
+ * - Questo file:
+ *      • Usa `items` come lista venue (nessun merge/dedup lato client).
+ *      • Toggles dei chip categoria/district → aggiornano category_ids/district_ids.
+ *      • Calendar overlay → setta selectedDate (YYYY-MM-DD) e la manda al backend.
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -66,57 +30,36 @@ import {
   useTransform,
 } from "framer-motion";
 import { Search, Calendar } from "lucide-react";
-import VenueDetail from "@/features/venues/VenueDetail"; // ← already created
+import VenueDetail from "@/features/venues/VenueDetail";
+
+// ---- TYPES ----
+
+interface XanoFile {
+  url?: string;
+  [k: string]: any;
+}
 
 interface Venue {
-  restaurant_turbo_id: number;
+  id: number;
   Name: string;
-  Cover?: { url?: string | null } | null;
-  visible?: boolean;
-  Visible?: boolean;
-  display?: boolean;
-  hidden?: boolean;
-  Hidden?: boolean;
-  status?: string;
-  city?: string | null;
-  City?: string | null;
-  category?: string | null;
-  Category?: string | null;
+  Cover?: XanoFile | null;
+  Background?: XanoFile | null;
+  cities_id?: number | null;
   [k: string]: any;
 }
 
-interface VenuesResponse {
-  categoryfilter?: Venue[];
-  area?: Venue[];
-  filt?: Venue[];
+interface RestaurantUpgradeTopResponse {
+  items?: Venue[];
+  itemsReceived?: number;
+  curPage?: number;
+  nextPage?: number | null;
   [k: string]: any;
 }
 
-const FALLBACK_GRADIENT =
-  "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, rgba(10,11,12,0.92) 55%, rgba(10,11,12,1) 100%)";
-
-function isHiddenVenue(venue: Venue): boolean {
-  if (!venue) return true;
-  const status = typeof venue.status === "string" ? venue.status.toLowerCase() : "";
-  return (
-    venue.visible === false ||
-    (venue as { Visible?: boolean }).Visible === false ||
-    venue.display === false ||
-    venue.hidden === true ||
-    (venue as { Hidden?: boolean }).Hidden === true ||
-    status === "hidden"
-  );
-}
-
-function getBadgeLabel(venue: Venue): string | null {
-  const rawLabel =
-    (typeof venue.city === "string" && venue.city.trim()) ||
-    (typeof venue.City === "string" && venue.City.trim()) ||
-    (typeof venue.category === "string" && venue.category.trim()) ||
-    (typeof venue.Category === "string" && venue.Category.trim()) ||
-    (typeof (venue as any).area === "string" && String((venue as any).area).trim());
-
-  return rawLabel && rawLabel.length ? rawLabel : null;
+interface TurboFilterItem {
+  id: number;
+  CategoryName: string;
+  filter_type: string;
 }
 
 type DetailVenue = {
@@ -128,123 +71,145 @@ type DetailVenue = {
   offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
 };
 
-const CATEGORY_FILTERS = ["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"];
-const DISTRICT_FILTERS = ["Seminyak", "Canggu", "Uluwatu", "Kerobokan", "Pererenan"];
+type ChipDefinition = {
+  label: string;
+  id: number | null;
+};
 
-/**
- * Codex Patch — Make sticky bar Search & Calendar interactive
- *
- * Goal:
- * Keep the existing VenuesScreen layout and logic, but:
- *
- *  - Search icon (in the sticky bar):
- *      • Opens a floating, Spotlight-style overlay.
- *      • Overlay: dark blurred backdrop + centered white card with:
- *            - Title: “Search experiences”
- *            - Subtitle: “Find venues, districts or vibes”
- *            - Text input bound to the same `search` state used in the hero.
- *      • Closing: tapping an X button or tapping the backdrop.
- *
- *  - Calendar icon (in the sticky bar):
- *      • Opens a simple month modal overlay.
- *      • Overlay: same dark blurred backdrop + centered white card with:
- *            - Title: “Select date”
- *            - A simple month grid (1–30) as buttons.
- *            - Selecting a day updates a local `selectedDay` state.
- *      • No real date filter logic is required; this is just UI for now.
- *      • Closing: tapping an X button or tapping the backdrop.
- *
- * Implementation details:
- *  1. Add new React state in VenuesScreen:
- *        const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
- *        const [calendarOpen, setCalendarOpen] = useState(false);
- *        const [selectedDay, setSelectedDay] = useState<number | null>(null);
- *
- *  2. Update the Search + Calendar icon buttons in the sticky filter bar
- *     so they call setSearchOverlayOpen(true) and setCalendarOpen(true).
- *
- *  3. At the bottom of the component JSX (inside LayoutGroup, but after the main
- *     page content), add two <AnimatePresence> blocks:
- *        - One for the Search overlay (Spotlight style).
- *        - One for the Calendar month modal.
- *
- *     Both overlays should:
- *        - Use motion.div for the backdrop (fade in/out).
- *        - Use motion.div for the card (scale + y + opacity in/out).
- *        - Have z-index higher than VenueDetail so they appear on top (e.g. z-50).
- */
+const FALLBACK_GRADIENT =
+  "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, rgba(10,11,12,0.92) 55%, rgba(10,11,12,1) 100%)";
+
+// Se in futuro dal backend arriva la city o il tag come stringa la useremo qui.
+// Per ora torna sempre null → niente pill secondaria.
+function getBadgeLabel(_venue: Venue): string | null {
+  return null;
+}
+
+const STATIC_CATEGORY_LABELS = ["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"] as const;
+const STATIC_DISTRICT_LABELS = ["Seminyak", "Canggu", "Uluwatu", "Kerobokan", "Pererenan"] as const;
+
+const FILTER_ENDPOINT = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo";
+
+const normalize = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [open, setOpen] = useState<DetailVenue | null>(null);
   const [search, setSearch] = useState("");
+
   const [districtOpen, setDistrictOpen] = useState(false);
+
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
-  // Scroll-based hero animation (fade + compress)
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null); // "YYYY-MM-DD"
+
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [selectedDistrictIds, setSelectedDistrictIds] = useState<number[]>([]);
+
+  const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>(
+    STATIC_CATEGORY_LABELS.map((label) => ({ label, id: null }))
+  );
+  const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>(
+    STATIC_DISTRICT_LABELS.map((label) => ({ label, id: null }))
+  );
+  const [filtersError, setFiltersError] = useState<string | null>(null);
+
+  // Scroll-based hero animation
   const { scrollY } = useScroll();
   const heroOpacity = useTransform(scrollY, [0, 140], [1, 0]);
   const heroScale = useTransform(scrollY, [0, 140], [1, 0.93]);
   const heroTranslateY = useTransform(scrollY, [0, 140], [0, -26]);
 
+  // ---- FETCH FILTER LOOKUPS ----
   useEffect(() => {
     const controller = new AbortController();
+    setFiltersError(null);
 
-    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW", {
+    fetch(FILTER_ENDPOINT, { signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unable to fetch filters: ${res.status}`);
+        return (await res.json()) as TurboFilterItem[];
+      })
+      .then((items) => {
+        const categoryMap = new Map<string, TurboFilterItem>();
+        const districtMap = new Map<string, TurboFilterItem>();
+
+        for (const item of items) {
+          if (!item?.CategoryName) continue;
+          const key = normalize(item.CategoryName);
+          if (item.filter_type === "category" && !categoryMap.has(key)) {
+            categoryMap.set(key, item);
+          }
+          if (item.filter_type === "area" && !districtMap.has(key)) {
+            districtMap.set(key, item);
+          }
+        }
+
+        setCategoryFilters((prev) =>
+          prev.map((chip) => {
+            const match = categoryMap.get(normalize(chip.label));
+            return { ...chip, id: match?.id ?? null };
+          })
+        );
+        setDistrictFilters((prev) =>
+          prev.map((chip) => {
+            const match = districtMap.get(normalize(chip.label));
+            return { ...chip, id: match?.id ?? null };
+          })
+        );
+      })
+      .catch((err) => {
+        if ((err as { name?: string }).name === "AbortError") return;
+        console.error("Failed to load filter IDs", err);
+        setFiltersError("Unable to load filters. Chips may be disabled.");
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  // ---- FETCH FROM RestaurantUpgradeTop ----
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+
+    const body = {
+      page: 1,
+      search: search.trim(),
+      category_ids: selectedCategoryIds,
+      district_ids: selectedDistrictIds,
+      date: selectedDate,
+    };
+
+    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        city_id: 3,
-        page: 1,
-        search: "",
-        area: [],
-        category: [],
-        content: [],
-        booking: [],
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const json = (await res.json()) as VenuesResponse | Venue[];
+        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
 
-        let merged: Venue[] = [];
-        if ((json as any).categoryfilter && Array.isArray((json as any).categoryfilter)) {
-          const restaurantMap = new Map<number, Venue>();
-          (json as any).categoryfilter.forEach((r: any) => {
-            if (r?.restaurant_turbo_id) restaurantMap.set(r.restaurant_turbo_id, r);
-          });
-          merged = Array.from(restaurantMap.values());
-        } else if ((json as any).filt) {
-          const restaurantMap = new Map<number, Venue>();
-          Object.values((json as any).filt).forEach((group: any) => {
-            if (Array.isArray(group)) {
-              group.forEach((r: any) => {
-                if (r?.restaurant_turbo_id) restaurantMap.set(r.restaurant_turbo_id, r);
-              });
-            }
-          });
-          merged = Array.from(restaurantMap.values());
-        } else if (Array.isArray(json)) {
-          merged = json as Venue[];
-        } else {
-          merged = [...(((json as any).area ?? []) as Venue[])];
+        let items: Venue[] = [];
+        if (Array.isArray(json)) {
+          items = json;
+        } else if (Array.isArray(json.items)) {
+          items = json.items;
         }
 
-        const seen = new Set<number>();
-        const filtered = merged.filter((v) => {
-          const id = Number(v?.restaurant_turbo_id ?? 0);
-          if (!id || seen.has(id)) return false;
-          if (isHiddenVenue(v)) return false;
-          seen.add(id);
-          return true;
-        });
-
-        setVenues(filtered);
+        setVenues(items);
       })
       .catch((err) => {
         if ((err as any).name !== "AbortError") {
@@ -255,7 +220,9 @@ export default function VenuesScreen() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, []);
+  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
+
+  // ---- LOCAL SEARCH (client-side) ----
 
   const content = useMemo(() => {
     if (loading)
@@ -279,20 +246,16 @@ export default function VenuesScreen() {
 
     const normalizedSearch = search.trim().toLowerCase();
     const visibleVenues = normalizedSearch
-      ? venues.filter((v) => {
-          const name = (v.Name ?? "").toLowerCase();
-          const badge = (getBadgeLabel(v) ?? "").toLowerCase();
-          return name.includes(normalizedSearch) || badge.includes(normalizedSearch);
-        })
+      ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
       : venues;
 
     const pinnedVenues = visibleVenues.slice(0, 5);
-    const pinnedIds = new Set(pinnedVenues.map((v) => v.restaurant_turbo_id));
-    const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.restaurant_turbo_id));
+    const pinnedIds = new Set(pinnedVenues.map((v) => v.id));
+    const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.id));
 
     const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
-      const id = String(venue.restaurant_turbo_id);
-      const coverUrl = venue.Cover?.url ?? "";
+      const id = String(venue.id);
+      const coverUrl = venue.Cover?.url ?? venue.Background?.url ?? "";
       const badgeLabel = getBadgeLabel(venue);
       const rankNumber = index + 1;
       const baseHeight = size === "compact" ? 190 : 230;
@@ -390,12 +353,10 @@ export default function VenuesScreen() {
 
     return (
       <div className="space-y-8">
-        {/* Pinned section - normal scroll, goes away when user scrolls down */}
+        {/* Pinned section */}
         {pinnedVenues.length > 0 && (
           <section>
-            <h2 className="mb-3 text-base font-semibold text-gray-900">
-              Pinned This Week
-            </h2>
+            <h2 className="mb-3 text-base font-semibold text-gray-900">Pinned This Week</h2>
             <div className="-mx-5 overflow-x-auto pb-1">
               <motion.div
                 className="flex gap-4 px-5"
@@ -410,7 +371,7 @@ export default function VenuesScreen() {
           </section>
         )}
 
-        {/* STICKY FILTER BAR – icons + categories always, districts collapsable */}
+        {/* STICKY FILTER BAR – icons + categories + collapsable districts */}
         <section
           className="
             sticky top-0 z-30 -mx-5
@@ -436,7 +397,7 @@ export default function VenuesScreen() {
               </button>
             </div>
 
-            {/* District toggle pill (collapsable row) */}
+            {/* District toggle pill */}
             <button
               onClick={() => setDistrictOpen((v) => !v)}
               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
@@ -454,20 +415,37 @@ export default function VenuesScreen() {
             </button>
           </div>
 
-          {/* Row 1 — categories (always visible) */}
+          {/* Row 1 — categories */}
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {CATEGORY_FILTERS.map((label, i) => (
-              <button
-                key={label}
-                className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-sm ${
-                  i === 0
-                    ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
-                    : "border-gray-200 bg-white text-gray-800"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+            {categoryFilters.map((item, index) => {
+              const isActive = item.id != null && selectedCategoryIds.includes(item.id);
+              const isDisabled = item.id == null;
+              return (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (isDisabled) return;
+                    setSelectedCategoryIds((prev) =>
+                      prev.includes(item.id as number)
+                        ? prev.filter((id) => id !== item.id)
+                        : [...prev, item.id as number]
+                    );
+                  }}
+                  disabled={isDisabled}
+                  className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-sm transition-colors ${
+                    isDisabled
+                      ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                      : isActive
+                      ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
+                      : index === 0 && selectedCategoryIds.length === 0
+                      ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
+                      : "border-gray-200 bg-white text-gray-800"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Row 2 — districts (collapsable) */}
@@ -481,23 +459,41 @@ export default function VenuesScreen() {
             className="overflow-hidden"
           >
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {DISTRICT_FILTERS.map((label) => (
-                <button
-                  key={label}
-                  className="
-                    inline-flex flex-shrink-0 items-center rounded-full
-                    border border-gray-200 bg-white/90 px-4 py-2
-                    text-xs font-medium text-gray-600
-                  "
-                >
-                  {label}
-                </button>
-              ))}
+              {districtFilters.map((item) => {
+                const isActive = item.id != null && selectedDistrictIds.includes(item.id);
+                const isDisabled = item.id == null;
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      if (isDisabled) return;
+                      setSelectedDistrictIds((prev) =>
+                        prev.includes(item.id as number)
+                          ? prev.filter((id) => id !== item.id)
+                          : [...prev, item.id as number]
+                      );
+                    }}
+                    disabled={isDisabled}
+                    className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
+                      isDisabled
+                        ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                        : isActive
+                        ? "border-red-500 bg-red-50 text-red-600"
+                        : "border-gray-200 bg-white/90 text-gray-600"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </div>
+            {filtersError && (
+              <p className="px-1 pb-1 text-[10px] text-red-500/80">{filtersError}</p>
+            )}
           </motion.div>
         </section>
 
-        {/* All venues - vertical list taking full screen height under sticky filters */}
+        {/* All venues */}
         <section>
           <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
           <div className="space-y-4">
@@ -508,13 +504,15 @@ export default function VenuesScreen() {
         </section>
       </div>
     );
-  }, [error, loading, venues, search]);
+  }, [error, loading, venues, search, selectedCategoryIds, selectedDistrictIds, districtOpen, categoryFilters, filtersError]);
+
+  // ---- RENDER ----
 
   return (
     <LayoutGroup id="venues">
       <div className="min-h-screen bg-gradient-to-b from-[#f7f7f8] to-white px-5 pb-24 pt-8">
         <div className="mx-auto w-full max-w-5xl space-y-8">
-          {/* Notch header – fades & compresses on scroll */}
+          {/* Notch header – scroll animation */}
           <motion.section
             style={{ opacity: heroOpacity, scale: heroScale, y: heroTranslateY }}
             transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
@@ -537,7 +535,10 @@ export default function VenuesScreen() {
                   className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
                 />
               </div>
-              <button className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+              <button
+                onClick={() => setCalendarOpen(true)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+              >
                 <Calendar className="h-4 w-4" />
               </button>
             </div>
@@ -567,7 +568,9 @@ export default function VenuesScreen() {
             >
               <div className="mb-4 flex items-start justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-900">Search experiences</h2>
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Search experiences
+                  </h2>
                   <p className="mt-1 text-xs text-gray-500">
                     Find venues, districts or vibes across the city.
                   </p>
@@ -595,7 +598,7 @@ export default function VenuesScreen() {
         )}
       </AnimatePresence>
 
-      {/* Calendar overlay — simple month modal */}
+      {/* Calendar overlay — month modal; sets selectedDate (YYYY-MM-DD) */}
       <AnimatePresence>
         {calendarOpen && (
           <motion.div
@@ -628,7 +631,6 @@ export default function VenuesScreen() {
                 </button>
               </div>
 
-              {/* Simple month grid (1–30) */}
               <div className="mb-3 grid grid-cols-7 gap-2 text-center text-xs text-gray-500">
                 {["M", "T", "W", "T", "F", "S", "S"].map((d) => (
                   <div key={d} className="font-medium">
@@ -640,7 +642,17 @@ export default function VenuesScreen() {
                 {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
                   <button
                     key={day}
-                    onClick={() => setSelectedDay(day)}
+                    onClick={() => {
+                      setSelectedDay(day);
+                      const today = new Date();
+                      const date = new Date(
+                        today.getFullYear(),
+                        today.getMonth(),
+                        day
+                      );
+                      const iso = date.toISOString().slice(0, 10);
+                      setSelectedDate(iso);
+                    }}
                     className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs ${
                       selectedDay === day
                         ? "border-red-500 bg-red-500 text-white"
@@ -652,9 +664,12 @@ export default function VenuesScreen() {
                 ))}
               </div>
 
-              {selectedDay && (
+              {selectedDate && (
                 <p className="mt-4 text-xs text-gray-500">
-                  Selected day: <span className="font-medium text-gray-800">{selectedDay}</span>
+                  Selected date:{" "}
+                  <span className="font-medium text-gray-800">
+                    {selectedDate}
+                  </span>
                 </p>
               )}
             </motion.div>
@@ -668,3 +683,4 @@ export default function VenuesScreen() {
     </LayoutGroup>
   );
 }
+
