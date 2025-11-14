@@ -1,24 +1,25 @@
 /**
- * Venues Home — wired to RestaurantUpgradeTop
+ * Codex Prompt — Venues Home (Hero hides when filters are active)
  *
- * - Usa l'endpoint:
- *      POST https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop
- * - Body di default:
- *      {
- *        page: 1,
- *        search: "",
- *        category_ids: number[],
- *        district_ids: number[],
- *        date: string | null   // "YYYY-MM-DD"
- *      }
+ * Behaviour:
+ * - POST https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop
+ *   body: { page, search, category_ids, district_ids, date }
+ * - GET  https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo
+ *   → lista filtri (category + area) con id e nome.
  *
- * - La risposta è del tipo:
- *      { items: Venue[], curPage: number, nextPage: number | null, ... }
+ * UX:
+ * - Stato 1 (no filtri attivi):
+ *      Hero "Discover where your presence matters"
+ *      + Pinned This Week (prime 5 venues)
+ *      + Sticky filter bar
+ *      + All Venues (resto lista)
  *
- * - Questo file:
- *      • Usa `items` come lista venue (nessun merge/dedup lato client).
- *      • Toggles dei chip categoria/district → aggiornano category_ids/district_ids.
- *      • Calendar overlay → setta selectedDate (YYYY-MM-DD) e la manda al backend.
+ * - Stato 2 (filtri attivi: search OR categoria OR district OR data):
+ *      Hero nascosto
+ *      Pinned nascosto
+ *      Rimangono:
+ *          • sticky filter bar (search icon, calendar, districts, chips)
+ *          • lista "All Venues" con TUTTI i risultati filtrati
  */
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -48,10 +49,18 @@ interface Venue {
   [k: string]: any;
 }
 
+interface RestaurantUpgradeTopResponse {
+  items?: Venue[];
+  itemsReceived?: number;
+  curPage?: number;
+  nextPage?: number | null;
+  [k: string]: any;
+}
+
 interface TurboFilterItem {
   id: number;
   CategoryName: string;
-  filter_type: string;
+  filter_type: "category" | "area" | string;
 }
 
 type DetailVenue = {
@@ -60,7 +69,13 @@ type DetailVenue = {
   image: string;
   city?: string;
   brief: string;
-  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
+  offers: Array<{
+    id: string;
+    title: string;
+    plates?: number;
+    drinks?: number;
+    mission: string;
+  }>;
 };
 
 type ChipDefinition = {
@@ -71,16 +86,8 @@ type ChipDefinition = {
 const FALLBACK_GRADIENT =
   "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, rgba(10,11,12,0.92) 55%, rgba(10,11,12,1) 100%)";
 
-// Se in futuro dal backend arriva la city o il tag come stringa la useremo qui.
-// Per ora torna sempre null → niente pill secondaria.
-function getBadgeLabel(_venue: Venue): string | null {
-  return null;
-}
-
-const STATIC_CATEGORY_LABELS = ["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"] as const;
-const STATIC_DISTRICT_LABELS = ["Seminyak", "Canggu", "Uluwatu", "Kerobokan", "Pererenan"] as const;
-
-const FILTER_ENDPOINT = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo";
+const FILTER_ENDPOINT =
+  "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo";
 
 const normalize = (value: string) =>
   value
@@ -88,6 +95,11 @@ const normalize = (value: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+
+// per ora non abbiamo city/tag nel payload → niente badge
+function getBadgeLabel(_venue: Venue): string | null {
+  return null;
+}
 
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -108,17 +120,9 @@ export default function VenuesScreen() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [selectedDistrictIds, setSelectedDistrictIds] = useState<number[]>([]);
 
-  const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>(
-    STATIC_CATEGORY_LABELS.map((label) => ({ label, id: null }))
-  );
-  const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>(
-    STATIC_DISTRICT_LABELS.map((label) => ({ label, id: null }))
-  );
+  const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>([]);
+  const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>([]);
   const [filtersError, setFiltersError] = useState<string | null>(null);
-
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Scroll-based hero animation
   const { scrollY } = useScroll();
@@ -126,7 +130,7 @@ export default function VenuesScreen() {
   const heroScale = useTransform(scrollY, [0, 140], [1, 0.93]);
   const heroTranslateY = useTransform(scrollY, [0, 140], [0, -26]);
 
-  // ---- FETCH FILTER LOOKUPS ----
+  // ---- FILTER LOOKUPS (category + area) ----
   useEffect(() => {
     const controller = new AbortController();
     setFiltersError(null);
@@ -151,18 +155,24 @@ export default function VenuesScreen() {
           }
         }
 
-        setCategoryFilters((prev) =>
-          prev.map((chip) => {
-            const match = categoryMap.get(normalize(chip.label));
-            return { ...chip, id: match?.id ?? null };
+        // category chips
+        const categoryChips: ChipDefinition[] = Array.from(categoryMap.values()).map(
+          (item) => ({
+            label: item.CategoryName,
+            id: item.id,
           })
         );
-        setDistrictFilters((prev) =>
-          prev.map((chip) => {
-            const match = districtMap.get(normalize(chip.label));
-            return { ...chip, id: match?.id ?? null };
+
+        // district chips
+        const districtChips: ChipDefinition[] = Array.from(districtMap.values()).map(
+          (item) => ({
+            label: item.CategoryName,
+            id: item.id,
           })
         );
+
+        setCategoryFilters(categoryChips);
+        setDistrictFilters(districtChips);
       })
       .catch((err) => {
         if ((err as { name?: string }).name === "AbortError") return;
@@ -173,24 +183,18 @@ export default function VenuesScreen() {
     return () => controller.abort();
   }, []);
 
-  // ---- FETCH FROM RestaurantUpgradeTop ----
-
+  // ---- BACKEND FETCH (RestaurantUpgradeTop) ----
   useEffect(() => {
     const controller = new AbortController();
-
-    if (page === 1) {
-      setLoading(true);
-      setVenues([]);
-    } else {
-      setIsLoadingMore(true);
-    }
+    setLoading(true);
     setError(null);
 
     const body = {
-      page,
-      search: "",
-      district_ids: selectedDistrictIds,
+      page: 1,
+      search: search.trim(),
       category_ids: selectedCategoryIds,
+      district_ids: selectedDistrictIds,
+      date: selectedDate,
     };
 
     fetch(
@@ -204,20 +208,16 @@ export default function VenuesScreen() {
     )
       .then(async (res) => {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const json = (await res.json()) as {
-          items?: Venue[];
-          curPage?: number;
-          nextPage?: number | null;
-          itemsReceived?: number;
-        };
+        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
 
-        const items = Array.isArray(json.items) ? json.items : [];
+        let items: Venue[] = [];
+        if (Array.isArray(json)) {
+          items = json;
+        } else if (Array.isArray(json.items)) {
+          items = json.items;
+        }
 
-        setVenues((prev) => (page === 1 ? items : [...prev, ...items]));
-
-        const hasNext =
-          typeof json.nextPage === "number" ? json.nextPage > page : items.length > 0;
-        setHasMore(hasNext);
+        setVenues(items);
       })
       .catch((err) => {
         if ((err as any).name !== "AbortError") {
@@ -225,16 +225,19 @@ export default function VenuesScreen() {
           setError("Unable to load venues. Please try again later.");
         }
       })
-      .finally(() => {
-        setLoading(false);
-        setIsLoadingMore(false);
-      });
+      .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [page, selectedCategoryIds, selectedDistrictIds]);
+  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
 
-  // ---- LOCAL SEARCH (client-side) ----
+  // ---- FLAG: FILTERS ACTIVE? (navigation mode) ----
+  const hasActiveFilters =
+    search.trim().length > 0 ||
+    selectedCategoryIds.length > 0 ||
+    selectedDistrictIds.length > 0 ||
+    !!selectedDate;
 
+  // ---- CONTENT (pinned + list) ----
   const content = useMemo(() => {
     if (loading)
       return (
@@ -260,9 +263,12 @@ export default function VenuesScreen() {
       ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
       : venues;
 
-    const pinnedVenues = visibleVenues.slice(0, 5);
+    // SE CI SONO FILTRI ATTIVI → niente pinned, tutta la lista in "All Venues"
+    const pinnedVenues = hasActiveFilters ? [] : visibleVenues.slice(0, 5);
     const pinnedIds = new Set(pinnedVenues.map((v) => v.id));
-    const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.id));
+    const allVenues = hasActiveFilters
+      ? visibleVenues
+      : visibleVenues.filter((v) => !pinnedIds.has(v.id));
 
     const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
       const id = String(venue.id);
@@ -364,10 +370,12 @@ export default function VenuesScreen() {
 
     return (
       <div className="space-y-8">
-        {/* Pinned section */}
-        {pinnedVenues.length > 0 && (
+        {/* Pinned section — SOLO se non ci sono filtri attivi */}
+        {!hasActiveFilters && pinnedVenues.length > 0 && (
           <section>
-            <h2 className="mb-3 text-base font-semibold text-gray-900">Pinned This Week</h2>
+            <h2 className="mb-3 text-base font-semibold text-gray-900">
+              Pinned This Week
+            </h2>
             <div className="-mx-5 overflow-x-auto pb-1">
               <motion.div
                 className="flex gap-4 px-5"
@@ -382,7 +390,7 @@ export default function VenuesScreen() {
           </section>
         )}
 
-        {/* STICKY FILTER BAR – icons + categories + collapsable districts */}
+        {/* STICKY FILTER BAR – sempre visibile */}
         <section
           className="
             sticky top-0 z-30 -mx-5
@@ -391,7 +399,7 @@ export default function VenuesScreen() {
             backdrop-blur
           "
         >
-          {/* Row 0 — global controls + districts toggle */}
+          {/* Row 0 — search & calendar + districts toggle */}
           <div className="mb-2 flex items-center justify-between">
             <div className="inline-flex gap-2">
               <button
@@ -408,14 +416,15 @@ export default function VenuesScreen() {
               </button>
             </div>
 
-            {/* District toggle pill */}
             <button
               onClick={() => setDistrictOpen((v) => !v)}
               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
             >
               <span>Districts</span>
               <span className="h-[3px] w-[3px] rounded-full bg-gray-400" />
-              <span className="text-gray-700">All</span>
+              <span className="text-gray-700">
+                {selectedDistrictIds.length ? "Filtered" : "All"}
+              </span>
               <span
                 className={`ml-1 text-[10px] transition-transform ${
                   districtOpen ? "rotate-180" : ""
@@ -426,17 +435,17 @@ export default function VenuesScreen() {
             </button>
           </div>
 
-          {/* Row 1 — categories */}
+          {/* Row 1 — category chips */}
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {categoryFilters.map((item, index) => {
-              const isActive = item.id != null && selectedCategoryIds.includes(item.id);
+            {categoryFilters.map((item) => {
+              const isActive =
+                item.id != null && selectedCategoryIds.includes(item.id);
               const isDisabled = item.id == null;
               return (
                 <button
                   key={item.label}
                   onClick={() => {
                     if (isDisabled) return;
-                    setPage(1);
                     setSelectedCategoryIds((prev) =>
                       prev.includes(item.id as number)
                         ? prev.filter((id) => id !== item.id)
@@ -448,8 +457,6 @@ export default function VenuesScreen() {
                     isDisabled
                       ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
                       : isActive
-                      ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
-                      : index === 0 && selectedCategoryIds.length === 0
                       ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
                       : "border-gray-200 bg-white text-gray-800"
                   }`}
@@ -472,14 +479,14 @@ export default function VenuesScreen() {
           >
             <div className="flex gap-2 overflow-x-auto pb-1">
               {districtFilters.map((item) => {
-                const isActive = item.id != null && selectedDistrictIds.includes(item.id);
+                const isActive =
+                  item.id != null && selectedDistrictIds.includes(item.id);
                 const isDisabled = item.id == null;
                 return (
                   <button
                     key={item.label}
                     onClick={() => {
                       if (isDisabled) return;
-                      setPage(1);
                       setSelectedDistrictIds((prev) =>
                         prev.includes(item.id as number)
                           ? prev.filter((id) => id !== item.id)
@@ -501,36 +508,24 @@ export default function VenuesScreen() {
               })}
             </div>
             {filtersError && (
-              <p className="px-1 pb-1 text-[10px] text-red-500/80">{filtersError}</p>
+              <p className="px-1 pb-1 text-[10px] text-red-500/80">
+                {filtersError}
+              </p>
             )}
           </motion.div>
         </section>
 
         {/* All venues */}
         <section>
-          <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
+          <h2 className="mb-3 text-base font-semibold text-gray-900">
+            All Venues
+          </h2>
           <div className="space-y-4">
             {allVenues.map((venue, index) =>
               renderVenueCard(venue, index, "full")
             )}
           </div>
         </section>
-
-        {hasMore && (
-          <div className="mt-4 flex justify-center pb-8">
-            <button
-              disabled={isLoadingMore}
-              onClick={() => {
-                if (!isLoadingMore && hasMore) {
-                  setPage((p) => p + 1);
-                }
-              }}
-              className="inline-flex items-center rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-medium text-gray-800 shadow-[0_10px_30px_rgba(15,23,42,0.08)] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isLoadingMore ? "Loading more…" : "Load more experiences"}
-            </button>
-          </div>
-        )}
       </div>
     );
   }, [
@@ -538,58 +533,60 @@ export default function VenuesScreen() {
     loading,
     venues,
     search,
+    hasActiveFilters,
     selectedCategoryIds,
     selectedDistrictIds,
     districtOpen,
     categoryFilters,
+    districtFilters,
     filtersError,
-    hasMore,
-    isLoadingMore,
   ]);
 
-  // ---- RENDER ----
+  // ---- RENDER ROOT ----
 
   return (
     <LayoutGroup id="venues">
       <div className="min-h-screen bg-gradient-to-b from-[#f7f7f8] to-white px-5 pb-24 pt-8">
         <div className="mx-auto w-full max-w-5xl space-y-8">
-          {/* Notch header – scroll animation */}
-          <motion.section
-            style={{ opacity: heroOpacity, scale: heroScale, y: heroTranslateY }}
-            transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
-            className="rounded-3xl border border-slate-100 bg-white/90 px-6 pb-5 pt-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur"
-          >
-            <h1 className="text-center text-[24px] sm:text-[28px] font-light text-gray-900">
-              Discover where your presence matters
-            </h1>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Find curated creator experiences across the city.
-            </p>
+          {/* HERO — SOLO se non ci sono filtri attivi */}
+          {!hasActiveFilters && (
+            <motion.section
+              style={{ opacity: heroOpacity, scale: heroScale, y: heroTranslateY }}
+              transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
+              className="rounded-3xl border border-slate-100 bg-white/90 px-6 pb-5 pt-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur"
+            >
+              <h1 className="text-center text-[24px] sm:text-[28px] font-light text-gray-900">
+                Discover where your presence matters
+              </h1>
+              <p className="mt-2 text-center text-sm text-gray-600">
+                Find curated creator experiences across the city.
+              </p>
 
-            <div className="mt-5 flex items-center gap-3">
-              <div className="flex-1 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-                <Search className="h-4 w-4 text-gray-400" />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search venues or areas"
-                  className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
-                />
+              <div className="mt-5 flex items-center gap-3">
+                <div className="flex-1 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                  <Search className="h-4 w-4 text-gray-400" />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search venues or areas"
+                    className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                  />
+                </div>
+                <button
+                  onClick={() => setCalendarOpen(true)}
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+                >
+                  <Calendar className="h-4 w-4" />
+                </button>
               </div>
-              <button
-                onClick={() => setCalendarOpen(true)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
-              >
-                <Calendar className="h-4 w-4" />
-              </button>
-            </div>
-          </motion.section>
+            </motion.section>
+          )}
 
           {content}
         </div>
       </div>
 
-      {/* Search overlay — Spotlight style */}
+      {/* Search overlay */}
       <AnimatePresence>
         {searchOverlayOpen && (
           <motion.div
@@ -639,7 +636,7 @@ export default function VenuesScreen() {
         )}
       </AnimatePresence>
 
-      {/* Calendar overlay — month modal; sets selectedDate (YYYY-MM-DD) */}
+      {/* Calendar overlay */}
       <AnimatePresence>
         {calendarOpen && (
           <motion.div
@@ -659,7 +656,9 @@ export default function VenuesScreen() {
             >
               <div className="mb-4 flex items-start justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-900">Select date</h2>
+                  <h2 className="text-sm font-semibold text-gray-900">
+                    Select date
+                  </h2>
                   <p className="mt-1 text-xs text-gray-500">
                     Choose a day to refine your experiences.
                   </p>
@@ -724,4 +723,3 @@ export default function VenuesScreen() {
     </LayoutGroup>
   );
 }
-
