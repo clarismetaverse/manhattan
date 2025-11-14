@@ -131,6 +131,49 @@ type DetailVenue = {
 const CATEGORY_FILTERS = ["Sport", "Cocktail", "Beauty", "Lunch", "Breakfast"];
 const DISTRICT_FILTERS = ["Seminyak", "Canggu", "Uluwatu", "Kerobokan", "Pererenan"];
 
+/**
+ * Codex Patch — Make sticky bar Search & Calendar interactive
+ *
+ * Goal:
+ * Keep the existing VenuesScreen layout and logic, but:
+ *
+ *  - Search icon (in the sticky bar):
+ *      • Opens a floating, Spotlight-style overlay.
+ *      • Overlay: dark blurred backdrop + centered white card with:
+ *            - Title: “Search experiences”
+ *            - Subtitle: “Find venues, districts or vibes”
+ *            - Text input bound to the same `search` state used in the hero.
+ *      • Closing: tapping an X button or tapping the backdrop.
+ *
+ *  - Calendar icon (in the sticky bar):
+ *      • Opens a simple month modal overlay.
+ *      • Overlay: same dark blurred backdrop + centered white card with:
+ *            - Title: “Select date”
+ *            - A simple month grid (1–30) as buttons.
+ *            - Selecting a day updates a local `selectedDay` state.
+ *      • No real date filter logic is required; this is just UI for now.
+ *      • Closing: tapping an X button or tapping the backdrop.
+ *
+ * Implementation details:
+ *  1. Add new React state in VenuesScreen:
+ *        const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
+ *        const [calendarOpen, setCalendarOpen] = useState(false);
+ *        const [selectedDay, setSelectedDay] = useState<number | null>(null);
+ *
+ *  2. Update the Search + Calendar icon buttons in the sticky filter bar
+ *     so they call setSearchOverlayOpen(true) and setCalendarOpen(true).
+ *
+ *  3. At the bottom of the component JSX (inside LayoutGroup, but after the main
+ *     page content), add two <AnimatePresence> blocks:
+ *        - One for the Search overlay (Spotlight style).
+ *        - One for the Calendar month modal.
+ *
+ *     Both overlays should:
+ *        - Use motion.div for the backdrop (fade in/out).
+ *        - Use motion.div for the card (scale + y + opacity in/out).
+ *        - Have z-index higher than VenueDetail so they appear on top (e.g. z-50).
+ */
+
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +181,9 @@ export default function VenuesScreen() {
   const [open, setOpen] = useState<DetailVenue | null>(null);
   const [search, setSearch] = useState("");
   const [districtOpen, setDistrictOpen] = useState(false);
+  const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   // Scroll-based hero animation (fade + compress)
   const { scrollY } = useScroll();
@@ -377,20 +423,20 @@ export default function VenuesScreen() {
           <div className="mb-2 flex items-center justify-between">
             <div className="inline-flex gap-2">
               <button
+                onClick={() => setSearchOverlayOpen(true)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.08)]"
-                // TODO: scroll to top / open search sheet
               >
                 <Search className="h-4 w-4 text-gray-500" />
               </button>
               <button
+                onClick={() => setCalendarOpen(true)}
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_8px_20px_rgba(15,23,42,0.12)]"
-                // TODO: open calendar sheet
               >
                 <Calendar className="h-4 w-4" />
               </button>
             </div>
 
-            {/* District toggle pill */}
+            {/* District toggle pill (collapsable row) */}
             <button
               onClick={() => setDistrictOpen((v) => !v)}
               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
@@ -500,6 +546,121 @@ export default function VenuesScreen() {
           {content}
         </div>
       </div>
+
+      {/* Search overlay — Spotlight style */}
+      <AnimatePresence>
+        {searchOverlayOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSearchOverlayOpen(false)}
+          >
+            <motion.div
+              className="relative w-[90%] max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 250, damping: 24, mass: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-900">Search experiences</h2>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Find venues, districts or vibes across the city.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSearchOverlayOpen(false)}
+                  className="ml-3 text-xs text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
+                <Search className="h-4 w-4 text-gray-400" />
+                <input
+                  autoFocus
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search venues, districts or areas"
+                  className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Calendar overlay — simple month modal */}
+      <AnimatePresence>
+        {calendarOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setCalendarOpen(false)}
+          >
+            <motion.div
+              className="relative w-[90%] max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 240, damping: 24, mass: 0.9 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-gray-900">Select date</h2>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Choose a day to refine your experiences.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setCalendarOpen(false)}
+                  className="ml-3 text-xs text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Simple month grid (1–30) */}
+              <div className="mb-3 grid grid-cols-7 gap-2 text-center text-xs text-gray-500">
+                {["M", "T", "W", "T", "F", "S", "S"].map((d) => (
+                  <div key={d} className="font-medium">
+                    {d}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-2 text-sm">
+                {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
+                  <button
+                    key={day}
+                    onClick={() => setSelectedDay(day)}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs ${
+                      selectedDay === day
+                        ? "border-red-500 bg-red-500 text-white"
+                        : "border-gray-200 bg-white text-gray-700"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                ))}
+              </div>
+
+              {selectedDay && (
+                <p className="mt-4 text-xs text-gray-500">
+                  Selected day: <span className="font-medium text-gray-800">{selectedDay}</span>
+                </p>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {open && <VenueDetail venue={open as any} onClose={() => setOpen(null)} />}
