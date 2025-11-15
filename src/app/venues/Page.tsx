@@ -212,23 +212,73 @@ export default function VenuesScreen() {
           {error}
         </div>
       );
-    if (!venues.length)
-      return (
-        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
-          No venues found.
-        </div>
-      );
-
+    
     const normalizedSearch = search.trim().toLowerCase();
-    const visibleVenues = normalizedSearch
-      ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
-      : venues;
-
     const hasActiveFilters =
       normalizedSearch.length > 0 ||
       selectedCategoryIds.length > 0 ||
       selectedDistrictIds.length > 0 ||
       Boolean(selectedDate);
+    
+    if (!venues.length)
+      return (
+        <div className="flex flex-col items-center justify-center px-5 py-24 text-center">
+          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-50">
+            <svg
+              className="h-12 w-12 text-gray-300"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </div>
+          <h3 className="mb-2 text-lg font-semibold text-gray-900">
+            No venues found
+          </h3>
+          <p className="mb-6 max-w-sm text-sm text-gray-500">
+            {hasActiveFilters
+              ? "Try adjusting your filters or search terms to find more venues."
+              : "We couldn't find any venues at the moment. Please try again later."}
+          </p>
+          {hasActiveFilters && (
+            <button
+              onClick={() => {
+                setSelectedCategoryIds([]);
+                setSelectedDistrictIds([]);
+                setSearch("");
+                setSelectedDate(null);
+                setSelectedDay(null);
+              }}
+              className="inline-flex items-center gap-2 rounded-full bg-red-600 px-6 py-2.5 text-sm font-medium text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)] transition-all hover:bg-red-700 active:scale-95"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              Clear all filters
+            </button>
+          )}
+        </div>
+      );
+
+    const visibleVenues = normalizedSearch
+      ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
+      : venues;
 
     // When filters are active, show all venues in one list
     // When no filters, split into pinned (first 5) and all (rest)
