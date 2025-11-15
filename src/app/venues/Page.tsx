@@ -14,10 +14,9 @@
  * - POST body to RestaurantUpgradeTop:
  *      {
  *        page: 1,
- *        search: string,
+ *        search: "",
  *        category_ids: number[],
- *        district_ids: number[],
- *        date: string | null
+ *        district_ids: number[]
  *      }
  *
  * - Extra:
@@ -161,11 +160,12 @@ export default function VenuesScreen() {
     setError(null);
 
     const body = {
-      page: 1,
-      search: search.trim(),
-      category_ids: selectedCategoryIds,
-      district_ids: selectedDistrictIds,
-      date: selectedDate,
+      page: 1, // per ora fisso, poi lo colleghiamo allo scroll infinito
+      search: search.trim() || "", // text
+      category_ids: selectedCategoryIds, // integer[]
+      district_ids: selectedDistrictIds, // integer[]
+      // se in futuro riaggiungiamo il filtro per data
+      // date: selectedDate,
     };
 
     fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
@@ -196,7 +196,7 @@ export default function VenuesScreen() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
+  }, [search, selectedCategoryIds, selectedDistrictIds /*, selectedDate */]);
 
   // ---- CONTENT (pinned + list) ----
   const content = useMemo(() => {
