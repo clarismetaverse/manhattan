@@ -227,6 +227,11 @@ export default function VenuesScreen() {
     const pinnedVenues = visibleVenues.slice(0, 5);
     const pinnedIds = new Set(pinnedVenues.map((v) => v.id));
     const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.id));
+    const hasActiveFilters =
+      normalizedSearch.length > 0 ||
+      selectedCategoryIds.length > 0 ||
+      selectedDistrictIds.length > 0 ||
+      Boolean(selectedDate);
 
     const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
       const id = String(venue.id);
@@ -239,6 +244,17 @@ export default function VenuesScreen() {
       return (
         <motion.button
           key={id}
+          layout
+          initial={{ opacity: 0, y: 18, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 22,
+            mass: 0.9,
+            delay: index * 0.03,
+          }}
           onClick={async () => {
             if (coverUrl) {
               const img = new Image();
@@ -278,9 +294,12 @@ export default function VenuesScreen() {
             };
             setOpen(detail);
           }}
-          whileHover={isPinned ? { y: -8, rotateX: -4, rotateY: 4 } : { y: -4 }}
+          whileHover={
+            isPinned
+              ? { y: -8, rotateX: -4, rotateY: 4 }
+              : { y: -4 }
+          }
           whileTap={isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 260, damping: 22, mass: 0.9 }}
           className={`group relative block overflow-hidden rounded-[22px] bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out ${
             size === "compact" ? "min-w-[260px] max-w-[280px]" : "w-full"
           }`}
@@ -325,19 +344,21 @@ export default function VenuesScreen() {
     return (
       <div className="space-y-8">
         {/* Pinned section */}
-        {pinnedVenues.length > 0 && (
+        {!hasActiveFilters && pinnedVenues.length > 0 && (
           <section>
             <h2 className="mb-3 text-base font-semibold text-gray-900">Pinned This Week</h2>
             <div className="-mx-5 overflow-x-auto pb-1">
-              <motion.div
-                className="flex gap-4 px-5"
-                layout
-                transition={{ type: "spring", stiffness: 260, damping: 26 }}
-              >
-                {pinnedVenues.map((venue, index) =>
-                  renderVenueCard(venue, index, "compact")
-                )}
-              </motion.div>
+              <AnimatePresence mode="popLayout">
+                <motion.div
+                  className="flex gap-4 px-5"
+                  layout
+                  transition={{ type: "spring", stiffness: 260, damping: 26 }}
+                >
+                  {pinnedVenues.map((venue, index) =>
+                    renderVenueCard(venue, index, "compact")
+                  )}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </section>
         )}
@@ -472,11 +493,13 @@ export default function VenuesScreen() {
         {/* All venues */}
         <section>
           <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
-          <div className="space-y-4">
-            {allVenues.map((venue, index) =>
-              renderVenueCard(venue, index, "full")
-            )}
-          </div>
+          <AnimatePresence mode="popLayout">
+            <div className="space-y-4">
+              {allVenues.map((venue, index) =>
+                renderVenueCard(venue, index, "full")
+              )}
+            </div>
+          </AnimatePresence>
         </section>
       </div>
     );
@@ -491,6 +514,7 @@ export default function VenuesScreen() {
     categoryFilters,
     districtFilters,
     filtersError,
+    selectedDate,
   ]);
 
   // ---- RENDER ----
