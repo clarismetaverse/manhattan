@@ -224,14 +224,16 @@ export default function VenuesScreen() {
       ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
       : venues;
 
-    const pinnedVenues = visibleVenues.slice(0, 5);
-    const pinnedIds = new Set(pinnedVenues.map((v) => v.id));
-    const allVenues = visibleVenues.filter((v) => !pinnedIds.has(v.id));
     const hasActiveFilters =
       normalizedSearch.length > 0 ||
       selectedCategoryIds.length > 0 ||
       selectedDistrictIds.length > 0 ||
       Boolean(selectedDate);
+
+    // When filters are active, show all venues in one list
+    // When no filters, split into pinned (first 5) and all (rest)
+    const pinnedVenues = hasActiveFilters ? [] : visibleVenues.slice(0, 5);
+    const allVenues = hasActiveFilters ? visibleVenues : visibleVenues.slice(5);
 
     const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
       const id = String(venue.id);
