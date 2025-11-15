@@ -153,23 +153,22 @@ export default function VenuesScreen() {
     return () => controller.abort();
   }, []);
 
-  // ---- FETCH FROM getRestaurantNEW ----
+  // ---- FETCH FROM RestaurantUpgradeTop ----
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
 
     const body = {
-      city_id: 3,
-      page: 1,
-      search: search.trim() || "",
-      area: selectedDistrictIds,
-      category: selectedCategoryIds,
-      content: [],
-      booking: [],
+      page: 1, // per ora fisso, poi lo colleghiamo allo scroll infinito
+      search: search.trim() || "", // text
+      category_ids: selectedCategoryIds, // integer[]
+      district_ids: selectedDistrictIds, // integer[]
+      // se in futuro riaggiungiamo il filtro per data
+      // date: selectedDate,
     };
 
-    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/getRestaurantNEW", {
+    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -177,30 +176,10 @@ export default function VenuesScreen() {
     })
       .then(async (res) => {
         if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const json = await res.json();
+        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
 
         let items: Venue[] = [];
-        
-        // Handle grouped response format (json.filt)
-        if (json.filt) {
-          type RestaurantRecord = { id: number; [key: string]: unknown };
-          const restaurantMap = new Map<number, RestaurantRecord>();
-
-          Object.values(json.filt).forEach((group: unknown) => {
-            if (Array.isArray(group)) {
-              (group as RestaurantRecord[]).forEach((restaurant) => {
-                if (restaurant?.id) {
-                  restaurantMap.set(restaurant.id, restaurant);
-                }
-              });
-            } else if (group && typeof group === 'object' && 'id' in group) {
-              const r = group as RestaurantRecord;
-              if (r.id) restaurantMap.set(r.id, r);
-            }
-          });
-
-          items = Array.from(restaurantMap.values()) as Venue[];
-        } else if (Array.isArray(json)) {
+        if (Array.isArray(json)) {
           items = json;
         } else if (Array.isArray(json.items)) {
           items = json.items;
@@ -217,7 +196,7 @@ export default function VenuesScreen() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [search, selectedCategoryIds, selectedDistrictIds]);
+  }, [search, selectedCategoryIds, selectedDistrictIds /*, selectedDate */]);
 
   // ---- CONTENT (pinned + list) ----
   const content = useMemo(() => {
