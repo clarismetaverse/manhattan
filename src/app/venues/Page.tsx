@@ -401,22 +401,44 @@ export default function VenuesScreen() {
               </button>
             </div>
 
-            {/* District toggle pill */}
-            <button
-              onClick={() => setDistrictOpen((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
-            >
-              <span>Districts</span>
-              <span className="h-[3px] w-[3px] rounded-full bg-gray-400" />
-              <span className="text-gray-700">All</span>
-              <span
-                className={`ml-1 text-[10px] transition-transform ${
-                  districtOpen ? "rotate-180" : ""
-                }`}
+            <div className="inline-flex items-center gap-2">
+              {/* Clear all filters button */}
+              {(selectedCategoryIds.length > 0 || 
+                selectedDistrictIds.length > 0 || 
+                search.trim().length > 0 || 
+                selectedDate) && (
+                <button
+                  onClick={() => {
+                    setSelectedCategoryIds([]);
+                    setSelectedDistrictIds([]);
+                    setSearch("");
+                    setSelectedDate(null);
+                    setSelectedDay(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 shadow-[0_4px_12px_rgba(248,113,113,0.15)] transition-all hover:bg-red-100"
+                >
+                  <span className="text-[10px]">✕</span>
+                  <span>Clear</span>
+                </button>
+              )}
+              
+              {/* District toggle pill */}
+              <button
+                onClick={() => setDistrictOpen((v) => !v)}
+                className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
               >
-                ▾
-              </span>
-            </button>
+                <span>Districts</span>
+                <span className="h-[3px] w-[3px] rounded-full bg-gray-400" />
+                <span className="text-gray-700">All</span>
+                <span
+                  className={`ml-1 text-[10px] transition-transform ${
+                    districtOpen ? "rotate-180" : ""
+                  }`}
+                >
+                  ▾
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Row 1 — categories (from API) */}
