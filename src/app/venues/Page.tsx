@@ -235,7 +235,11 @@ export default function VenuesScreen() {
     const pinnedVenues = hasActiveFilters ? [] : visibleVenues.slice(0, 5);
     const allVenues = hasActiveFilters ? visibleVenues : visibleVenues.slice(5);
 
-    const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
+    const renderVenueCard = (
+      venue: Venue,
+      index: number,
+      size: "compact" | "full"
+    ) => {
       const id = String(venue.id);
       const coverUrl = venue.Cover?.url ?? venue.Background?.url ?? "";
       const badgeLabel = getBadgeLabel(venue);
@@ -247,15 +251,19 @@ export default function VenuesScreen() {
         <motion.button
           key={id}
           layout
-          initial={{ opacity: 0, y: 18, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          // buttery entry
+          initial={{ opacity: 0, y: 18, scale: 0.97, filter: "blur(4px)" }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          // buttery exit (fade + leggero shift)
+          exit={{ opacity: 0, y: -6, scale: 0.97, filter: "blur(4px)" }}
           transition={{
             type: "spring",
-            stiffness: 260,
-            damping: 22,
+            stiffness: 210,
+            damping: 28,
             mass: 0.9,
-            delay: index * 0.03,
+            opacity: { duration: 0.28, ease: [0.22, 0.61, 0.36, 1] },
+            filter: { duration: 0.28 },
+            delay: index * 0.03, // piccolo stagger
           }}
           onClick={async () => {
             if (coverUrl) {
@@ -296,11 +304,7 @@ export default function VenuesScreen() {
             };
             setOpen(detail);
           }}
-          whileHover={
-            isPinned
-              ? { y: -8, rotateX: -4, rotateY: 4 }
-              : { y: -4 }
-          }
+          whileHover={isPinned ? { y: -8, rotateX: -4, rotateY: 4 } : { y: -4 }}
           whileTap={isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }}
           className={`group relative block overflow-hidden rounded-[22px] bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out ${
             size === "compact" ? "min-w-[260px] max-w-[280px]" : "w-full"
@@ -348,13 +352,19 @@ export default function VenuesScreen() {
         {/* Pinned section */}
         {!hasActiveFilters && pinnedVenues.length > 0 && (
           <section>
-            <h2 className="mb-3 text-base font-semibold text-gray-900">Pinned This Week</h2>
+            <h2 className="mb-3 text-base font-semibold text-gray-900">
+              Pinned This Week
+            </h2>
             <div className="-mx-5 overflow-x-auto pb-1">
-              <AnimatePresence mode="popLayout">
+              <AnimatePresence mode="wait">
                 <motion.div
+                  key={`pinned-${pinnedVenues.map((v) => v.id).join(",")}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
                   className="flex gap-4 px-5"
                   layout
-                  transition={{ type: "spring", stiffness: 260, damping: 26 }}
                 >
                   {pinnedVenues.map((venue, index) =>
                     renderVenueCard(venue, index, "compact")
@@ -495,12 +505,23 @@ export default function VenuesScreen() {
         {/* All venues */}
         <section>
           <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
-          <AnimatePresence mode="popLayout">
-            <div className="space-y-4">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={
+                hasActiveFilters
+                  ? `filtered-${normalizedSearch}-${selectedCategoryIds.join(",")}-${selectedDistrictIds.join(",")}-${selectedDate ?? "none"}`
+                  : "default-list"
+              }
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
+              className="space-y-4"
+            >
               {allVenues.map((venue, index) =>
                 renderVenueCard(venue, index, "full")
               )}
-            </div>
+            </motion.div>
           </AnimatePresence>
         </section>
       </div>
