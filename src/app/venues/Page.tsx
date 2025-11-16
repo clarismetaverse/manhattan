@@ -92,7 +92,11 @@ const FILTER_ENDPOINT =
 export default function VenuesScreen() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
 
   const [open, setOpen] = useState<DetailVenue | null>(null);
   const [search, setSearch] = useState("");
@@ -111,6 +115,9 @@ export default function VenuesScreen() {
   const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>([]);
   const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>([]);
   const [filtersError, setFiltersError] = useState<string | null>(null);
+
+  // Infinite scroll observer ref
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
 
   // Scroll-based hero animation
   const { scrollY } = useScroll();
@@ -158,14 +165,14 @@ export default function VenuesScreen() {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
+    setCurrentPage(1);
+    setHasNextPage(false);
 
     const body = {
-      page: 1, // per ora fisso, poi lo colleghiamo allo scroll infinito
-      search: search.trim() || "", // text
-      category_ids: selectedCategoryIds, // integer[]
-      district_ids: selectedDistrictIds, // integer[]
-      // se in futuro riaggiungiamo il filtro per data
-      // date: selectedDate,
+      page: 1,
+      search: search.trim() || "",
+      category_ids: selectedCategoryIds,
+      district_ids: selectedDistrictIds,
     };
 
     fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
@@ -179,13 +186,17 @@ export default function VenuesScreen() {
         const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
 
         let items: Venue[] = [];
+        let nextPage: number | null = null;
+        
         if (Array.isArray(json)) {
           items = json;
         } else if (Array.isArray(json.items)) {
           items = json.items;
+          nextPage = json.nextPage ?? null;
         }
 
         setVenues(items);
+        setHasNextPage(nextPage !== null);
       })
       .catch((err) => {
         if ((err as any).name !== "AbortError") {
@@ -196,7 +207,73 @@ export default function VenuesScreen() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [search, selectedCategoryIds, selectedDistrictIds /*, selectedDate */]);
+  }, [search, selectedCategoryIds, selectedDistrictIds]);
+
+  // ---- LOAD MORE (infinite scroll) ----
+  const loadMoreVenues = React.useCallback(() => {
+    if (loadingMore || !hasNextPage) return;
+
+    setLoadingMore(true);
+    const nextPage = currentPage + 1;
+
+    const body = {
+      page: nextPage,
+      search: search.trim() || "",
+      category_ids: selectedCategoryIds,
+      district_ids: selectedDistrictIds,
+    };
+
+    fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
+        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
+
+        let items: Venue[] = [];
+        let nextPageNum: number | null = null;
+        
+        if (Array.isArray(json)) {
+          items = json;
+        } else if (Array.isArray(json.items)) {
+          items = json.items;
+          nextPageNum = json.nextPage ?? null;
+        }
+
+        setVenues(prev => [...prev, ...items]);
+        setCurrentPage(nextPage);
+        setHasNextPage(nextPageNum !== null);
+      })
+      .catch((err) => {
+        console.error("Error loading more venues:", err);
+      })
+      .finally(() => setLoadingMore(false));
+  }, [loadingMore, hasNextPage, currentPage, search, selectedCategoryIds, selectedDistrictIds]);
+
+  // ---- INTERSECTION OBSERVER FOR INFINITE SCROLL ----
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !loadingMore) {
+          loadMoreVenues();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [hasNextPage, loadingMore, loadMoreVenues]);
 
   // ---- CONTENT (pinned + list) ----
   const content = useMemo(() => {
@@ -595,6 +672,13 @@ export default function VenuesScreen() {
               )}
             </motion.div>
           </AnimatePresence>
+          
+          {/* Infinite scroll trigger */}
+          <div ref={loadMoreRef} className="py-8 text-center">
+            {loadingMore && (
+              <div className="text-sm text-gray-500">Loading more venues…</div>
+            )}
+          </div>
         </section>
       </div>
     );
