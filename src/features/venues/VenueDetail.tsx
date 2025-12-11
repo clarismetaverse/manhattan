@@ -136,7 +136,54 @@ export default function VenueDetail({
               <button
                 onClick={() => setBriefOpen(v => !v)}
                 className="text-sm text-stone-600 underline"
-              >
+              > 
+
+import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
+
+// Dummy data for now – later you can load from Xano
+const demoFeaturedCollabs = [
+  {
+    id: "sofiatravels",
+    creatorHandle: "@sofiatravels",
+    contentType: "3 × Story",
+    badge: "Top pick",
+    imageUrl:
+      "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=800",
+  },
+  {
+    id: "jakeson",
+    creatorHandle: "@jakeson",
+    contentType: "Reel",
+    badge: undefined,
+    imageUrl:
+      "https://images.pexels.com/photos/2983101/pexels-photo-2983101.jpeg?auto=compress&cs=tinysrgb&w=800",
+  },
+];
+
+function VenueDetail(/* props */) {
+  // ...your existing code...
+
+  return (
+    <div className="space-y-6">
+      {/* About block (already existing) */}
+      {/* ... */}
+
+      {/* NEW: featured collabs, horizontal pinned */}
+      <FeaturedCollabsStrip
+        collabs={demoFeaturedCollabs}
+        onViewAll={() => {
+          // TODO: open your full gallery / bottom sheet
+          // e.g. setFeaturedOpen(true)
+          console.log("View all featured collabs");
+        }}
+      />
+
+      {/* Your "Select a Collaboration" section */}
+      {/* ... */}
+    </div>
+  );
+}
+      
                 {briefOpen ? "Hide brief" : "Creator brief"}
               </button>
             </div>
