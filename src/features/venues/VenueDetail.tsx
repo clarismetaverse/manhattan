@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Instagram } from "lucide-react";
+import { ArrowLeft, MapPin, Instagram, Utensils, Wine, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import type { Venue } from "./VenueTypes";
 import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
@@ -8,16 +8,16 @@ import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 // Dummy data for now – later you can load from Xano
 const demoFeaturedCollabs = [
   {
-    id: "sofiatravels",
-    creatorHandle: "@sofiatravels",
+    id: "pancakes",
+    creatorHandle: "Pancake Stack",
     contentType: "3 × Story",
     badge: "Top pick",
     imageUrl:
       "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=800",
   },
   {
-    id: "jakeson",
-    creatorHandle: "@jakeson",
+    id: "fries",
+    creatorHandle: "House Fries",
     contentType: "Reel",
     badge: undefined,
     imageUrl:
@@ -53,28 +53,100 @@ export default function VenueDetail({
     () => ({
       0: [],
       1: [
-        { id: "mon-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
-        { id: "mon-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+        {
+          id: "mon-lunch",
+          label: "Lunch",
+          start: { h: 12, m: 0 },
+          end: { h: 15, m: 0 },
+          stepMins: 30,
+        },
+        {
+          id: "mon-dinner",
+          label: "Dinner",
+          start: { h: 18, m: 0 },
+          end: { h: 22, m: 0 },
+          stepMins: 30,
+        },
       ],
       2: [
-        { id: "tue-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
-        { id: "tue-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+        {
+          id: "tue-lunch",
+          label: "Lunch",
+          start: { h: 12, m: 0 },
+          end: { h: 15, m: 0 },
+          stepMins: 30,
+        },
+        {
+          id: "tue-dinner",
+          label: "Dinner",
+          start: { h: 18, m: 0 },
+          end: { h: 22, m: 0 },
+          stepMins: 30,
+        },
       ],
       3: [
-        { id: "wed-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
-        { id: "wed-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+        {
+          id: "wed-lunch",
+          label: "Lunch",
+          start: { h: 12, m: 0 },
+          end: { h: 15, m: 0 },
+          stepMins: 30,
+        },
+        {
+          id: "wed-dinner",
+          label: "Dinner",
+          start: { h: 18, m: 0 },
+          end: { h: 22, m: 0 },
+          stepMins: 30,
+        },
       ],
       4: [
-        { id: "thu-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
-        { id: "thu-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
+        {
+          id: "thu-lunch",
+          label: "Lunch",
+          start: { h: 12, m: 0 },
+          end: { h: 15, m: 0 },
+          stepMins: 30,
+        },
+        {
+          id: "thu-dinner",
+          label: "Dinner",
+          start: { h: 18, m: 0 },
+          end: { h: 22, m: 0 },
+          stepMins: 30,
+        },
       ],
       5: [
-        { id: "fri-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
-        { id: "fri-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 23, m: 0 }, stepMins: 30 },
+        {
+          id: "fri-lunch",
+          label: "Lunch",
+          start: { h: 12, m: 0 },
+          end: { h: 15, m: 0 },
+          stepMins: 30,
+        },
+        {
+          id: "fri-dinner",
+          label: "Dinner",
+          start: { h: 18, m: 0 },
+          end: { h: 23, m: 0 },
+          stepMins: 30,
+        },
       ],
       6: [
-        { id: "sat-brunch", label: "Brunch", start: { h: 11, m: 0 }, end: { h: 14, m: 0 }, stepMins: 30 },
-        { id: "sat-dinner", label: "Dinner", start: { h: 17, m: 30 }, end: { h: 23, m: 0 }, stepMins: 30 },
+        {
+          id: "sat-brunch",
+          label: "Brunch",
+          start: { h: 11, m: 0 },
+          end: { h: 14, m: 0 },
+          stepMins: 30,
+        },
+        {
+          id: "sat-dinner",
+          label: "Dinner",
+          start: { h: 17, m: 30 },
+          end: { h: 23, m: 0 },
+          stepMins: 30,
+        },
       ],
     }),
     []
@@ -184,7 +256,6 @@ export default function VenueDetail({
           <FeaturedCollabsStrip
             collabs={demoFeaturedCollabs}
             onViewAll={() => {
-              // TODO: open full gallery / bottom sheet
               console.log("View all featured collabs");
             }}
           />
@@ -385,6 +456,13 @@ function OfferCard({
   pinned?: boolean;
   collabsLeft?: number;
 }) {
+  const chipLabel =
+    title.toLowerCase().includes("story")
+      ? "Stories Content"
+      : title.toLowerCase().includes("reel")
+      ? "Reel Content"
+      : "Creator Content";
+
   return (
     <motion.button
       layout
@@ -436,24 +514,43 @@ function OfferCard({
               {collabsLeft} left
             </span>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center justify-between gap-2">
             <div className="text-xl font-semibold text-stone-900">{title}</div>
+            <span className="rounded-full bg-stone-100 px-3 py-1 text-[11px] text-stone-600">
+              {chipLabel}
+            </span>
           </div>
+
           <div className="absolute left-3 bottom-3">
             <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
               by venue approval
             </span>
           </div>
+
+          {/* GRID ICONS */}
           <div className="mt-4 grid grid-cols-2 gap-4 text-stone-700">
-            <div>
-              <div className="text-xs tracking-wide">PLATES</div>
-              <div className="text-2xl font-semibold">{plates}</div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFE5EA]">
+                <Utensils className="h-4 w-4 text-[#FF5A7A]" />
+              </div>
+              <div>
+                <div className="text-xs tracking-wide text-stone-500">PLATES</div>
+                <div className="text-lg font-semibold text-stone-900">{plates}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs tracking-wide">DRINKS</div>
-              <div className="text-2xl font-semibold">{drinks}</div>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFE7F5]">
+                <Wine className="h-4 w-4 text-[#FF5A7A]" />
+              </div>
+              <div>
+                <div className="text-xs tracking-wide text-stone-500">DRINKS</div>
+                <div className="text-lg font-semibold text-stone-900">{drinks}</div>
+              </div>
             </div>
           </div>
+
+          {/* Mission copy (collapsible) */}
           <motion.div
             initial={false}
             animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
@@ -461,14 +558,20 @@ function OfferCard({
           >
             <p className="mt-4 text-sm text-stone-600">{mission}</p>
           </motion.div>
-          <div className="mt-3 text-right">
-            <span className="text-sm underline text-stone-700">
+
+          {/* Instructions + value hint */}
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <button className="text-sm underline text-stone-700 flex items-center gap-1">
               Content Instructions
-            </span>
+              <Info className="h-4 w-4 text-[#FF5A7A]" />
+            </button>
+            <div className="text-right">
+              <div className="text-xs text-stone-500">Estimated value</div>
+              <div className="text-sm font-semibold text-stone-900">350K IDR</div>
+            </div>
           </div>
         </>
       )}
     </motion.button>
   );
 }
-
