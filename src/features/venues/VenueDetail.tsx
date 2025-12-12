@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
@@ -62,6 +62,31 @@ export default function VenueDetail({
     timeframeId?: string;
   } | null>(null);
 
+  // ---- GALLERY STATE (new notch thumbnails) ----
+  const galleryImages = useMemo(() => {
+    const raw =
+      (venue as any)?.galleryUrls ??
+      (venue as any)?.gallery ??
+      (venue as any)?.Gallery ??
+      [];
+    const urls: string[] = Array.isArray(raw)
+      ? raw.map((x: any) => (typeof x === "string" ? x : x?.url)).filter(Boolean)
+      : [];
+
+    const cover = venue.image ? [venue.image] : [];
+    const merged = [...cover, ...urls].filter(Boolean);
+
+    return Array.from(new Set(merged));
+  }, [venue]);
+
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveGalleryIndex(0);
+  }, [venue?.id]);
+
+  const activeCoverUrl = galleryImages[activeGalleryIndex] ?? venue.image;
+
   const offer = venue.offers[activeTab] ?? venue.offers[0];
   const enabled = !!selectedOfferId;
   const activeConfirmed =
@@ -112,32 +137,74 @@ export default function VenueDetail({
       }}
     >
       <div className="mx-auto max-w-sm pb-28">
-        {/* Hero */}
+        {/* Hero / Gallery */}
         <div className="relative">
-          <motion.div
-            layoutId={`card-${venue.id}`}
-            className="relative overflow-hidden"
-            style={{ borderRadius: 24 }}
-            transition={{ type: "spring", stiffness: 420, damping: 34 }}
-          >
-            <img
-              src={venue.image}
-              alt={venue.name}
-              className="h-64 w-full object-cover"
-              style={{ borderRadius: 24 }}
-            />
-            <motion.div
-              layoutId={`card-grad-${venue.id}`}
-              className="absolute inset-0"
-              style={{
-                borderRadius: 24,
-                background:
-                  "linear-gradient(to top, rgba(0,0,0,.40), rgba(0,0,0,.10), rgba(0,0,0,0))",
-              }}
-            />
-            <h1 className="absolute bottom-5 left-4 right-4 text-3xl font-semibold text-white drop-shadow-[0_2px_6px_rgba(0,0,0,.5)]">
+          {/* Title outside the cover */}
+          <div className="px-4 pt-2">
+            <h1 className="text-[26px] font-semibold text-stone-900 tracking-tight">
               {venue.name}
             </h1>
+          </div>
+
+          {/* Notch thumbnails under title */}
+          <div className="px-4 mt-3">
+            <div className="rounded-3xl border border-white/60 bg-white/55 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.10)] px-3 py-2">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {galleryImages.map((url, idx) => {
+                  const isActive = idx === activeGalleryIndex;
+                  return (
+                    <button
+                      key={`${url}-${idx}`}
+                      onClick={() => setActiveGalleryIndex(idx)}
+                      className={`relative h-[44px] w-[44px] flex-shrink-0 overflow-hidden rounded-[12px] ring-1 transition-all ${
+                        isActive
+                          ? "ring-[#FF5A7A] shadow-[0_10px_22px_rgba(255,90,122,0.25)] scale-[1.02]"
+                          : "ring-white/70 opacity-90"
+                      }`}
+                      aria-label={`Open image ${idx + 1}`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Gallery thumbnail ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                      {isActive && (
+                        <div className="absolute inset-0 rounded-[12px] ring-2 ring-[#FF5A7A]/70" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Venue name under thumbnails list (as requested) */}
+              <div className="mt-2 px-1">
+                <div className="text-[13px] font-medium text-stone-800">
+                  Wilhelmina
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Cover image (changes on thumbnail click) */}
+          <motion.div
+            key={activeCoverUrl}
+            initial={{ opacity: 0, y: 8, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="px-4 mt-3"
+            layoutId={`card-${venue.id}`}
+          >
+            <div className="relative overflow-hidden rounded-[24px]">
+              <img
+                src={activeCoverUrl}
+                alt={venue.name}
+                className="h-64 w-full object-cover"
+              />
+              <motion.div
+                layoutId={`card-grad-${venue.id}`}
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent"
+              />
+            </div>
           </motion.div>
 
           {/* Back */}
