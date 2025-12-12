@@ -139,7 +139,6 @@ export default function VenueDetail({
 
           {/* Cover image (changes on thumbnail click) */}
           <motion.div
-            key={activeImg}
             initial={{ opacity: 0, y: 8, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
@@ -147,11 +146,19 @@ export default function VenueDetail({
             layoutId={`card-${venue.id}`}
           >
             <div className="relative overflow-hidden rounded-[24px]">
-              <img
-                src={activeImg ?? venue.image}
-                alt={venue.name}
-                className="h-64 w-full object-cover"
-              />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.img
+                  key={activeImg}
+                  src={activeImg ?? venue.image}
+                  alt={venue.name}
+                  className="h-64 w-full object-cover"
+                  initial={{ opacity: 0, scale: 1.02, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, scale: 0.995, filter: "blur(6px)" }}
+                  transition={{ duration: 0.55, ease: [0.22, 0.61, 0.36, 1] }}
+                />
+              </AnimatePresence>
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-black/0" />
               <motion.div
                 layoutId={`card-grad-${venue.id}`}
                 className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent"
