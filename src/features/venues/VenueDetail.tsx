@@ -139,51 +139,13 @@ export default function VenueDetail({
       <div className="mx-auto max-w-sm pb-28">
         {/* Hero / Gallery */}
         <div className="relative">
-          {/* Title outside the cover */}
-          <div className="px-4 pt-2">
-            <h1 className="text-[26px] font-semibold text-stone-900 tracking-tight">
-              {venue.name}
-            </h1>
-          </div>
-
-          {/* Notch thumbnails under title */}
-          <div className="px-4 mt-3">
-            <div className="rounded-3xl border border-white/60 bg-white/55 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.10)] px-3 py-2">
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {galleryImages.map((url, idx) => {
-                  const isActive = idx === activeGalleryIndex;
-                  return (
-                    <button
-                      key={`${url}-${idx}`}
-                      onClick={() => setActiveGalleryIndex(idx)}
-                      className={`relative h-[44px] w-[44px] flex-shrink-0 overflow-hidden rounded-[12px] ring-1 transition-all ${
-                        isActive
-                          ? "ring-[#FF5A7A] shadow-[0_10px_22px_rgba(255,90,122,0.25)] scale-[1.02]"
-                          : "ring-white/70 opacity-90"
-                      }`}
-                      aria-label={`Open image ${idx + 1}`}
-                    >
-                      <img
-                        src={url}
-                        alt={`Gallery thumbnail ${idx + 1}`}
-                        className="h-full w-full object-cover"
-                      />
-                      {isActive && (
-                        <div className="absolute inset-0 rounded-[12px] ring-2 ring-[#FF5A7A]/70" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Venue name under thumbnails list (as requested) */}
-              <div className="mt-2 px-1">
-                <div className="text-[13px] font-medium text-stone-800">
-                  Wilhelmina
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Back */}
+          <button
+            onClick={onClose}
+            className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow ring-1 ring-white/70"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
 
           {/* Cover image (changes on thumbnail click) */}
           <motion.div
@@ -191,7 +153,7 @@ export default function VenueDetail({
             initial={{ opacity: 0, y: 8, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            className="px-4 mt-3"
+            className="px-4 pt-2"
             layoutId={`card-${venue.id}`}
           >
             <div className="relative overflow-hidden rounded-[24px]">
@@ -207,13 +169,41 @@ export default function VenueDetail({
             </div>
           </motion.div>
 
-          {/* Back */}
-          <button
-            onClick={onClose}
-            className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow ring-1 ring-white/70"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          {/* Thumbnails under cover */}
+          <div className="px-4 mt-3">
+            <div className="h-px bg-white/50" />
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {galleryImages.map((url, idx) => {
+                const isActive = idx === activeGalleryIndex;
+                return (
+                  <button
+                    key={`${url}-${idx}`}
+                    onClick={() => setActiveGalleryIndex(idx)}
+                    className={`relative h-[44px] w-[44px] flex-shrink-0 overflow-hidden rounded-[12px] ring-1 transition-all${
+                      isActive
+                        ? " ring-[#FF5A7A] shadow-[0_10px_22px_rgba(255,90,122,0.25)] scale-[1.02]"
+                        : " ring-white/60 opacity-90"
+                    }`}
+                    aria-label={`Open image ${idx + 1}`}
+                  >
+                    <img
+                      src={url}
+                      alt={`Gallery thumbnail ${idx + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    {isActive && (
+                      <div className="absolute inset-0 rounded-[12px] ring-2 ring-[#FF5A7A]/70" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Venue name under thumbnails */}
+          <div className="px-4 mt-2 text-[18px] font-semibold text-stone-900 tracking-tight">
+            {venue.name}
+          </div>
         </div>
 
         {/* About */}
@@ -221,7 +211,7 @@ export default function VenueDetail({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
-          className="mx-4 -mt-4 rounded-2xl bg-white/65 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.08)] p-4"
+          className="mx-4 mt-4 rounded-2xl bg-white/65 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.08)] p-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-stone-700">
