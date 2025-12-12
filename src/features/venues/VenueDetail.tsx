@@ -1,29 +1,33 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import type { Venue } from "./VenueTypes";
 import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 
-// --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
+// --- Cartoonish Emoji Icons ---
 const PlateIcon = () => (
-  <span className="text-xl leading-none" role="img" aria-label="plates">🥗</span>
+  <span className="text-xl leading-none" role="img" aria-label="plates">
+    🥗
+  </span>
 );
-
 const DrinkIcon = () => (
-  <span className="text-xl leading-none" role="img" aria-label="drinks">🍷</span>
+  <span className="text-xl leading-none" role="img" aria-label="drinks">
+    🍷
+  </span>
 );
-
 const DessertIcon = () => (
-  <span className="text-xl leading-none" role="img" aria-label="dessert">🍰</span>
+  <span className="text-xl leading-none" role="img" aria-label="dessert">
+    🍰
+  </span>
 );
-
 const ChampagneIcon = () => (
-  <span className="text-xl leading-none" role="img" aria-label="champagne">🥂</span>
+  <span className="text-xl leading-none" role="img" aria-label="champagne">
+    🥂
+  </span>
 );
 
-
-// Dummy featured collabs (no @handles shown)
+// Dummy featured collabs
 const demoFeaturedCollabs = [
   {
     id: "pancakes",
@@ -54,6 +58,7 @@ export default function VenueDetail({
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [briefOpen, setBriefOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+
   const [confirmedSlot, setConfirmedSlot] = useState<{
     iso: string;
     date: string;
@@ -61,6 +66,9 @@ export default function VenueDetail({
     offerId: string;
     timeframeId?: string;
   } | null>(null);
+
+  // ✅ refs for smooth scroll-to-card
+  const offerCardRef = useRef<HTMLDivElement | null>(null);
 
   const offer = venue.offers[activeTab] ?? venue.offers[0];
   const enabled = !!selectedOfferId;
@@ -98,7 +106,31 @@ export default function VenueDetail({
     []
   );
 
+  // ✅ when selecting an offer: auto-open brief + center card
+  useEffect(() => {
+    if (!selectedOfferId) return;
+
+    // open creator brief automatically
+    setBriefOpen(true);
+
+    // scroll to the card after DOM updates
+    const raf = requestAnimationFrame(() => {
+      offerCardRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "nearest",
+      });
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [selectedOfferId]);
+
   if (!offer) return null;
+
+  const handleSelectOffer = (offerId: string) => {
+    setSelectedOfferId((prev) => (prev === offerId ? null : offerId));
+    // briefOpen + scroll are handled by useEffect when selectedOfferId becomes truthy
+  };
 
   return (
     <motion.div
@@ -140,7 +172,6 @@ export default function VenueDetail({
             </h1>
           </motion.div>
 
-          {/* Back */}
           <button
             onClick={onClose}
             className="absolute left-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-md shadow ring-1 ring-white/70"
@@ -217,9 +248,7 @@ export default function VenueDetail({
               <h3 className="text-[15px] font-semibold text-stone-900 tracking-tight">
                 Select a Collaboration
               </h3>
-              <span className="text-[12px] text-stone-500">
-                Compare perks &amp; requirements
-              </span>
+              <span className="text-[12px] text-stone-500">Compare perks &amp; requirements</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -269,19 +298,19 @@ export default function VenueDetail({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25 }}
               className="mx-4 mt-4"
+              // ✅ scroll target
+              ref={offerCardRef}
             >
               <OfferCard
                 offerId={offer.id}
                 title={offer.title}
                 plates={offer.plates ?? 0}
                 drinks={offer.drinks ?? 0}
-                dessert={offer.dessert ?? 0}
-                champagne={offer.champagne ?? 0}
+                dessert={(offer as any).dessert ?? 0}
+                champagne={(offer as any).champagne ?? 0}
                 mission={offer.mission}
                 isSelected={selectedOfferId === offer.id}
-                onToggle={() =>
-                  setSelectedOfferId((prev) => (prev === offer.id ? null : offer.id))
-                }
+                onToggle={() => handleSelectOffer(offer.id)}
                 collabsLeft={3}
               />
             </motion.section>
@@ -328,9 +357,7 @@ export default function VenueDetail({
               className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all"
               onClick={() => enabled && setSheetOpen(true)}
             >
-              {activeConfirmed?.timeLabel
-                ? `Confirm ${activeConfirmed.timeLabel}`
-                : "Select date & time"}
+              {activeConfirmed?.timeLabel ? `Confirm ${activeConfirmed.timeLabel}` : "Select date & time"}
             </motion.button>
           </div>
         </div>
@@ -348,7 +375,7 @@ export default function VenueDetail({
   );
 }
 
-/* OfferCard - Cartoon Friendly Instagram-native */
+/* OfferCard */
 function OfferCard({
   title,
   plates,
@@ -397,8 +424,7 @@ function OfferCard({
               borderColor: "#FF5A7A",
             }
           : {
-              boxShadow:
-                "0 2px 12px rgba(0,0,0,0.04)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
               backgroundColor: "rgba(255,255,255,0.7)",
               borderColor: "#F0E6D8",
             }
@@ -408,7 +434,6 @@ function OfferCard({
         pinned ? "rounded-xl px-3 py-3" : "rounded-3xl px-5 py-5"
       }`}
     >
-      {/* Top right badges */}
       <div className="absolute right-4 top-4 flex items-center gap-2">
         {isSelected && (
           <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-stone-600 ring-1 ring-stone-200/50">
@@ -420,7 +445,6 @@ function OfferCard({
         </span>
       </div>
 
-      {/* Title + Content Type Pill */}
       <div className="flex items-center gap-3">
         <div className="text-lg font-semibold text-stone-800 tracking-tight">{title}</div>
         <span className="rounded-full bg-stone-100/80 px-3 py-1 text-[10px] font-medium text-stone-500 uppercase tracking-wide">
@@ -428,9 +452,8 @@ function OfferCard({
         </span>
       </div>
 
-      {/* Perks Grid - 2x2 with vertical layout */}
+      {/* Perks Grid 2x2 */}
       <div className="mt-5 grid grid-cols-2 gap-4">
-        {/* Plates */}
         {plates > 0 && (
           <div className="flex flex-col items-center text-center">
             <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#E8F5E9]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
@@ -443,7 +466,6 @@ function OfferCard({
           </div>
         )}
 
-        {/* Drinks */}
         {drinks > 0 && (
           <div className="flex flex-col items-center text-center">
             <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FCE4EC]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
@@ -456,7 +478,6 @@ function OfferCard({
           </div>
         )}
 
-        {/* Dessert */}
         {dessert > 0 && (
           <div className="flex flex-col items-center text-center">
             <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FFF3E0]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
@@ -469,7 +490,6 @@ function OfferCard({
           </div>
         )}
 
-        {/* Champagne */}
         {champagne > 0 && (
           <div className="flex flex-col items-center text-center">
             <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FFF8E1]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
@@ -483,7 +503,7 @@ function OfferCard({
         )}
       </div>
 
-      {/* Mission collapsible */}
+      {/* Mission collapsible (auto-open when selected) */}
       <motion.div
         initial={false}
         animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
@@ -492,7 +512,6 @@ function OfferCard({
         <p className="mt-4 text-[13px] leading-relaxed text-stone-500">{mission}</p>
       </motion.div>
 
-      {/* Bottom hint */}
       <div className="mt-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 text-stone-400">
           <Info className="h-3.5 w-3.5" />
