@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
@@ -58,7 +58,6 @@ export default function VenueDetail({
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [briefOpen, setBriefOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-
   const [confirmedSlot, setConfirmedSlot] = useState<{
     iso: string;
     date: string;
@@ -67,13 +66,66 @@ export default function VenueDetail({
     timeframeId?: string;
   } | null>(null);
 
-  // ✅ refs for smooth scroll-to-card
+  // ✅ scroll container ref (IMPORTANT)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // ✅ card wrapper ref
   const offerCardRef = useRef<HTMLDivElement | null>(null);
 
   const offer = venue.offers[activeTab] ?? venue.offers[0];
   const enabled = !!selectedOfferId;
   const activeConfirmed =
     confirmedSlot && confirmedSlot.offerId === selectedOfferId ? confirmedSlot : null;
+
+  // ✅ perfect centering helper (scrolls the container, not window)
+  const scrollOfferToCenter = useCallback(() => {
+    const container = scrollContainerRef.current;
+    const el = offerCardRef.current;
+    if (!container || !el) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const elRect = el.getBoundingClientRect();
+
+    // element top relative to container scroll
+    const elTopInContainer = elRect.top - containerRect.top + container.scrollTop;
+
+    // center positioning
+    const targetCenter =
+      elTopInContainer - (container.clientHeight / 2 - elRect.height / 2);
+
+    // ✅ "perfect feeling" offset (tweak 24–64)
+    const PERFECT_OFFSET = 40;
+
+    container.scrollTo({
+      top: Math.max(0, targetCenter - PERFECT_OFFSET),
+      behavior: "smooth",
+    });
+  }, []);
+
+  // ✅ when selecting: open brief + scroll to center (after layout)
+  useEffect(() => {
+    if (!selectedOfferId) return;
+
+    setBriefOpen(true);
+
+    const r1 = requestAnimationFrame(() => {
+      const r2 = requestAnimationFrame(() => {
+        scrollOfferToCenter();
+      });
+      return () => cancelAnimationFrame(r2);
+    });
+
+    return () => cancelAnimationFrame(r1);
+  }, [selectedOfferId, scrollOfferToCenter]);
+
+  const handleSelectOffer = (offerId: string) => {
+    setSelectedOfferId((prev) => (prev === offerId ? null : offerId));
+
+    // extra safety scroll (still smooth)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => scrollOfferToCenter());
+    });
+  };
 
   const weeklyTimeframes = useMemo<Record<number, Timeframe[]>>(
     () => ({
@@ -106,34 +158,11 @@ export default function VenueDetail({
     []
   );
 
-  // ✅ when selecting an offer: auto-open brief + center card
-  useEffect(() => {
-    if (!selectedOfferId) return;
-
-    // open creator brief automatically
-    setBriefOpen(true);
-
-    // scroll to the card after DOM updates
-    const raf = requestAnimationFrame(() => {
-      offerCardRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-        inline: "nearest",
-      });
-    });
-
-    return () => cancelAnimationFrame(raf);
-  }, [selectedOfferId]);
-
   if (!offer) return null;
-
-  const handleSelectOffer = (offerId: string) => {
-    setSelectedOfferId((prev) => (prev === offerId ? null : offerId));
-    // briefOpen + scroll are handled by useEffect when selectedOfferId becomes truthy
-  };
 
   return (
     <motion.div
+      ref={scrollContainerRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -248,7 +277,9 @@ export default function VenueDetail({
               <h3 className="text-[15px] font-semibold text-stone-900 tracking-tight">
                 Select a Collaboration
               </h3>
-              <span className="text-[12px] text-stone-500">Compare perks &amp; requirements</span>
+              <span className="text-[12px] text-stone-500">
+                Compare perks &amp; requirements
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -298,21 +329,22 @@ export default function VenueDetail({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.25 }}
               className="mx-4 mt-4"
-              // ✅ scroll target
-              ref={offerCardRef}
             >
-              <OfferCard
-                offerId={offer.id}
-                title={offer.title}
-                plates={offer.plates ?? 0}
-                drinks={offer.drinks ?? 0}
-                dessert={(offer as any).dessert ?? 0}
-                champagne={(offer as any).champagne ?? 0}
-                mission={offer.mission}
-                isSelected={selectedOfferId === offer.id}
-                onToggle={() => handleSelectOffer(offer.id)}
-                collabsLeft={3}
-              />
+              {/* ✅ ref on plain div (more reliable) */}
+              <div ref={offerCardRef}>
+                <OfferCard
+                  offerId={offer.id}
+                  title={offer.title}
+                  plates={offer.plates ?? 0}
+                  drinks={offer.drinks ?? 0}
+                  dessert={(offer as any).dessert ?? 0}
+                  champagne={(offer as any).champagne ?? 0}
+                  mission={offer.mission}
+                  isSelected={selectedOfferId === offer.id}
+                  onToggle={() => handleSelectOffer(offer.id)}
+                  collabsLeft={3}
+                />
+              </div>
             </motion.section>
           )}
         </AnimatePresence>
@@ -357,7 +389,9 @@ export default function VenueDetail({
               className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all"
               onClick={() => enabled && setSheetOpen(true)}
             >
-              {activeConfirmed?.timeLabel ? `Confirm ${activeConfirmed.timeLabel}` : "Select date & time"}
+              {activeConfirmed?.timeLabel
+                ? `Confirm ${activeConfirmed.timeLabel}`
+                : "Select date & time"}
             </motion.button>
           </div>
         </div>
@@ -503,7 +537,7 @@ function OfferCard({
         )}
       </div>
 
-      {/* Mission collapsible (auto-open when selected) */}
+      {/* Mission collapsible */}
       <motion.div
         initial={false}
         animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
