@@ -62,30 +62,20 @@ export default function VenueDetail({
     timeframeId?: string;
   } | null>(null);
 
-  // ---- GALLERY STATE (new notch thumbnails) ----
+  // ---- GALLERY STATE (thumbnail selector) ----
   const galleryImages = useMemo(() => {
-    const raw =
-      (venue as any)?.galleryUrls ??
-      (venue as any)?.gallery ??
-      (venue as any)?.Gallery ??
-      [];
-    const urls: string[] = Array.isArray(raw)
-      ? raw.map((x: any) => (typeof x === "string" ? x : x?.url)).filter(Boolean)
-      : [];
-
-    const cover = venue.image ? [venue.image] : [];
-    const merged = [...cover, ...urls].filter(Boolean);
-
-    return Array.from(new Set(merged));
+    const urls = (venue.gallery ?? []).filter(Boolean);
+    if (urls.length) return urls;
+    return venue.image ? [venue.image] : [];
   }, [venue]);
 
-  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
+  const [activeImg, setActiveImg] = useState(
+    venue.gallery?.[0] ?? venue.image
+  );
 
   useEffect(() => {
-    setActiveGalleryIndex(0);
-  }, [venue?.id]);
-
-  const activeCoverUrl = galleryImages[activeGalleryIndex] ?? venue.image;
+    setActiveImg(venue.gallery?.[0] ?? venue.image);
+  }, [venue]);
 
   const offer = venue.offers[activeTab] ?? venue.offers[0];
   const enabled = !!selectedOfferId;
@@ -149,7 +139,7 @@ export default function VenueDetail({
 
           {/* Cover image (changes on thumbnail click) */}
           <motion.div
-            key={activeCoverUrl}
+            key={activeImg}
             initial={{ opacity: 0, y: 8, scale: 0.99 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
@@ -158,7 +148,7 @@ export default function VenueDetail({
           >
             <div className="relative overflow-hidden rounded-[24px]">
               <img
-                src={activeCoverUrl}
+                src={activeImg ?? venue.image}
                 alt={venue.name}
                 className="h-64 w-full object-cover"
               />
@@ -174,15 +164,15 @@ export default function VenueDetail({
             <div className="h-px bg-white/50" />
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
               {galleryImages.map((url, idx) => {
-                const isActive = idx === activeGalleryIndex;
+                const isActive = url === activeImg;
                 return (
                   <button
                     key={`${url}-${idx}`}
-                    onClick={() => setActiveGalleryIndex(idx)}
-                    className={`relative h-[44px] w-[44px] flex-shrink-0 overflow-hidden rounded-[12px] ring-1 transition-all${
+                    onClick={() => setActiveImg(url)}
+                    className={`relative flex h-[44px] w-[44px] flex-shrink-0 overflow-hidden rounded-[12px] ring-1 ring-white/60 transition-all duration-150 ${
                       isActive
-                        ? " ring-[#FF5A7A] shadow-[0_10px_22px_rgba(255,90,122,0.25)] scale-[1.02]"
-                        : " ring-white/60 opacity-90"
+                        ? "ring-2 ring-[#FF5A7A] ring-offset-2 ring-offset-white shadow-[0_10px_22px_rgba(255,90,122,0.25)]"
+                        : "opacity-90 hover:opacity-100"
                     }`}
                     aria-label={`Open image ${idx + 1}`}
                   >
@@ -191,9 +181,6 @@ export default function VenueDetail({
                       alt={`Gallery thumbnail ${idx + 1}`}
                       className="h-full w-full object-cover"
                     />
-                    {isActive && (
-                      <div className="absolute inset-0 rounded-[12px] ring-2 ring-[#FF5A7A]/70" />
-                    )}
                   </button>
                 );
               })}

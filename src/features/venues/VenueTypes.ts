@@ -13,6 +13,7 @@ export type Venue = {
   name: string;
   city: string;
   image: string;
+  gallery?: string[];
   brief: string;
   offers: Offer[];
 };

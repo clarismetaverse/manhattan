@@ -46,6 +46,7 @@ interface Venue {
   Name: string;
   Cover?: XanoFile | null;
   Background?: XanoFile | null;
+  GalleryRestaurant?: XanoFile[] | null;
   cities_id?: number | null;
   [k: string]: any;
 }
@@ -68,6 +69,7 @@ type DetailVenue = {
   id: string;
   name: string;
   image: string;
+  gallery: string[];
   city?: string;
   brief: string;
   offers: Array<{ id: string; title: string; plates?: number; drinks?: number; dessert?: number; champagne?: number; mission: string }>;
@@ -403,10 +405,18 @@ export default function VenuesScreen() {
               }
             }
 
+            const galleryUrls = (venue.GalleryRestaurant ?? [])
+              .map((f) => f?.url)
+              .filter(Boolean);
+            const mergedGallery = Array.from(
+              new Set([coverUrl, ...galleryUrls].filter(Boolean))
+            );
+
             const detail: DetailVenue = {
               id,
               name: venue.Name,
-              image: coverUrl,
+              image: mergedGallery[0] ?? coverUrl,
+              gallery: mergedGallery,
               city: badgeLabel ?? undefined,
               brief:
                 "Scandinavian vibes in the heart of Seminyak. Everything is organized to feel warm and light.",
