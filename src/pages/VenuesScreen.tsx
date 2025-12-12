@@ -1,4 +1,4 @@
-{/* COVER */}
+
 <div className="relative">
   <motion.img
     key={activeImage}
