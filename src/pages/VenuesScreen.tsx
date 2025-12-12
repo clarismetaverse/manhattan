@@ -74,6 +74,8 @@ type DetailVenue = {
     title: string;
     plates?: number;
     drinks?: number;
+    dessert?: number;
+    champagne?: number;
     mission: string;
   }>;
 };
@@ -313,6 +315,8 @@ export default function VenuesScreen() {
                   title: "Reel",
                   plates: 3,
                   drinks: 2,
+                  dessert: 1,
+                  champagne: 1,
                   mission:
                     "Post 1 Reel with yourself, ambience and dishes. Tag @venue and #clarisapp in caption.",
                 },
