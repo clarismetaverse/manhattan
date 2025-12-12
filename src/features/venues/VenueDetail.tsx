@@ -7,38 +7,17 @@ import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 
 // --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
 const PlateIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none">
-    <circle cx="12" cy="12" r="9" fill="#66BB6A" opacity="0.18" />
-    <circle cx="12" cy="12" r="6.2" fill="#66BB6A" opacity="0.95" />
-    <circle cx="12" cy="12" r="3.6" fill="#FFFFFF" opacity="0.92" />
-    <path
-      d="M7.2 10.2c1.2-2.3 3.2-3.6 5.5-3.6"
-      stroke="#fff"
-      strokeOpacity="0.75"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-    />
-  </svg>
+  <span className={`text-xl leading-none ${className}`} role="img" aria-label="plates">
+    🥗
+  </span>
 );
 
 const DrinkIcon = ({ className = "" }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className} fill="none">
-    <path
-      d="M7 3h10l-1.2 7c-.45 2.6-2.7 4.5-5.3 4.5S5.95 12.6 5.8 10L7 3Z"
-      fill="#EC407A"
-      opacity="0.95"
-    />
-    <path
-      d="M8.2 6.2h7.6"
-      stroke="#fff"
-      strokeOpacity="0.6"
-      strokeWidth="1.4"
-      strokeLinecap="round"
-    />
-    <rect x="11" y="14.4" width="2" height="4.8" rx="1" fill="#EC407A" />
-    <rect x="8" y="19.2" width="8" height="2" rx="1" fill="#EC407A" />
-  </svg>
+  <span className={`text-xl leading-none ${className}`} role="img" aria-label="drinks">
+    🍷
+  </span>
 );
+
 
 // Dummy featured collabs (no @handles shown)
 const demoFeaturedCollabs = [
