@@ -6,16 +6,20 @@ import type { Venue } from "./VenueTypes";
 import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 
 // --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
-const PlateIcon = ({ className = "" }: { className?: string }) => (
-  <span className={`text-xl leading-none ${className}`} role="img" aria-label="plates">
-    🥗
-  </span>
+const PlateIcon = () => (
+  <span className="text-xl leading-none" role="img" aria-label="plates">🥗</span>
 );
 
-const DrinkIcon = ({ className = "" }: { className?: string }) => (
-  <span className={`text-xl leading-none ${className}`} role="img" aria-label="drinks">
-    🍷
-  </span>
+const DrinkIcon = () => (
+  <span className="text-xl leading-none" role="img" aria-label="drinks">🍷</span>
+);
+
+const DessertIcon = () => (
+  <span className="text-xl leading-none" role="img" aria-label="dessert">🍰</span>
+);
+
+const ChampagneIcon = () => (
+  <span className="text-xl leading-none" role="img" aria-label="champagne">🥂</span>
 );
 
 
@@ -271,6 +275,8 @@ export default function VenueDetail({
                 title={offer.title}
                 plates={offer.plates ?? 0}
                 drinks={offer.drinks ?? 0}
+                dessert={offer.dessert ?? 0}
+                champagne={offer.champagne ?? 0}
                 mission={offer.mission}
                 isSelected={selectedOfferId === offer.id}
                 onToggle={() =>
@@ -347,6 +353,8 @@ function OfferCard({
   title,
   plates,
   drinks,
+  dessert = 0,
+  champagne = 0,
   mission,
   isSelected,
   onToggle,
@@ -357,6 +365,8 @@ function OfferCard({
   title: string;
   plates: number;
   drinks: number;
+  dessert?: number;
+  champagne?: number;
   mission: string;
   isSelected: boolean;
   onToggle: () => void;
@@ -421,26 +431,56 @@ function OfferCard({
       {/* Perks Grid - 2x2 with vertical layout */}
       <div className="mt-5 grid grid-cols-2 gap-4">
         {/* Plates */}
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#E8F5E9]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
-            <PlateIcon className="h-[22px] w-[22px]" />
+        {plates > 0 && (
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#E8F5E9]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
+              <PlateIcon />
+            </div>
+            <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
+              Plates
+            </div>
+            <div className="mt-0.5 text-sm font-medium text-stone-700">{plates}</div>
           </div>
-          <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
-            Plates
-          </div>
-          <div className="mt-0.5 text-sm font-medium text-stone-700">{plates}</div>
-        </div>
+        )}
 
         {/* Drinks */}
-        <div className="flex flex-col items-center text-center">
-          <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FCE4EC]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
-            <DrinkIcon className="h-[22px] w-[22px]" />
+        {drinks > 0 && (
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FCE4EC]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
+              <DrinkIcon />
+            </div>
+            <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
+              Drinks
+            </div>
+            <div className="mt-0.5 text-sm font-medium text-stone-700">{drinks}</div>
           </div>
-          <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
-            Drinks
+        )}
+
+        {/* Dessert */}
+        {dessert > 0 && (
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FFF3E0]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
+              <DessertIcon />
+            </div>
+            <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
+              Dessert
+            </div>
+            <div className="mt-0.5 text-sm font-medium text-stone-700">{dessert}</div>
           </div>
-          <div className="mt-0.5 text-sm font-medium text-stone-700">{drinks}</div>
-        </div>
+        )}
+
+        {/* Champagne */}
+        {champagne > 0 && (
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FFF8E1]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
+              <ChampagneIcon />
+            </div>
+            <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
+              Champagne
+            </div>
+            <div className="mt-0.5 text-sm font-medium text-stone-700">{champagne}</div>
+          </div>
+        )}
       </div>
 
       {/* Mission collapsible */}

@@ -3,6 +3,8 @@ export type Offer = {
   title: string;
   plates?: number;
   drinks?: number;
+  dessert?: number;
+  champagne?: number;
   mission: string;
 };
 

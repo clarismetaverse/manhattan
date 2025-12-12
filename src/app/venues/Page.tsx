@@ -70,7 +70,7 @@ type DetailVenue = {
   image: string;
   city?: string;
   brief: string;
-  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; mission: string }>;
+  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; dessert?: number; champagne?: number; mission: string }>;
 };
 
 type ChipDefinition = {
@@ -424,6 +424,8 @@ export default function VenuesScreen() {
                   title: "Reel",
                   plates: 3,
                   drinks: 2,
+                  dessert: 1,
+                  champagne: 1,
                   mission:
                     "Post 1 Reel with yourself, ambience and dishes. Tag @venue and #clarisapp in caption.",
                 },
