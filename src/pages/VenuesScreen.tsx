@@ -1,729 +1,130 @@
-/**
- * Codex Prompt — Venues Home (Hero hides when filters are active)
- *
- * Behaviour:
- * - POST https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop
- *   body: { page, search, category_ids, district_ids, date }
- * - GET  https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo
- *   → lista filtri (category + area) con id e nome.
- *
- * UX:
- * - Stato 1 (no filtri attivi):
- *      Hero "Discover where your presence matters"
- *      + Pinned This Week (prime 5 venues)
- *      + Sticky filter bar
- *      + All Venues (resto lista)
- *
- * - Stato 2 (filtri attivi: search OR categoria OR district OR data):
- *      Hero nascosto
- *      Pinned nascosto
- *      Rimangono:
- *          • sticky filter bar (search icon, calendar, districts, chips)
- *          • lista "All Venues" con TUTTI i risultati filtrati
- */
+{/* COVER */}
+<div className="relative">
+  <motion.img
+    key={activeImage}
+    src={activeImage}
+    alt={venue.name}
+    className="h-[280px] w-full object-cover rounded-b-[28px]"
+    initial={{ opacity: 0.4, scale: 1.02 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.35, ease: "easeOut" }}
+  />
 
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  LayoutGroup,
-  AnimatePresence,
-  motion,
-  useScroll,
-  useTransform,
-} from "framer-motion";
-import { Search, Calendar } from "lucide-react";
-import VenueDetail from "@/features/venues/VenueDetail";
+  {/* Back */}
+  <button
+    onClick={onClose}
+    className="absolute left-4 top-4 h-9 w-9 rounded-full bg-white/80 backdrop-blur shadow ring-1 ring-white/70"
+  >
+    ←
+  </button>
+</div>
 
-// ---- TYPES ----
+{/* NOTCH: thumbnails + title (title moved UNDER thumbnails) */}
+<div className="relative -mt-10 px-4">
+  <div className="rounded-3xl bg-white/80 backdrop-blur-xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-4">
 
-interface XanoFile {
-  url?: string;
-  [k: string]: any;
-}
-
-interface Venue {
-  id: number;
-  Name: string;
-  Cover?: XanoFile | null;
-  Background?: XanoFile | null;
-  cities_id?: number | null;
-  [k: string]: any;
-}
-
-interface RestaurantUpgradeTopResponse {
-  items?: Venue[];
-  itemsReceived?: number;
-  curPage?: number;
-  nextPage?: number | null;
-  [k: string]: any;
-}
-
-interface TurboFilterItem {
-  id: number;
-  CategoryName: string;
-  filter_type: "category" | "area" | string;
-}
-
-type DetailVenue = {
-  id: string;
-  name: string;
-  image: string;
-  city?: string;
-  brief: string;
-  offers: Array<{
-    id: string;
-    title: string;
-    plates?: number;
-    drinks?: number;
-    dessert?: number;
-    champagne?: number;
-    mission: string;
-  }>;
-};
-
-type ChipDefinition = {
-  label: string;
-  id: number | null;
-};
-
-const FALLBACK_GRADIENT =
-  "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.12) 0%, rgba(10,11,12,0.92) 55%, rgba(10,11,12,1) 100%)";
-
-const FILTER_ENDPOINT =
-  "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/category_venues_turbo";
-
-const normalize = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-
-// per ora non abbiamo city/tag nel payload → niente badge
-function getBadgeLabel(_venue: Venue): string | null {
-  return null;
-}
-
-export default function VenuesScreen() {
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const [open, setOpen] = useState<DetailVenue | null>(null);
-  const [search, setSearch] = useState("");
-
-  const [districtOpen, setDistrictOpen] = useState(false);
-
-  const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-
-  const [selectedDay, setSelectedDay] = useState<number | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null); // "YYYY-MM-DD"
-
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
-  const [selectedDistrictIds, setSelectedDistrictIds] = useState<number[]>([]);
-
-  const [categoryFilters, setCategoryFilters] = useState<ChipDefinition[]>([]);
-  const [districtFilters, setDistrictFilters] = useState<ChipDefinition[]>([]);
-  const [filtersError, setFiltersError] = useState<string | null>(null);
-
-  // Scroll-based hero animation
-  const { scrollY } = useScroll();
-  const heroOpacity = useTransform(scrollY, [0, 140], [1, 0]);
-  const heroScale = useTransform(scrollY, [0, 140], [1, 0.93]);
-  const heroTranslateY = useTransform(scrollY, [0, 140], [0, -26]);
-
-  // ---- FILTER LOOKUPS (category + area) ----
-  useEffect(() => {
-    const controller = new AbortController();
-    setFiltersError(null);
-
-    fetch(FILTER_ENDPOINT, { signal: controller.signal })
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Unable to fetch filters: ${res.status}`);
-        return (await res.json()) as TurboFilterItem[];
-      })
-      .then((items) => {
-        const categoryMap = new Map<string, TurboFilterItem>();
-        const districtMap = new Map<string, TurboFilterItem>();
-
-        for (const item of items) {
-          if (!item?.CategoryName) continue;
-          const key = normalize(item.CategoryName);
-          if (item.filter_type === "category" && !categoryMap.has(key)) {
-            categoryMap.set(key, item);
-          }
-          if (item.filter_type === "area" && !districtMap.has(key)) {
-            districtMap.set(key, item);
-          }
-        }
-
-        // category chips
-        const categoryChips: ChipDefinition[] = Array.from(categoryMap.values()).map(
-          (item) => ({
-            label: item.CategoryName,
-            id: item.id,
-          })
+    {/* Thumbnails strip */}
+    <div className="flex gap-2 overflow-x-auto pb-1">
+      {(venue.gallery || []).map((img, i) => {
+        const isActive = img === activeImage;
+        return (
+          <button
+            key={i}
+            onClick={() => setActiveImage(img)}
+            className={`relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl transition
+              ${isActive ? "ring-2 ring-[#FF5A7A]" : "opacity-85 hover:opacity-100"}
+            `}
+          >
+            <img src={img} alt="" className="h-full w-full object-cover" />
+          </button>
         );
+      })}
+    </div>
 
-        // district chips
-        const districtChips: ChipDefinition[] = Array.from(districtMap.values()).map(
-          (item) => ({
-            label: item.CategoryName,
-            id: item.id,
-          })
-        );
+    {/* Title UNDER thumbnails */}
+    <h1 className="mt-3 text-[26px] font-semibold tracking-tight text-stone-900">
+      {venue.name}
+    </h1>
+  </div>
+</div>
 
-        setCategoryFilters(categoryChips);
-        setDistrictFilters(districtChips);
-      })
-      .catch((err) => {
-        if ((err as { name?: string }).name === "AbortError") return;
-        console.error("Failed to load filter IDs", err);
-        setFiltersError("Unable to load filters. Chips may be disabled.");
-      });
+{/* ABOUT CARD */}
+<motion.section
+  initial={{ opacity: 0, y: 18 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.35 }}
+  className="mx-4 mt-4 rounded-2xl bg-white/65 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.08)] p-4"
+>
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2 text-sm text-stone-700">
+      <MapPin className="h-4 w-4" />
+      {venue.city}
+    </div>
 
-    return () => controller.abort();
-  }, []);
+    <button className="inline-flex items-center gap-2 text-sm text-stone-700">
+      <Instagram className="h-4 w-4" /> Visit
+    </button>
+  </div>
 
-  // ---- BACKEND FETCH (RestaurantUpgradeTop) ----
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
+  <div className="mt-3">
+    <div className="flex items-center justify-between">
+      <h3 className="text-stone-900 font-semibold">About</h3>
+      <button
+        onClick={() => setBriefOpen((v) => !v)}
+        className="text-sm text-stone-600 underline"
+      >
+        {briefOpen ? "Hide brief" : "Creator brief"}
+      </button>
+    </div>
 
-    const body = {
-      page: 1,
-      search: search.trim(),
-      category_ids: selectedCategoryIds,
-      district_ids: selectedDistrictIds,
-      date: selectedDate,
-    };
+    <p className="mt-1 text-[13px] leading-6 text-stone-700">{venue.brief}</p>
 
-    fetch(
-      "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      }
-    )
-      .then(async (res) => {
-        if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
-        const json = (await res.json()) as RestaurantUpgradeTopResponse | Venue[];
-
-        let items: Venue[] = [];
-        if (Array.isArray(json)) {
-          items = json;
-        } else if (Array.isArray(json.items)) {
-          items = json.items;
-        }
-
-        setVenues(items);
-      })
-      .catch((err) => {
-        if ((err as any).name !== "AbortError") {
-          console.error("Error fetching venues:", err);
-          setError("Unable to load venues. Please try again later.");
-        }
-      })
-      .finally(() => setLoading(false));
-
-    return () => controller.abort();
-  }, [search, selectedCategoryIds, selectedDistrictIds, selectedDate]);
-
-  // ---- FLAG: FILTERS ACTIVE? (navigation mode) ----
-  const hasActiveFilters =
-    search.trim().length > 0 ||
-    selectedCategoryIds.length > 0 ||
-    selectedDistrictIds.length > 0 ||
-    !!selectedDate;
-
-  // ---- CONTENT (pinned + list) ----
-  const content = useMemo(() => {
-    if (loading)
-      return (
-        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
-          Loading venues…
-        </div>
-      );
-    if (error)
-      return (
-        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
-          {error}
-        </div>
-      );
-    if (!venues.length)
-      return (
-        <div className="flex items-center justify-center py-16 text-sm text-gray-500">
-          No venues found.
-        </div>
-      );
-
-    const normalizedSearch = search.trim().toLowerCase();
-    const visibleVenues = normalizedSearch
-      ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
-      : venues;
-
-    // SE CI SONO FILTRI ATTIVI → niente pinned, tutta la lista in "All Venues"
-    const pinnedVenues = hasActiveFilters ? [] : visibleVenues.slice(0, 5);
-    const pinnedIds = new Set(pinnedVenues.map((v) => v.id));
-    const allVenues = hasActiveFilters
-      ? visibleVenues
-      : visibleVenues.filter((v) => !pinnedIds.has(v.id));
-
-    const renderVenueCard = (venue: Venue, index: number, size: "compact" | "full") => {
-      const id = String(venue.id);
-      const coverUrl = venue.Cover?.url ?? venue.Background?.url ?? "";
-      const badgeLabel = getBadgeLabel(venue);
-      const rankNumber = index + 1;
-      const baseHeight = size === "compact" ? 190 : 230;
-      const isPinned = size === "compact";
-
-      return (
-        <motion.button
-          key={id}
-          onClick={async () => {
-            if (coverUrl) {
-              const img = new Image();
-              img.src = coverUrl;
-              try {
-                await img.decode();
-              } catch {
-                // ignore
-              }
-            }
-
-            const detail: DetailVenue = {
-              id,
-              name: venue.Name,
-              image: coverUrl,
-              city: badgeLabel ?? undefined,
-              brief:
-                "Scandinavian vibes in the heart of Seminyak. Everything is organized to feel warm and light.",
-              offers: [
-                {
-                  id: "story3",
-                  title: "3 × Story",
-                  plates: 1,
-                  drinks: 2,
-                  mission:
-                    "Publish 3 Stories showcasing ambience, hero dishes, and yourself. Tag @venue + #clarisapp with one hidden @claris.app mention after posting.",
-                },
-                {
-                  id: "reel",
-                  title: "Reel",
-                  plates: 3,
-                  drinks: 2,
-                  dessert: 1,
-                  champagne: 1,
-                  mission:
-                    "Post 1 Reel with yourself, ambience and dishes. Tag @venue and #clarisapp in caption.",
-                },
-              ],
-            };
-            setOpen(detail);
-          }}
-          whileHover={
-            isPinned
-              ? { y: -8, rotateX: -4, rotateY: 4 }
-              : { y: -4 }
-          }
-          whileTap={isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 260, damping: 22, mass: 0.9 }}
-          className={`group relative block overflow-hidden rounded-[22px] bg-white text-left shadow-[0_16px_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out ${
-            size === "compact" ? "min-w-[260px] max-w-[280px]" : "w-full"
-          }`}
+    <AnimatePresence initial={false}>
+      {briefOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mt-2 rounded-xl bg-white/70 backdrop-blur-md ring-1 ring-white/50 p-3 text-sm text-stone-700"
         >
-          <motion.div layoutId={`card-${id}`} className="relative">
-            <div
-              className="w-full rounded-[22px] bg-cover bg-center"
-              style={{
-                height: baseHeight,
-                backgroundImage: coverUrl ? `url(${coverUrl})` : FALLBACK_GRADIENT,
-              }}
-            />
-            <motion.div
-              layoutId={`card-grad-${id}`}
-              className="pointer-events-none absolute inset-0 rounded-[22px] bg-gradient-to-t from-black/80 via-black/40 to-transparent"
-            />
-          </motion.div>
+          Keep it tasteful and upbeat. Tag @venue and #clarisapp. Focus on ambience,
+          signature dishes, and your personality.
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+</motion.section>
 
-          <div className="pointer-events-none absolute inset-0 flex flex-col justify-between p-4 sm:p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex max-w-max items-center rounded-full bg-red-600/90 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-white shadow-sm">
-                {isPinned ? "Pinned This Week" : "Featured Venue"}
-              </span>
-              {badgeLabel && (
-                <span className="inline-flex max-w-max items-center rounded-full bg-black/40 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-white/80 backdrop-blur">
-                  {badgeLabel}
-                </span>
-              )}
-            </div>
+{/* NEW: BRAND GUIDELINES CARD (under About) */}
+<motion.section
+  initial={{ opacity: 0, y: 14 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.35, delay: 0.05 }}
+  className="mx-4 mt-3 rounded-2xl bg-white/60 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.06)] p-4"
+>
+  <div className="flex items-center justify-between">
+    <h3 className="text-stone-900 font-semibold">Brand guidelines</h3>
+    <button className="text-sm text-stone-600 underline">
+      View
+    </button>
+  </div>
 
-            <div>
-              <h2 className="text-[18px] sm:text-[20px] font-light text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.7)]">
-                {venue.Name}
-              </h2>
-              <p className="mt-1 text-xs font-light text-white/80">#{rankNumber} Venue</p>
-            </div>
-          </div>
-        </motion.button>
-      );
-    };
+  <p className="mt-1 text-[13px] leading-6 text-stone-700">
+    What to capture, tone &amp; framing. Quick rules to match the venue’s aesthetic.
+  </p>
 
-    return (
-      <div className="space-y-8">
-        {/* Pinned section — SOLO se non ci sono filtri attivi */}
-        {!hasActiveFilters && pinnedVenues.length > 0 && (
-          <section>
-            <h2 className="mb-3 text-base font-semibold text-gray-900">
-              Pinned This Week
-            </h2>
-            <div className="-mx-5 overflow-x-auto pb-1">
-              <motion.div
-                className="flex gap-4 px-5"
-                layout
-                transition={{ type: "spring", stiffness: 260, damping: 26 }}
-              >
-                {pinnedVenues.map((venue, index) =>
-                  renderVenueCard(venue, index, "compact")
-                )}
-              </motion.div>
-            </div>
-          </section>
-        )}
-
-        {/* STICKY FILTER BAR – sempre visibile */}
-        <section
-          className="
-            sticky top-0 z-30 -mx-5
-            bg-gradient-to-b from-[#f7f7f8] via-[#f7f7f8] to-transparent
-            px-5 pb-3 pt-2
-            backdrop-blur
-          "
-        >
-          {/* Row 0 — search & calendar + districts toggle */}
-          <div className="mb-2 flex items-center justify-between">
-            <div className="inline-flex gap-2">
-              <button
-                onClick={() => setSearchOverlayOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white shadow-[0_8px_20px_rgba(15,23,42,0.08)]"
-              >
-                <Search className="h-4 w-4 text-gray-500" />
-              </button>
-              <button
-                onClick={() => setCalendarOpen(true)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_8px_20px_rgba(15,23,42,0.12)]"
-              >
-                <Calendar className="h-4 w-4" />
-              </button>
-            </div>
-
-            <button
-              onClick={() => setDistrictOpen((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-[0_8px_20px_rgba(15,23,42,0.04)]"
-            >
-              <span>Districts</span>
-              <span className="h-[3px] w-[3px] rounded-full bg-gray-400" />
-              <span className="text-gray-700">
-                {selectedDistrictIds.length ? "Filtered" : "All"}
-              </span>
-              <span
-                className={`ml-1 text-[10px] transition-transform ${
-                  districtOpen ? "rotate-180" : ""
-                }`}
-              >
-                ▾
-              </span>
-            </button>
-          </div>
-
-          {/* Row 1 — category chips */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {categoryFilters.map((item) => {
-              const isActive =
-                item.id != null && selectedCategoryIds.includes(item.id);
-              const isDisabled = item.id == null;
-              return (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    if (isDisabled) return;
-                    setSelectedCategoryIds((prev) =>
-                      prev.includes(item.id as number)
-                        ? prev.filter((id) => id !== item.id)
-                        : [...prev, item.id as number]
-                    );
-                  }}
-                  disabled={isDisabled}
-                  className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-sm transition-colors ${
-                    isDisabled
-                      ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                      : isActive
-                      ? "border-red-500 bg-red-500 text-white shadow-[0_10px_25px_rgba(248,113,113,0.45)]"
-                      : "border-gray-200 bg-white text-gray-800"
-                  }`}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Row 2 — districts (collapsable) */}
-          <motion.div
-            initial={false}
-            animate={districtOpen ? "open" : "closed"}
-            variants={{
-              open: { height: "auto", opacity: 1, marginTop: 8 },
-              closed: { height: 0, opacity: 0, marginTop: 0 },
-            }}
-            className="overflow-hidden"
-          >
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {districtFilters.map((item) => {
-                const isActive =
-                  item.id != null && selectedDistrictIds.includes(item.id);
-                const isDisabled = item.id == null;
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => {
-                      if (isDisabled) return;
-                      setSelectedDistrictIds((prev) =>
-                        prev.includes(item.id as number)
-                          ? prev.filter((id) => id !== item.id)
-                          : [...prev, item.id as number]
-                      );
-                    }}
-                    disabled={isDisabled}
-                    className={`inline-flex flex-shrink-0 items-center rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
-                      isDisabled
-                        ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
-                        : isActive
-                        ? "border-red-500 bg-red-50 text-red-600"
-                        : "border-gray-200 bg-white/90 text-gray-600"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </div>
-            {filtersError && (
-              <p className="px-1 pb-1 text-[10px] text-red-500/80">
-                {filtersError}
-              </p>
-            )}
-          </motion.div>
-        </section>
-
-        {/* All venues */}
-        <section>
-          <h2 className="mb-3 text-base font-semibold text-gray-900">
-            All Venues
-          </h2>
-          <div className="space-y-4">
-            {allVenues.map((venue, index) =>
-              renderVenueCard(venue, index, "full")
-            )}
-          </div>
-        </section>
-      </div>
-    );
-  }, [
-    error,
-    loading,
-    venues,
-    search,
-    hasActiveFilters,
-    selectedCategoryIds,
-    selectedDistrictIds,
-    districtOpen,
-    categoryFilters,
-    districtFilters,
-    filtersError,
-  ]);
-
-  // ---- RENDER ROOT ----
-
-  return (
-    <LayoutGroup id="venues">
-      <div className="min-h-screen bg-gradient-to-b from-[#f7f7f8] to-white px-5 pb-24 pt-8">
-        <div className="mx-auto w-full max-w-5xl space-y-8">
-          {/* HERO — SOLO se non ci sono filtri attivi */}
-          {!hasActiveFilters && (
-            <motion.section
-              style={{ opacity: heroOpacity, scale: heroScale, y: heroTranslateY }}
-              transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
-              className="rounded-3xl border border-slate-100 bg-white/90 px-6 pb-5 pt-6 shadow-[0_22px_60px_rgba(15,23,42,0.12)] backdrop-blur"
-            >
-              <h1 className="text-center text-[24px] sm:text-[28px] font-light text-gray-900">
-                Discover where your presence matters
-              </h1>
-              <p className="mt-2 text-center text-sm text-gray-600">
-                Find curated creator experiences across the city.
-              </p>
-
-              <div className="mt-5 flex items-center gap-3">
-                <div className="flex-1 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-                  <Search className="h-4 w-4 text-gray-400" />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search venues or areas"
-                    className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
-                  />
-                </div>
-                <button
-                  onClick={() => setCalendarOpen(true)}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-red-500 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
-                >
-                  <Calendar className="h-4 w-4" />
-                </button>
-              </div>
-            </motion.section>
-          )}
-
-          {content}
-        </div>
-      </div>
-
-      {/* Search overlay */}
-      <AnimatePresence>
-        {searchOverlayOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setSearchOverlayOpen(false)}
-          >
-            <motion.div
-              className="relative w-[90%] max-w-md rounded-2xl bg-white p-5 shadow-2xl"
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 250, damping: 24, mass: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    Search experiences
-                  </h2>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Find venues, districts or vibes across the city.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSearchOverlayOpen(false)}
-                  className="ml-3 text-xs text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-                <Search className="h-4 w-4 text-gray-400" />
-                <input
-                  autoFocus
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search venues, districts or areas"
-                  className="h-8 w-full border-none bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Calendar overlay */}
-      <AnimatePresence>
-        {calendarOpen && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setCalendarOpen(false)}
-          >
-            <motion.div
-              className="relative w-[90%] max-w-md rounded-2xl bg-white p-5 shadow-2xl"
-              initial={{ opacity: 0, y: 20, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.96 }}
-              transition={{ type: "spring", stiffness: 240, damping: 24, mass: 0.9 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-4 flex items-start justify-between">
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">
-                    Select date
-                  </h2>
-                  <p className="mt-1 text-xs text-gray-500">
-                    Choose a day to refine your experiences.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCalendarOpen(false)}
-                  className="ml-3 text-xs text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="mb-3 grid grid-cols-7 gap-2 text-center text-xs text-gray-500">
-                {["M", "T", "W", "T", "F", "S", "S"].map((d) => (
-                  <div key={d} className="font-medium">
-                    {d}
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-2 text-sm">
-                {Array.from({ length: 30 }, (_, i) => i + 1).map((day) => (
-                  <button
-                    key={day}
-                    onClick={() => {
-                      setSelectedDay(day);
-                      const today = new Date();
-                      const date = new Date(
-                        today.getFullYear(),
-                        today.getMonth(),
-                        day
-                      );
-                      const iso = date.toISOString().slice(0, 10);
-                      setSelectedDate(iso);
-                    }}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border text-xs ${
-                      selectedDay === day
-                        ? "border-red-500 bg-red-500 text-white"
-                        : "border-gray-200 bg-white text-gray-700"
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-
-              {selectedDate && (
-                <p className="mt-4 text-xs text-gray-500">
-                  Selected date:{" "}
-                  <span className="font-medium text-gray-800">
-                    {selectedDate}
-                  </span>
-                </p>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {open && <VenueDetail venue={open as any} onClose={() => setOpen(null)} />}
-      </AnimatePresence>
-    </LayoutGroup>
-  );
-}
+  <div className="mt-3 flex flex-wrap gap-2">
+    <span className="rounded-full bg-stone-100/80 px-3 py-1 text-[11px] text-stone-600 ring-1 ring-stone-200/40">
+      Natural light
+    </span>
+    <span className="rounded-full bg-stone-100/80 px-3 py-1 text-[11px] text-stone-600 ring-1 ring-stone-200/40">
+      Clean table shots
+    </span>
+    <span className="rounded-full bg-stone-100/80 px-3 py-1 text-[11px] text-stone-600 ring-1 ring-stone-200/40">
+      Warm tones
+    </span>
+    <span className="rounded-full bg-stone-100/80 px-3 py-1 text-[11px] text-stone-600 ring-1 ring-stone-200/40">
+      Avoid harsh flash
+    </span>
+  </div>
+</motion.section>
