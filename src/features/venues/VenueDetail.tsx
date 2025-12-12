@@ -5,16 +5,16 @@ import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import type { Venue } from "./VenueTypes";
 import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 
-// --- Cartoonish Claris Icons (SVG) ---
+// --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
 const PlateIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none">
-    <circle cx="12" cy="12" r="9" fill="#FF5A7A" opacity="0.16" />
-    <circle cx="12" cy="12" r="6.2" fill="#FF5A7A" opacity="0.95" />
-    <circle cx="12" cy="12" r="3.6" fill="#FFFFFF" opacity="0.9" />
+    <circle cx="12" cy="12" r="9" fill="#66BB6A" opacity="0.18" />
+    <circle cx="12" cy="12" r="6.2" fill="#66BB6A" opacity="0.95" />
+    <circle cx="12" cy="12" r="3.6" fill="#FFFFFF" opacity="0.92" />
     <path
       d="M7.2 10.2c1.2-2.3 3.2-3.6 5.5-3.6"
       stroke="#fff"
-      strokeOpacity="0.7"
+      strokeOpacity="0.75"
       strokeWidth="1.4"
       strokeLinecap="round"
     />
@@ -25,18 +25,18 @@ const DrinkIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none">
     <path
       d="M7 3h10l-1.2 7c-.45 2.6-2.7 4.5-5.3 4.5S5.95 12.6 5.8 10L7 3Z"
-      fill="#FF3A6E"
+      fill="#EC407A"
       opacity="0.95"
     />
     <path
       d="M8.2 6.2h7.6"
       stroke="#fff"
-      strokeOpacity="0.55"
+      strokeOpacity="0.6"
       strokeWidth="1.4"
       strokeLinecap="round"
     />
-    <rect x="11" y="14.4" width="2" height="4.8" rx="1" fill="#FF3A6E" />
-    <rect x="8" y="19.2" width="8" height="2" rx="1" fill="#FF3A6E" />
+    <rect x="11" y="14.4" width="2" height="4.8" rx="1" fill="#EC407A" />
+    <rect x="8" y="19.2" width="8" height="2" rx="1" fill="#EC407A" />
   </svg>
 );
 
@@ -363,7 +363,7 @@ export default function VenueDetail({
   );
 }
 
-/* OfferCard */
+/* OfferCard - Cartoon Friendly Instagram-native */
 function OfferCard({
   title,
   plates,
@@ -403,68 +403,64 @@ function OfferCard({
         isSelected
           ? {
               boxShadow:
-                "0 8px 24px rgba(255,90,122,0.15), 0 4px 12px rgba(224,201,163,0.3), inset 0 1px 0 rgba(255,255,255,0.8)",
-              backgroundColor: "rgba(255,255,255,0.85)",
+                "0 8px 20px rgba(255,90,122,0.12), 0 2px 8px rgba(224,201,163,0.2)",
+              backgroundColor: "rgba(255,255,255,0.9)",
               borderColor: "#FF5A7A",
             }
           : {
               boxShadow:
-                "0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)",
-              backgroundColor: "rgba(255,255,255,0.65)",
-              borderColor: "#E3D3BB",
+                "0 2px 12px rgba(0,0,0,0.04)",
+              backgroundColor: "rgba(255,255,255,0.7)",
+              borderColor: "#F0E6D8",
             }
       }
-      transition={{ duration: 0.35, ease: "easeOut" }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       className={`relative w-full text-left border-2 backdrop-blur-md ${
         pinned ? "rounded-xl px-3 py-3" : "rounded-3xl px-5 py-5"
       }`}
     >
-      <div className="absolute right-3 top-3 flex items-center gap-2">
+      {/* Top right badges */}
+      <div className="absolute right-4 top-4 flex items-center gap-2">
         {isSelected && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-medium text-stone-600 ring-1 ring-stone-200/50">
             Selected
           </span>
         )}
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/10 px-2 py-1 text-[11px] font-medium text-[#FF5A7A]">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/8 px-2.5 py-1 text-[10px] font-medium text-[#FF5A7A]">
           {collabsLeft} left
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-xl font-semibold text-stone-900">{title}</div>
-        <span className="rounded-full bg-stone-100 px-3 py-1 text-[11px] text-stone-600">
+      {/* Title + Content Type Pill */}
+      <div className="flex items-center gap-3">
+        <div className="text-lg font-semibold text-stone-800 tracking-tight">{title}</div>
+        <span className="rounded-full bg-stone-100/80 px-3 py-1 text-[10px] font-medium text-stone-500 uppercase tracking-wide">
           {chipLabel}
         </span>
       </div>
 
-      <div className="absolute left-3 bottom-3">
-        <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
-          by venue approval
-        </span>
-      </div>
-
-      {/* Cartoon icons grid */}
-      <div className="mt-4 grid grid-cols-2 gap-4">
+      {/* Perks Grid - 2x2 with vertical layout */}
+      <div className="mt-5 grid grid-cols-2 gap-4">
         {/* Plates */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFE5EA]">
-            <PlateIcon className="h-5 w-5" />
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#E8F5E9]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
+            <PlateIcon className="h-[22px] w-[22px]" />
           </div>
-          <div>
-            <div className="text-xs tracking-wide text-stone-500">PLATES</div>
-            <div className="text-lg font-semibold text-stone-900">{plates}</div>
+          <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
+            Plates
           </div>
+          <div className="mt-0.5 text-sm font-medium text-stone-700">{plates}</div>
         </div>
 
         {/* Drinks */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFE7F5]">
-            <DrinkIcon className="h-5 w-5" />
+        <div className="flex flex-col items-center text-center">
+          <div className="flex h-[36px] w-[36px] items-center justify-center rounded-full bg-[#FCE4EC]/80 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),0_1px_3px_rgba(0,0,0,0.06)]">
+            <DrinkIcon className="h-[22px] w-[22px]" />
           </div>
-          <div>
-            <div className="text-xs tracking-wide text-stone-500">DRINKS</div>
-            <div className="text-lg font-semibold text-stone-900">{drinks}</div>
+          <div className="mt-2 text-[9px] font-medium uppercase tracking-widest text-stone-400">
+            Drinks
           </div>
+          <div className="mt-0.5 text-sm font-medium text-stone-700">{drinks}</div>
         </div>
       </div>
 
@@ -474,19 +470,18 @@ function OfferCard({
         animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
         className="overflow-hidden"
       >
-        <p className="mt-4 text-sm text-stone-600">{mission}</p>
+        <p className="mt-4 text-[13px] leading-relaxed text-stone-500">{mission}</p>
       </motion.div>
 
-      {/* Instructions + value hint */}
+      {/* Bottom hint */}
       <div className="mt-4 flex items-center justify-between gap-3">
-        <button className="text-sm underline text-stone-700 flex items-center gap-1">
-          Content Instructions
-          <Info className="h-4 w-4 text-[#FF5A7A]" />
-        </button>
-        <div className="text-right">
-          <div className="text-xs text-stone-500">Estimated value</div>
-          <div className="text-sm font-semibold text-stone-900">350K IDR</div>
+        <div className="flex items-center gap-1.5 text-stone-400">
+          <Info className="h-3.5 w-3.5" />
+          <span className="text-[11px]">Tap to see details</span>
         </div>
+        <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-50 text-stone-500 border border-stone-100">
+          by venue approval
+        </span>
       </div>
     </motion.button>
   );
