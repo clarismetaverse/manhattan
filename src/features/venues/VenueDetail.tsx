@@ -1,11 +1,46 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MapPin, Instagram, Utensils, Wine, Info } from "lucide-react";
+import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import type { Venue } from "./VenueTypes";
 import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 
-// Dummy data for now – later you can load from Xano
+// --- Cartoonish Claris Icons (SVG) ---
+const PlateIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none">
+    <circle cx="12" cy="12" r="9" fill="#FF5A7A" opacity="0.16" />
+    <circle cx="12" cy="12" r="6.2" fill="#FF5A7A" opacity="0.95" />
+    <circle cx="12" cy="12" r="3.6" fill="#FFFFFF" opacity="0.9" />
+    <path
+      d="M7.2 10.2c1.2-2.3 3.2-3.6 5.5-3.6"
+      stroke="#fff"
+      strokeOpacity="0.7"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+
+const DrinkIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none">
+    <path
+      d="M7 3h10l-1.2 7c-.45 2.6-2.7 4.5-5.3 4.5S5.95 12.6 5.8 10L7 3Z"
+      fill="#FF3A6E"
+      opacity="0.95"
+    />
+    <path
+      d="M8.2 6.2h7.6"
+      stroke="#fff"
+      strokeOpacity="0.55"
+      strokeWidth="1.4"
+      strokeLinecap="round"
+    />
+    <rect x="11" y="14.4" width="2" height="4.8" rx="1" fill="#FF3A6E" />
+    <rect x="8" y="19.2" width="8" height="2" rx="1" fill="#FF3A6E" />
+  </svg>
+);
+
+// Dummy featured collabs (no @handles shown)
 const demoFeaturedCollabs = [
   {
     id: "pancakes",
@@ -53,100 +88,28 @@ export default function VenueDetail({
     () => ({
       0: [],
       1: [
-        {
-          id: "mon-lunch",
-          label: "Lunch",
-          start: { h: 12, m: 0 },
-          end: { h: 15, m: 0 },
-          stepMins: 30,
-        },
-        {
-          id: "mon-dinner",
-          label: "Dinner",
-          start: { h: 18, m: 0 },
-          end: { h: 22, m: 0 },
-          stepMins: 30,
-        },
+        { id: "mon-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "mon-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
       ],
       2: [
-        {
-          id: "tue-lunch",
-          label: "Lunch",
-          start: { h: 12, m: 0 },
-          end: { h: 15, m: 0 },
-          stepMins: 30,
-        },
-        {
-          id: "tue-dinner",
-          label: "Dinner",
-          start: { h: 18, m: 0 },
-          end: { h: 22, m: 0 },
-          stepMins: 30,
-        },
+        { id: "tue-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "tue-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
       ],
       3: [
-        {
-          id: "wed-lunch",
-          label: "Lunch",
-          start: { h: 12, m: 0 },
-          end: { h: 15, m: 0 },
-          stepMins: 30,
-        },
-        {
-          id: "wed-dinner",
-          label: "Dinner",
-          start: { h: 18, m: 0 },
-          end: { h: 22, m: 0 },
-          stepMins: 30,
-        },
+        { id: "wed-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "wed-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
       ],
       4: [
-        {
-          id: "thu-lunch",
-          label: "Lunch",
-          start: { h: 12, m: 0 },
-          end: { h: 15, m: 0 },
-          stepMins: 30,
-        },
-        {
-          id: "thu-dinner",
-          label: "Dinner",
-          start: { h: 18, m: 0 },
-          end: { h: 22, m: 0 },
-          stepMins: 30,
-        },
+        { id: "thu-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "thu-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 22, m: 0 }, stepMins: 30 },
       ],
       5: [
-        {
-          id: "fri-lunch",
-          label: "Lunch",
-          start: { h: 12, m: 0 },
-          end: { h: 15, m: 0 },
-          stepMins: 30,
-        },
-        {
-          id: "fri-dinner",
-          label: "Dinner",
-          start: { h: 18, m: 0 },
-          end: { h: 23, m: 0 },
-          stepMins: 30,
-        },
+        { id: "fri-lunch", label: "Lunch", start: { h: 12, m: 0 }, end: { h: 15, m: 0 }, stepMins: 30 },
+        { id: "fri-dinner", label: "Dinner", start: { h: 18, m: 0 }, end: { h: 23, m: 0 }, stepMins: 30 },
       ],
       6: [
-        {
-          id: "sat-brunch",
-          label: "Brunch",
-          start: { h: 11, m: 0 },
-          end: { h: 14, m: 0 },
-          stepMins: 30,
-        },
-        {
-          id: "sat-dinner",
-          label: "Dinner",
-          start: { h: 17, m: 30 },
-          end: { h: 23, m: 0 },
-          stepMins: 30,
-        },
+        { id: "sat-brunch", label: "Brunch", start: { h: 11, m: 0 }, end: { h: 14, m: 0 }, stepMins: 30 },
+        { id: "sat-dinner", label: "Dinner", start: { h: 17, m: 30 }, end: { h: 23, m: 0 }, stepMins: 30 },
       ],
     }),
     []
@@ -166,7 +129,7 @@ export default function VenueDetail({
       }}
     >
       <div className="mx-auto max-w-sm pb-28">
-        {/* Hero morph */}
+        {/* Hero */}
         <div className="relative">
           <motion.div
             layoutId={`card-${venue.id}`}
@@ -203,7 +166,7 @@ export default function VenueDetail({
           </button>
         </div>
 
-        {/* About / Creator Brief */}
+        {/* About */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,12 +174,11 @@ export default function VenueDetail({
           className="mx-4 -mt-4 rounded-2xl bg-white/65 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.08)] p-4"
         >
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-sm text-stone-700">
-                <MapPin className="h-4 w-4" />
-                {venue.city}
-              </div>
+            <div className="flex items-center gap-2 text-sm text-stone-700">
+              <MapPin className="h-4 w-4" />
+              {venue.city}
             </div>
+
             <button className="inline-flex items-center gap-2 text-sm text-stone-700">
               <Instagram className="h-4 w-4" /> Visit
             </button>
@@ -243,50 +205,23 @@ export default function VenueDetail({
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-2 rounded-xl bg-white/70 backdrop-blur-md ring-1 ring-white/50 p-3 text-sm text-stone-700"
                 >
-                  Keep it tasteful and upbeat. Tag @venue and #clarisapp. Focus on
-                  ambience, signature dishes, and your personality.
+                  Keep it tasteful and upbeat. Tag @venue and #clarisapp. Focus on ambience,
+                  signature dishes, and your personality.
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </motion.section>
 
-        {/* Featured collabs — horizontal pinned */}
+        {/* Featured collabs strip */}
         <div className="mt-4 px-4">
           <FeaturedCollabsStrip
             collabs={demoFeaturedCollabs}
-            onViewAll={() => {
-              console.log("View all featured collabs");
-            }}
+            onViewAll={() => console.log("View all featured collabs")}
           />
         </div>
 
-        {/* Pinned offer while sheet is open */}
-        <AnimatePresence>
-          {sheetOpen && selectedOfferId === offer.id && (
-            <motion.div
-              layout
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="sticky top-2 z-40 mx-4 mt-3"
-            >
-              <OfferCard
-                offerId={offer.id}
-                title={offer.title}
-                plates={offer.plates ?? 0}
-                drinks={offer.drinks ?? 0}
-                mission={offer.mission}
-                isSelected
-                onToggle={() => setSheetOpen(false)}
-                pinned
-                collabsLeft={3}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Bridge CTA between About and Tabs */}
+        {/* Bridge CTA */}
         <AnimatePresence initial={false}>
           {!selectedOfferId && (
             <motion.div
@@ -295,7 +230,6 @@ export default function VenueDetail({
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.3, delay: 0.15 }}
               className="mx-4 mt-6 mb-2 flex items-baseline justify-between"
-              aria-live="polite"
             >
               <h3 className="text-[15px] font-semibold text-stone-900 tracking-tight">
                 Select a Collaboration
@@ -307,7 +241,7 @@ export default function VenueDetail({
           )}
         </AnimatePresence>
 
-        {/* Tabs (glass segmented) */}
+        {/* Tabs */}
         <div className="mx-4 mt-4 relative rounded-2xl p-1 bg-white/45 backdrop-blur-xl ring-1 ring-white/50 flex">
           {venue.offers.map((o, i) => (
             <button
@@ -342,7 +276,7 @@ export default function VenueDetail({
           />
         </div>
 
-        {/* Offer card (selectable) */}
+        {/* Offer card */}
         <AnimatePresence mode="wait">
           {!sheetOpen && (
             <motion.section
@@ -369,10 +303,8 @@ export default function VenueDetail({
           )}
         </AnimatePresence>
 
-        {/* Helper copy under the collab card */}
         <p className="mx-4 mt-3 text-sm text-stone-600">
-          Choose the high-quality content you’ll craft in return for the complimentary
-          experience
+          Choose the high-quality content you’ll craft in return for the complimentary experience
         </p>
 
         {/* Sticky CTA */}
@@ -408,7 +340,6 @@ export default function VenueDetail({
                     }
               }
               disabled={!enabled}
-              aria-disabled={!enabled}
               className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all"
               onClick={() => enabled && setSheetOpen(true)}
             >
@@ -426,15 +357,13 @@ export default function VenueDetail({
         offerId={selectedOfferId ?? offer.id}
         venueId={venue.id}
         timeframesByDow={weeklyTimeframes}
-        onConfirm={(payload) => {
-          setConfirmedSlot(payload);
-        }}
+        onConfirm={(payload) => setConfirmedSlot(payload)}
       />
     </motion.div>
   );
 }
 
-/* Subcomponent: OfferCard */
+/* OfferCard */
 function OfferCard({
   title,
   plates,
@@ -490,88 +419,75 @@ function OfferCard({
         pinned ? "rounded-xl px-3 py-3" : "rounded-3xl px-5 py-5"
       }`}
     >
-      {pinned ? (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="text-sm font-semibold text-stone-900">{title}</div>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
-              by venue approval
-            </span>
+      <div className="absolute right-3 top-3 flex items-center gap-2">
+        {isSelected && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
+            Selected
+          </span>
+        )}
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/10 px-2 py-1 text-[11px] font-medium text-[#FF5A7A]">
+          {collabsLeft} left
+        </span>
+      </div>
+
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-xl font-semibold text-stone-900">{title}</div>
+        <span className="rounded-full bg-stone-100 px-3 py-1 text-[11px] text-stone-600">
+          {chipLabel}
+        </span>
+      </div>
+
+      <div className="absolute left-3 bottom-3">
+        <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
+          by venue approval
+        </span>
+      </div>
+
+      {/* Cartoon icons grid */}
+      <div className="mt-4 grid grid-cols-2 gap-4">
+        {/* Plates */}
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFE5EA]">
+            <PlateIcon className="h-5 w-5" />
           </div>
-          <div className="text-[11px] text-stone-600">
-            {plates} plates · {drinks} drinks
+          <div>
+            <div className="text-xs tracking-wide text-stone-500">PLATES</div>
+            <div className="text-lg font-semibold text-stone-900">{plates}</div>
           </div>
         </div>
-      ) : (
-        <>
-          <div className="absolute right-3 top-3 flex items-center gap-2">
-            {isSelected && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] text-stone-700 ring-1 ring-white/60">
-                Selected
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/10 px-2 py-1 text-[11px] font-medium text-[#FF5A7A]">
-              {collabsLeft} left
-            </span>
-          </div>
 
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xl font-semibold text-stone-900">{title}</div>
-            <span className="rounded-full bg-stone-100 px-3 py-1 text-[11px] text-stone-600">
-              {chipLabel}
-            </span>
+        {/* Drinks */}
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FFE7F5]">
+            <DrinkIcon className="h-5 w-5" />
           </div>
-
-          <div className="absolute left-3 bottom-3">
-            <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-stone-600 border border-stone-200/50 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),inset_0_-1px_0_0_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.05)]">
-              by venue approval
-            </span>
+          <div>
+            <div className="text-xs tracking-wide text-stone-500">DRINKS</div>
+            <div className="text-lg font-semibold text-stone-900">{drinks}</div>
           </div>
+        </div>
+      </div>
 
-          {/* GRID ICONS */}
-          <div className="mt-4 grid grid-cols-2 gap-4 text-stone-700">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFE5EA]">
-                <Utensils className="h-4 w-4 text-[#FF5A7A]" />
-              </div>
-              <div>
-                <div className="text-xs tracking-wide text-stone-500">PLATES</div>
-                <div className="text-lg font-semibold text-stone-900">{plates}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FFE7F5]">
-                <Wine className="h-4 w-4 text-[#FF5A7A]" />
-              </div>
-              <div>
-                <div className="text-xs tracking-wide text-stone-500">DRINKS</div>
-                <div className="text-lg font-semibold text-stone-900">{drinks}</div>
-              </div>
-            </div>
-          </div>
+      {/* Mission collapsible */}
+      <motion.div
+        initial={false}
+        animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
+        className="overflow-hidden"
+      >
+        <p className="mt-4 text-sm text-stone-600">{mission}</p>
+      </motion.div>
 
-          {/* Mission copy (collapsible) */}
-          <motion.div
-            initial={false}
-            animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
-            className="overflow-hidden"
-          >
-            <p className="mt-4 text-sm text-stone-600">{mission}</p>
-          </motion.div>
-
-          {/* Instructions + value hint */}
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <button className="text-sm underline text-stone-700 flex items-center gap-1">
-              Content Instructions
-              <Info className="h-4 w-4 text-[#FF5A7A]" />
-            </button>
-            <div className="text-right">
-              <div className="text-xs text-stone-500">Estimated value</div>
-              <div className="text-sm font-semibold text-stone-900">350K IDR</div>
-            </div>
-          </div>
-        </>
-      )}
+      {/* Instructions + value hint */}
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <button className="text-sm underline text-stone-700 flex items-center gap-1">
+          Content Instructions
+          <Info className="h-4 w-4 text-[#FF5A7A]" />
+        </button>
+        <div className="text-right">
+          <div className="text-xs text-stone-500">Estimated value</div>
+          <div className="text-sm font-semibold text-stone-900">350K IDR</div>
+        </div>
+      </div>
     </motion.button>
   );
 }
