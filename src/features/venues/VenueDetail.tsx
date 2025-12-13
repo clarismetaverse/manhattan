@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import type { Venue } from "./VenueTypes";
 import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
+import { useNavigate } from "react-router-dom";
 
 // --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
 const PlateIcon = () => (
@@ -60,7 +61,9 @@ export default function VenueDetail({
     timeLabel: string;
     offerId: string;
     timeframeId?: string;
+    timeframeLabel?: string;
   } | null>(null);
+  const navigate = useNavigate();
 
   // ---- GALLERY STATE (thumbnail selector) ----
   const galleryImages = useMemo(() => {
@@ -112,6 +115,13 @@ export default function VenueDetail({
     }),
     []
   );
+
+  const getTimeframeLabel = (timeframeId?: string) => {
+    if (!timeframeId) return undefined;
+    return Object.values(weeklyTimeframes)
+      .flat()
+      .find(tf => tf.id === timeframeId)?.label;
+  };
 
   if (!offer) return null;
 
@@ -393,7 +403,25 @@ export default function VenueDetail({
         offerId={selectedOfferId ?? offer.id}
         venueId={venue.id}
         timeframesByDow={weeklyTimeframes}
-        onConfirm={(payload) => setConfirmedSlot(payload)}
+        onConfirm={(payload) => {
+          const timeframeLabel = getTimeframeLabel(payload.timeframeId);
+          setConfirmedSlot({ ...payload, timeframeLabel });
+
+          const matchedOffer =
+            venue.offers.find(currentOffer => currentOffer.id === payload.offerId) ?? offer;
+
+          navigate("/booking/preview", {
+            state: {
+              date: payload.date,
+              time: payload.timeLabel,
+              meal: timeframeLabel,
+              venueId: venue.id,
+              venueName: venue.name,
+              offerId: matchedOffer.id,
+              offerTitle: matchedOffer.title,
+            },
+          });
+        }}
       />
     </motion.div>
   );
