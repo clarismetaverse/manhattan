@@ -32,16 +32,21 @@ function ProUpgradeCardMobile({ plan }: { plan: { Name: string; Price: number; R
             </div>
           </div>
 
-          {/* Features list with improved spacing */}
-          <ul className="mt-6 space-y-4">
-            {(plan.Features ?? []).slice(0, 3).map((f, idx) => (
-              <li key={f.Feature} className="flex items-start gap-3 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
-                <span className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 text-white text-sm font-bold ring-2 ring-purple-400/20 shadow-lg">
+          <ul className="mt-5 space-y-3">
+            {(Array.isArray(plan.Features) ? plan.Features : []).slice(0, 3).map((f) => (
+              <li key={f.Feature} className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-purple-600 text-white/90 ring-1 ring-white/20">
                   ✓
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-zinc-100 text-base font-bold leading-tight uppercase tracking-wide">{f.Feature}</div>
-                  <div className="text-xs text-zinc-400 mt-1 leading-relaxed">{f.About ?? ''}</div>
+                  <div className="text-zinc-200 text-sm font-semibold leading-tight break-words">
+                    {f.Feature}
+                  </div>
+                  {f.About ? (
+                    <div className="mt-1 text-xs text-zinc-400 break-words">
+                      {f.About}
+                    </div>
+                  ) : null}
                 </div>
               </li>
             ))}
