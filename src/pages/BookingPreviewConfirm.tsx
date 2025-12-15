@@ -1,4 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, Bookmark, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +25,8 @@ type Venue = {
 
 export default function BookingPreviewConfirm() {
   const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [scrolledToBottom, setScrolledToBottom] = useState(false);
 
   // TODO: replace with real selected venue/offer coming from app state or route params
   const venue: Venue = {
@@ -59,11 +67,27 @@ export default function BookingPreviewConfirm() {
     setChecked((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const canConfirm = done >= Math.min(3, total); // light guard so user doesn't confirm “blind”
-  // TODO: adjust confirm rule (maybe all must be checked, or only key ones)
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const { scrollTop, clientHeight, scrollHeight } = el;
+    setScrolledToBottom(scrollTop + clientHeight >= scrollHeight - 24);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(handleScroll, 0);
+    return () => clearTimeout(timer);
+  }, [handleScroll]);
+
+  const canConfirm = scrolledToBottom;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div
+      ref={scrollRef}
+      onScroll={handleScroll}
+      className="relative h-[100dvh] overflow-y-auto bg-black text-white"
+    >
       {/* soft background aura */}
       <div className="pointer-events-none fixed inset-0 opacity-40">
         <div className="absolute -top-24 left-1/2 h-72 w-[520px] -translate-x-1/2 rounded-full bg-gradient-to-r from-fuchsia-600 via-rose-600 to-purple-700 blur-3xl" />
@@ -106,7 +130,7 @@ export default function BookingPreviewConfirm() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="mt-4 relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl shadow-[0_0_40px_-14px_rgba(236,72,153,0.45)]"
+          className="mt-4 relative overflow-hidden rounded-3xl border border-white/15 bg-zinc-950/70 backdrop-blur-xl shadow-[0_0_40px_-14px_rgba(236,72,153,0.45)]"
         >
           <div className="absolute inset-0 opacity-20 bg-gradient-to-br from-fuchsia-600 via-rose-600 to-purple-700" />
           <div className="relative p-4 flex gap-3">
@@ -134,7 +158,7 @@ export default function BookingPreviewConfirm() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="mt-4 rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl p-4"
+          className="mt-4 rounded-3xl border border-white/15 bg-zinc-950/70 backdrop-blur-xl p-4"
         >
           <div className="text-sm font-semibold">Brand guidelines</div>
           <p className="mt-2 text-sm text-zinc-300 leading-relaxed">
@@ -147,7 +171,7 @@ export default function BookingPreviewConfirm() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.15 }}
-          className="mt-3 rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl p-4"
+          className="mt-3 rounded-3xl border border-white/15 bg-zinc-950/70 backdrop-blur-xl p-4"
         >
           <div className="text-sm font-semibold">Content instructions</div>
           <p className="mt-2 text-sm text-zinc-300 leading-relaxed">
@@ -160,7 +184,7 @@ export default function BookingPreviewConfirm() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="mt-4 rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl p-4"
+          className="mt-4 rounded-3xl border border-white/15 bg-zinc-950/70 backdrop-blur-xl p-4"
         >
           <div className="flex items-end justify-between">
             <div>
@@ -193,7 +217,7 @@ export default function BookingPreviewConfirm() {
                 >
                   <span className="mt-0.5">
                     {isOn ? (
-                      <CheckCircle2 className="h-5 w-5 text-fuchsia-300" />
+                      <CheckCircle2 className="h-5 w-5 text-emerald-300" />
                     ) : (
                       <Circle className="h-5 w-5 text-zinc-500" />
                     )}
@@ -211,7 +235,13 @@ export default function BookingPreviewConfirm() {
       {/* sticky bottom bar */}
       <div className="fixed inset-x-0 bottom-0 z-50">
         <div className="pointer-events-none h-8 bg-gradient-to-t from-black to-transparent" />
-        <div className="border-t border-white/10 bg-black/80 backdrop-blur-xl">
+        <div className="border-t border-white/15 bg-black/80 backdrop-blur-xl">
+          {!canConfirm ? (
+            <div className="mx-auto max-w-md px-4 pt-3 text-center text-xs text-zinc-400">
+              Scroll to the bottom to enable confirmation
+            </div>
+          ) : null}
+
           <div className="mx-auto max-w-md px-4 py-3 flex items-center gap-3">
             <button
               disabled={!canConfirm}
@@ -219,7 +249,7 @@ export default function BookingPreviewConfirm() {
               onClick={() => {}}
               className={`h-12 flex-1 rounded-2xl text-sm font-semibold transition-all ${
                 canConfirm
-                  ? "bg-gradient-to-r from-rose-600 via-fuchsia-600 to-purple-700 shadow-[0_12px_30px_-14px_rgba(168,85,247,0.8)]"
+                  ? "bg-gradient-to-r from-rose-600 via-fuchsia-600 to-purple-700 text-white shadow-[0_12px_30px_-14px_rgba(168,85,247,0.8)]"
                   : "bg-zinc-800 text-zinc-400 cursor-not-allowed"
               }`}
             >
