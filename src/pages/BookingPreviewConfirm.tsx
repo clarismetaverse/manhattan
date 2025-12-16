@@ -245,8 +245,7 @@ export default function BookingPreviewConfirm() {
           <div className="mx-auto max-w-md px-4 py-3 flex items-center gap-3">
             <button
               disabled={!canConfirm}
-              // TODO: call confirm booking endpoint
-              onClick={() => {}}
+              onClick={() => navigate("/memberspass/tickets-v2")}
               className={`h-12 flex-1 rounded-2xl text-sm font-semibold transition-all ${
                 canConfirm
                   ? "bg-gradient-to-r from-rose-600 via-fuchsia-600 to-purple-700 text-white shadow-[0_12px_30px_-14px_rgba(168,85,247,0.8)]"
