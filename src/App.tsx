@@ -30,6 +30,7 @@ import BookingsScreen from "./pages/BookingsScreen";
 import BookingDetails from "./pages/BookingDetails";
 import VenuesPage from "./app/venues/Page";
 import BookingPreview from "./pages/BookingPreview";
+import BookingPreviewConfirm from "./pages/BookingPreviewConfirm";
 
 
 
@@ -76,6 +77,7 @@ const App = () => (
               <Route path="/memberpass/venues" element={<VenuesPage />} />
               <Route path="/app/venues" element={<VenuesPage />} />
               <Route path="/booking/preview" element={<BookingPreview />} />
+              <Route path="/booking/preview/confirm" element={<BookingPreviewConfirm />} />
               <Route path="/memberspass/bookings" element={<BookingsScreen />} />
               <Route path="/memberspass/booking/:id" element={<BookingDetails />} />
               <Route path="/memberspass/tickets" element={<MemberspassTickets />} />
