@@ -195,11 +195,6 @@ function TicketCard({ item }: { item: PassItem }) {
                 {item.time}
               </span>
             </div>
-            {isApproved && (
-              <p className="max-w-[260px] text-xs leading-relaxed text-white/70">
-                Wait for your host at the entrance — entry is by invitation only
-              </p>
-            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-5 text-xs uppercase tracking-[0.32em] text-white/60">

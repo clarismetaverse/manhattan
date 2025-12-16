@@ -71,9 +71,6 @@ export function TicketCardV2({ item }: { item: TicketItem }) {
           </div>
         </div>
 
-        {/* etiquette */}
-        <p className="text-sm text-black/60">Wait for your host at the entrance — entry is by invitation only.</p>
-
         {/* actions */}
         <div className="flex items-center justify-between gap-3">
           <button className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-emerald-100/80 px-4 py-2 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200 transition hover:bg-emerald-100">

@@ -132,11 +132,7 @@ export default function GuestMatch(props: GuestMatchProps) {
             </div>
           </div>
 
-          {/* Etiquette note */}
-          <p className="mt-8 max-w-[520px] px-2 text-center text-[13px] leading-relaxed text-white/75 sm:text-[14px]">
-            Wait for your host at the entrance — entry is by invitation only.
-          </p>
-        </div>
+      </div>
 
         {/* Action bar */}
         <div className="mt-12 grid grid-cols-[48px_1fr] items-center gap-3 sm:mt-14">

@@ -123,11 +123,6 @@ export function TicketCard({ item }: { item: TicketItem }) {
           </div>
         </div>
 
-        {/* etiquette */}
-        <p className="mb-5 text-sm text-stone-600">
-          Wait for your host at the entrance — entry is by invitation only.
-        </p>
-
         {/* rules */}
         <div className="mb-4 flex items-center gap-6 text-[12px] tracking-wide text-stone-600">
           <span className="inline-flex items-center gap-2">
