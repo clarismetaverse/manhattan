@@ -294,6 +294,18 @@ export default function VenueDetail({
           className="mx-4 mt-4 rounded-2xl bg-white/65 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.08)] p-4"
         >
           <div className="flex items-center justify-between">
+            <h3 className="text-stone-900 font-semibold">About</h3>
+            <button
+              onClick={() => setBriefOpen((v) => !v)}
+              className="text-sm text-stone-600 underline"
+            >
+              {briefOpen ? "Hide brief" : "Creator brief"}
+            </button>
+          </div>
+
+          <p className="mt-1 text-[13px] leading-6 text-stone-700">{venue.brief}</p>
+
+          <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-stone-700">
               <MapPin className="h-4 w-4" />
               {venue.city}
@@ -304,20 +316,7 @@ export default function VenueDetail({
             </button>
           </div>
 
-          <div className="mt-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-stone-900 font-semibold">About</h3>
-              <button
-                onClick={() => setBriefOpen((v) => !v)}
-                className="text-sm text-stone-600 underline"
-              >
-                {briefOpen ? "Hide brief" : "Creator brief"}
-              </button>
-            </div>
-
-            <p className="mt-1 text-[13px] leading-6 text-stone-700">{venue.brief}</p>
-
-            <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
               <StatPill
                 label="Response"
                 value={responseHours == null ? "—" : fmtHours(responseHours)}
@@ -358,7 +357,6 @@ export default function VenueDetail({
                   </svg>
                 }
               />
-            </div>
           </div>
         </motion.section>
 
