@@ -97,11 +97,12 @@ export default function VenuesScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
 
   const [open, setOpen] = useState<DetailVenue | null>(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [districtOpen, setDistrictOpen] = useState(false);
 
@@ -162,20 +163,34 @@ export default function VenuesScreen() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 350);
+
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    console.log("[Venues] search", search, "debounced", debouncedSearch);
+  }, [search, debouncedSearch]);
+
   // ---- FETCH FROM RestaurantUpgradeTop ----
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setError(null);
-    setCurrentPage(1);
+    setCurrentPage(0);
     setHasNextPage(false);
 
     const body = {
-      page: 1,
-      search: search.trim() || "",
+      page: 0,
+      search: debouncedSearch.trim() || "",
       category_ids: selectedCategoryIds,
       district_ids: selectedDistrictIds,
     };
+
+    console.log("[Venues] fetching", body);
 
     fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
       method: "POST",
@@ -199,6 +214,7 @@ export default function VenuesScreen() {
 
         setVenues(items);
         setHasNextPage(nextPage !== null);
+        console.log("[Venues] received", items.length, "nextPage", nextPage);
       })
       .catch((err) => {
         if ((err as any).name !== "AbortError") {
@@ -209,7 +225,7 @@ export default function VenuesScreen() {
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [search, selectedCategoryIds, selectedDistrictIds]);
+  }, [debouncedSearch, selectedCategoryIds, selectedDistrictIds]);
 
   // ---- LOAD MORE (infinite scroll) ----
   const loadMoreVenues = React.useCallback(() => {
@@ -220,10 +236,12 @@ export default function VenuesScreen() {
 
     const body = {
       page: nextPage,
-      search: search.trim() || "",
+      search: debouncedSearch.trim() || "",
       category_ids: selectedCategoryIds,
       district_ids: selectedDistrictIds,
     };
+
+    console.log("[Venues] fetching", body);
 
     fetch("https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/RestaurantUpgradeTop", {
       method: "POST",
@@ -247,12 +265,13 @@ export default function VenuesScreen() {
         setVenues(prev => [...prev, ...items]);
         setCurrentPage(nextPage);
         setHasNextPage(nextPageNum !== null);
+        console.log("[Venues] received", items.length, "nextPage", nextPageNum);
       })
       .catch((err) => {
         console.error("Error loading more venues:", err);
       })
       .finally(() => setLoadingMore(false));
-  }, [loadingMore, hasNextPage, currentPage, search, selectedCategoryIds, selectedDistrictIds]);
+  }, [loadingMore, hasNextPage, currentPage, debouncedSearch, selectedCategoryIds, selectedDistrictIds]);
 
   // ---- INTERSECTION OBSERVER FOR INFINITE SCROLL ----
   useEffect(() => {
@@ -292,9 +311,8 @@ export default function VenuesScreen() {
         </div>
       );
     
-    const normalizedSearch = search.trim().toLowerCase();
     const hasActiveFilters =
-      normalizedSearch.length > 0 ||
+      search.trim().length > 0 ||
       selectedCategoryIds.length > 0 ||
       selectedDistrictIds.length > 0 ||
       Boolean(selectedDate);
@@ -355,14 +373,10 @@ export default function VenuesScreen() {
         </div>
       );
 
-    const visibleVenues = normalizedSearch
-      ? venues.filter((v) => (v.Name ?? "").toLowerCase().includes(normalizedSearch))
-      : venues;
-
     // When filters are active, show all venues in one list
     // When no filters, split into pinned (first 5) and all (rest)
-    const pinnedVenues = hasActiveFilters ? [] : visibleVenues.slice(0, 5);
-    const allVenues = hasActiveFilters ? visibleVenues : visibleVenues.slice(5);
+    const pinnedVenues = hasActiveFilters ? [] : venues.slice(0, 5);
+    const allVenues = hasActiveFilters ? venues : venues.slice(5);
 
     const renderVenueCard = (
       venue: Venue,
@@ -670,7 +684,7 @@ export default function VenuesScreen() {
             <motion.div
               key={
                 hasActiveFilters
-                  ? `filtered-${normalizedSearch}-${selectedCategoryIds.join(",")}-${selectedDistrictIds.join(",")}-${selectedDate ?? "none"}`
+                  ? `filtered-${search.trim()}-${selectedCategoryIds.join(",")}-${selectedDistrictIds.join(",")}-${selectedDate ?? "none"}`
                   : "default-list"
               }
               initial={{ opacity: 0, y: 8 }}
