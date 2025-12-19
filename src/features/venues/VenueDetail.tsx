@@ -280,7 +280,7 @@ export default function VenueDetail({
           </div>
 
           {/* Venue name under thumbnails */}
-          <div className="px-4 mt-2 text-[18px] font-semibold text-stone-900 tracking-tight">
+          <div className="px-4 mt-2 text-[22px] font-semibold text-stone-900 tracking-tight">
             {venue.name}
           </div>
 
