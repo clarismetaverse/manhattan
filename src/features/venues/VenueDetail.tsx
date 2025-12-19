@@ -317,20 +317,6 @@ export default function VenueDetail({
 
             <p className="mt-1 text-[13px] leading-6 text-stone-700">{venue.brief}</p>
 
-            <AnimatePresence initial={false}>
-              {briefOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-2 rounded-xl bg-white/70 backdrop-blur-md ring-1 ring-white/50 p-3 text-sm text-stone-700"
-                >
-                  Keep it tasteful and upbeat. Tag @venue and #clarisapp. Focus on ambience,
-                  signature dishes, and your personality.
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div className="mt-3 flex flex-wrap gap-2">
               <StatPill
                 label="Response"
@@ -375,6 +361,24 @@ export default function VenueDetail({
             </div>
           </div>
         </motion.section>
+
+        {/* Creator Brief */}
+        <AnimatePresence initial={false}>
+          {briefOpen && (
+            <motion.section
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="mx-4 mt-3 rounded-2xl bg-white/65 backdrop-blur-xl ring-1 ring-white/60 shadow-[0_8px_24px_rgba(0,0,0,.08)] p-4"
+            >
+              <h3 className="text-stone-900 font-semibold text-sm">Creator Brief</h3>
+              <p className="mt-2 text-[13px] leading-6 text-stone-700">
+                Keep it tasteful and upbeat. Tag @venue and #clarisapp. Focus on ambience,
+                signature dishes, and your personality.
+              </p>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {/* Featured collabs strip */}
         <div className="mt-4 px-4">
