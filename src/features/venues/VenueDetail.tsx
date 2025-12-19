@@ -305,7 +305,7 @@ export default function VenueDetail({
 
           <p className="mt-1 text-[13px] leading-6 text-stone-700">{venue.brief}</p>
 
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-stone-700">
               <MapPin className="h-4 w-4" />
               {venue.city}
