@@ -60,36 +60,32 @@ const StatPill = ({
   return (
     <div
       className={[
-        "flex items-center gap-3",
-        "rounded-[18px]",
-        "bg-white/70 backdrop-blur-md",
-        "border border-white/60",
-        "shadow-[0_10px_28px_rgba(15,23,42,0.08)]",
-        "ring-1",
-        toneRing,
-        "px-4 py-3",
+        "flex items-center gap-2",
+        "rounded-full",
+        "bg-slate-50/80",
+        "border border-slate-200/60",
+        "px-3 py-1.5",
       ].join(" ")}
     >
       <div
         className={[
-          "h-9 w-9 rounded-full",
-          "bg-white/65 backdrop-blur",
-          "border border-white/70",
-          "shadow-[0_10px_22px_rgba(15,23,42,0.08)]",
+          "h-5 w-5 rounded-full",
+          "bg-white",
+          "border border-slate-200/70",
           "grid place-items-center",
+          "flex-shrink-0",
         ].join(" ")}
       >
-        {icon ?? <span className={["h-2.5 w-2.5 rounded-full", toneDot].join(" ")} />}
+        {icon ? (
+          <div className="scale-[0.65]">{icon}</div>
+        ) : (
+          <span className={["h-1.5 w-1.5 rounded-full", toneDot].join(" ")} />
+        )}
       </div>
 
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium tracking-[0.14em] text-slate-500 uppercase">
-          {label}
-        </p>
-        <div className="flex items-baseline gap-2">
-          <p className="text-[18px] font-semibold text-slate-900">{value}</p>
-          {sub && <p className="text-[12px] text-slate-500">{sub}</p>}
-        </div>
+      <div className="flex items-baseline gap-1 min-w-0">
+        <p className="text-[13px] font-medium text-slate-900">{value}</p>
+        <p className="text-[11px] text-slate-500 truncate">{sub || label}</p>
       </div>
     </div>
   );
@@ -289,7 +285,7 @@ export default function VenueDetail({
           </div>
 
           <div className="px-4">
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-3 flex flex-wrap gap-2">
               <StatPill
                 label="Response"
                 value={responseHours == null ? "—" : fmtHours(responseHours)}
