@@ -284,50 +284,6 @@ export default function VenueDetail({
             {venue.name}
           </div>
 
-          <div className="px-4">
-            <div className="mt-3 flex flex-wrap gap-2">
-              <StatPill
-                label="Response"
-                value={responseHours == null ? "—" : fmtHours(responseHours)}
-                sub="avg time"
-                tone={responseTone}
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 text-slate-700/70"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                }
-              />
-
-              <StatPill
-                label="Acceptance"
-                value={acceptanceRate == null ? "—" : `${Math.round(acceptanceRate)}%`}
-                sub="approved"
-                tone={acceptanceTone}
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 text-slate-700/70"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
-                  </svg>
-                }
-              />
-            </div>
-          </div>
         </div>
 
         {/* About */}
@@ -374,6 +330,49 @@ export default function VenueDetail({
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <StatPill
+                label="Response"
+                value={responseHours == null ? "—" : fmtHours(responseHours)}
+                sub="avg time"
+                tone={responseTone}
+                icon={
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 text-slate-700/70"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
+
+              <StatPill
+                label="Acceptance"
+                value={acceptanceRate == null ? "—" : `${Math.round(acceptanceRate)}%`}
+                sub="approved"
+                tone={acceptanceTone}
+                icon={
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 text-slate-700/70"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
+                  </svg>
+                }
+              />
+            </div>
           </div>
         </motion.section>
 
