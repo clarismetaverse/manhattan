@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
@@ -22,6 +22,78 @@ const DessertIcon = () => (
 const ChampagneIcon = () => (
   <span className="text-xl leading-none" role="img" aria-label="champagne">🥂</span>
 );
+
+const fmtHours = (h: number) => {
+  if (h < 1) return "<1h";
+  if (h < 24) return `${Math.round(h)}h`;
+  const d = Math.round(h / 24);
+  return `${d}d`;
+};
+
+const StatPill = ({
+  label,
+  value,
+  sub,
+  icon,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  icon?: ReactNode;
+  tone?: "neutral" | "good" | "warn";
+}) => {
+  const toneRing =
+    tone === "good"
+      ? "ring-emerald-200/60"
+      : tone === "warn"
+      ? "ring-amber-200/60"
+      : "ring-slate-200/60";
+
+  const toneDot =
+    tone === "good"
+      ? "bg-emerald-500/80"
+      : tone === "warn"
+      ? "bg-amber-500/80"
+      : "bg-slate-400/80";
+
+  return (
+    <div
+      className={[
+        "flex items-center gap-3",
+        "rounded-[18px]",
+        "bg-white/70 backdrop-blur-md",
+        "border border-white/60",
+        "shadow-[0_10px_28px_rgba(15,23,42,0.08)]",
+        "ring-1",
+        toneRing,
+        "px-4 py-3",
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "h-9 w-9 rounded-full",
+          "bg-white/65 backdrop-blur",
+          "border border-white/70",
+          "shadow-[0_10px_22px_rgba(15,23,42,0.08)]",
+          "grid place-items-center",
+        ].join(" ")}
+      >
+        {icon ?? <span className={["h-2.5 w-2.5 rounded-full", toneDot].join(" ")} />}
+      </div>
+
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium tracking-[0.14em] text-slate-500 uppercase">
+          {label}
+        </p>
+        <div className="flex items-baseline gap-2">
+          <p className="text-[18px] font-semibold text-slate-900">{value}</p>
+          {sub && <p className="text-[12px] text-slate-500">{sub}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 
 // Dummy featured collabs (no @handles shown)
@@ -64,6 +136,13 @@ export default function VenueDetail({
     timeframeLabel?: string;
   } | null>(null);
   const navigate = useNavigate();
+
+  const responseHours = 6;
+  const acceptanceRate = 72;
+  const responseTone: "good" | "warn" | "neutral" =
+    responseHours == null ? "neutral" : responseHours <= 6 ? "good" : responseHours <= 24 ? "neutral" : "warn";
+  const acceptanceTone: "good" | "warn" | "neutral" =
+    acceptanceRate == null ? "neutral" : acceptanceRate >= 70 ? "good" : acceptanceRate >= 40 ? "neutral" : "warn";
 
   // ---- GALLERY STATE (thumbnail selector) ----
   const galleryImages = useMemo(() => {
@@ -207,6 +286,51 @@ export default function VenueDetail({
           {/* Venue name under thumbnails */}
           <div className="px-4 mt-2 text-[18px] font-semibold text-stone-900 tracking-tight">
             {venue.name}
+          </div>
+
+          <div className="px-4">
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <StatPill
+                label="Response"
+                value={responseHours == null ? "—" : fmtHours(responseHours)}
+                sub="avg time"
+                tone={responseTone}
+                icon={
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 text-slate-700/70"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                }
+              />
+
+              <StatPill
+                label="Acceptance"
+                value={acceptanceRate == null ? "—" : `${Math.round(acceptanceRate)}%`}
+                sub="approved"
+                tone={acceptanceTone}
+                icon={
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4 text-slate-700/70"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
+                  </svg>
+                }
+              />
+            </div>
           </div>
         </div>
 
