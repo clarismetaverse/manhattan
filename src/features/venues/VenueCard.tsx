@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 import type { Venue } from "./VenueTypes";
 
@@ -6,14 +5,12 @@ const CARD_RADIUS = 24;
 
 export default function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: (v: Venue) => void }) {
   return (
-    <motion.button
+    <button
       onClick={() => onOpen(venue)}
       className="w-full text-left"
-      whileTap={{ scale: 0.98 }}
     >
-      <motion.div
-        layoutId={`card-${venue.id}`}
-        className="relative overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,.08)]"
+      <div
+        className="relative overflow-hidden shadow-[0_12px_30px_rgba(0,0,0,.08)] active:scale-[0.98] transition-transform"
         style={{ borderRadius: CARD_RADIUS }}
       >
         <img
@@ -22,8 +19,7 @@ export default function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: (v:
           className="h-64 w-full object-cover"
           style={{ borderRadius: CARD_RADIUS }}
         />
-        <motion.div
-          layoutId={`card-grad-${venue.id}`}
+        <div
           className="absolute inset-0"
           style={{
             borderRadius: CARD_RADIUS,
@@ -37,7 +33,7 @@ export default function VenueCard({ venue, onOpen }: { venue: Venue; onOpen: (v:
             <span>{venue.city}</span>
           </div>
         </div>
-      </motion.div>
-    </motion.button>
+      </div>
+    </button>
   );
 }

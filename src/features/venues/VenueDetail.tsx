@@ -337,9 +337,10 @@ export default function VenueDetail({
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0 }}
       className="fixed inset-0 z-50 overflow-y-auto"
       style={{
         background:
@@ -358,13 +359,7 @@ export default function VenueDetail({
           </button>
 
           {/* Cover image (changes on thumbnail click) */}
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 22 }}
-            className="px-4 pt-2"
-            layoutId={`card-${restaurantId}`}
-          >
+          <div className="px-4 pt-2">
             <div className="relative overflow-hidden rounded-[24px]">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.img
@@ -379,12 +374,11 @@ export default function VenueDetail({
                 />
               </AnimatePresence>
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-black/0" />
-              <motion.div
-                layoutId={`card-grad-${restaurantId}`}
+              <div
                 className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent"
               />
             </div>
-          </motion.div>
+          </div>
 
           {/* Thumbnails under cover */}
           <div className="px-4 mt-3">
