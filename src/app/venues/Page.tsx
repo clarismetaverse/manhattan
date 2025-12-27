@@ -65,14 +65,8 @@ interface TurboFilterItem {
   filter_type: "area" | "category" | "content" | string;
 }
 
-type DetailVenue = {
-  id: string;
-  name: string;
-  image: string;
-  gallery: string[];
-  city?: string;
-  brief: string;
-  offers: Array<{ id: string; title: string; plates?: number; drinks?: number; dessert?: number; champagne?: number; mission: string }>;
+type DetailVenueRef = {
+  id: number;
 };
 
 type ChipDefinition = {
@@ -100,7 +94,7 @@ export default function VenuesScreen() {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
 
-  const [open, setOpen] = useState<DetailVenue | null>(null);
+  const [open, setOpen] = useState<DetailVenueRef | null>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -419,43 +413,7 @@ export default function VenuesScreen() {
               }
             }
 
-            const galleryUrls = (venue.GalleryRestaurant ?? [])
-              .map((f) => f?.url)
-              .filter(Boolean);
-            const mergedGallery = Array.from(
-              new Set([coverUrl, ...galleryUrls].filter(Boolean))
-            );
-
-            const detail: DetailVenue = {
-              id,
-              name: venue.Name,
-              image: mergedGallery[0] ?? coverUrl,
-              gallery: mergedGallery,
-              city: badgeLabel ?? undefined,
-              brief:
-                "Scandinavian vibes in the heart of Seminyak. Everything is organized to feel warm and light.",
-              offers: [
-                {
-                  id: "story3",
-                  title: "3 × Story",
-                  plates: 1,
-                  drinks: 2,
-                  mission:
-                    "Publish 3 Stories showcasing ambience, hero dishes, and yourself. Tag @venue + #clarisapp with one hidden @claris.app mention after posting.",
-                },
-                {
-                  id: "reel",
-                  title: "Reel",
-                  plates: 3,
-                  drinks: 2,
-                  dessert: 1,
-                  champagne: 1,
-                  mission:
-                    "Post 1 Reel with yourself, ambience and dishes. Tag @venue and #clarisapp in caption.",
-                },
-              ],
-            };
-            setOpen(detail);
+            setOpen({ id: venue.id });
           }}
           whileHover={isPinned ? { y: -8, rotateX: -4, rotateY: 4 } : { y: -4 }}
           whileTap={isPinned ? { scale: 0.97, rotateX: 0, rotateY: 0 } : { scale: 0.98 }}
@@ -894,7 +852,7 @@ export default function VenuesScreen() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {open && <VenueDetail venue={open as any} onClose={() => setOpen(null)} />}
+        {open && <VenueDetail venue={open} onClose={() => setOpen(null)} />}
       </AnimatePresence>
     </LayoutGroup>
   );
