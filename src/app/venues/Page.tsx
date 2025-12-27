@@ -33,6 +33,7 @@ import {
 } from "framer-motion";
 import { Search, Calendar } from "lucide-react";
 import VenueDetail from "@/features/venues/VenueDetail";
+import ExpandedVenueCard from "@/features/venues/ExpandedVenueCard";
 
 // ---- TYPES ----
 
@@ -635,9 +636,9 @@ export default function VenuesScreen() {
           </motion.div>
         </section>
 
-        {/* All venues */}
+        {/* All venues - now showing expanded cards */}
         <section>
-          <h2 className="mb-3 text-base font-semibold text-gray-900">All Venues</h2>
+          <h2 className="mb-4 text-base font-semibold text-gray-900">All Venues</h2>
           <AnimatePresence mode="wait">
             <motion.div
               key={
@@ -649,11 +650,22 @@ export default function VenuesScreen() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.28, ease: [0.22, 0.61, 0.36, 1] }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              {allVenues.map((venue, index) =>
-                renderVenueCard(venue, index, "full")
-              )}
+              {allVenues.map((venue) => (
+                <motion.div
+                  key={venue.id}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.3, ease: [0.22, 0.61, 0.36, 1] }}
+                >
+                  <ExpandedVenueCard
+                    venueId={venue.id}
+                    onSelect={() => setOpen({ id: venue.id })}
+                  />
+                </motion.div>
+              ))}
             </motion.div>
           </AnimatePresence>
           
