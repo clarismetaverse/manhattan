@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
-import type { Venue } from "./VenueTypes";
-import { FeaturedCollabsStrip } from "@/features/venues/FeaturedCollabsStrip";
 import { useNavigate } from "react-router-dom";
 
 // --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
@@ -92,37 +90,70 @@ const StatPill = ({
 };
 
 
-// Dummy featured collabs (no @handles shown)
-const demoFeaturedCollabs = [
-  {
-    id: "pancakes",
-    creatorHandle: "Pancake Stack",
-    contentType: "3 × Story",
-    badge: "Top pick",
-    imageUrl:
-      "https://images.pexels.com/photos/376464/pexels-photo-376464.jpeg?auto=compress&cs=tinysrgb&w=800",
-  },
-  {
-    id: "fries",
-    creatorHandle: "House Fries",
-    contentType: "Reel",
-    badge: undefined,
-    imageUrl:
-      "https://images.pexels.com/photos/2983101/pexels-photo-2983101.jpeg?auto=compress&cs=tinysrgb&w=800",
-  },
-];
+type XanoFile = {
+  url?: string;
+  [key: string]: unknown;
+};
+
+type Restaurant = {
+  id?: number;
+  Name?: string;
+  Cover?: XanoFile | null;
+  GalleryRestaurant?: XanoFile[] | null;
+  Brief?: string | null;
+  Description?: string | null;
+  City?: { Name?: string | null } | null;
+  [key: string]: unknown;
+};
+
+type ActionTurbo = {
+  Action_Name?: string | null;
+  Descrizione?: string | null;
+  Action_icon?: XanoFile | null;
+  Plates?: number | null;
+  Drinks?: number | null;
+  stories?: number | null;
+  Days_deadline?: number | null;
+  [key: string]: unknown;
+};
+
+type Service = {
+  id: number;
+  _actions_turbo?: ActionTurbo | null;
+  [key: string]: unknown;
+};
+
+type ServiceOffer = {
+  id: string;
+  title: string;
+  description: string;
+  icon?: string;
+  plates?: number;
+  drinks?: number;
+  stories?: number;
+  daysDeadline?: number;
+  dessert?: number;
+  champagne?: number;
+};
+
+const DETAIL_ENDPOINT =
+  "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/get_restaurant_and_service_Upgrade";
 
 export default function VenueDetail({
   venue,
   onClose,
 }: {
-  venue: Venue;
+  venue: { id: number | string };
   onClose: () => void;
 }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null);
   const [briefOpen, setBriefOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [confirmedSlot, setConfirmedSlot] = useState<{
     iso: string;
     date: string;
@@ -133,29 +164,82 @@ export default function VenueDetail({
   } | null>(null);
   const navigate = useNavigate();
 
-  const responseHours = 6;
-  const acceptanceRate = 72;
-  const responseTone: "good" | "warn" | "neutral" =
-    responseHours == null ? "neutral" : responseHours <= 6 ? "good" : responseHours <= 24 ? "neutral" : "warn";
-  const acceptanceTone: "good" | "warn" | "neutral" =
-    acceptanceRate == null ? "neutral" : acceptanceRate >= 70 ? "good" : acceptanceRate >= 40 ? "neutral" : "warn";
+  const restaurantId = useMemo(() => Number(venue.id), [venue.id]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!Number.isFinite(restaurantId)) {
+      setError("Invalid restaurant id.");
+      return () => controller.abort();
+    }
+
+    setLoading(true);
+    setError(null);
+    setRestaurant(null);
+    setServices([]);
+
+    fetch(DETAIL_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ restaurant_id: restaurantId }),
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
+        return (await res.json()) as { restaurant?: Restaurant; services?: Service[] };
+      })
+      .then((data) => {
+        setRestaurant(data.restaurant ?? null);
+        setServices(Array.isArray(data.services) ? data.services : []);
+      })
+      .catch((err) => {
+        if ((err as { name?: string }).name === "AbortError") return;
+        console.error("Failed to load venue detail", err);
+        setError("Unable to load venue details.");
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [restaurantId]);
+
+  const offers = useMemo<ServiceOffer[]>(
+    () =>
+      services.map((service) => ({
+        id: String(service.id),
+        title: service._actions_turbo?.Action_Name ?? "",
+        description: service._actions_turbo?.Descrizione ?? "",
+        icon: service._actions_turbo?.Action_icon?.url ?? undefined,
+        plates: service._actions_turbo?.Plates ?? undefined,
+        drinks: service._actions_turbo?.Drinks ?? undefined,
+        stories: service._actions_turbo?.stories ?? undefined,
+        daysDeadline: service._actions_turbo?.Days_deadline ?? undefined,
+      })),
+    [services]
+  );
 
   // ---- GALLERY STATE (thumbnail selector) ----
   const galleryImages = useMemo(() => {
-    const urls = (venue.gallery ?? []).filter(Boolean);
-    if (urls.length) return urls;
-    return venue.image ? [venue.image] : [];
-  }, [venue]);
+    const urls =
+      restaurant?.GalleryRestaurant?.map((item) => item?.url).filter(Boolean) ?? [];
+    const coverUrl = restaurant?.Cover?.url;
+    if (coverUrl) urls.unshift(coverUrl);
+    return Array.from(new Set(urls.filter(Boolean)));
+  }, [restaurant]);
 
-  const [activeImg, setActiveImg] = useState(
-    venue.gallery?.[0] ?? venue.image
-  );
+  const [activeImg, setActiveImg] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    setActiveImg(venue.gallery?.[0] ?? venue.image);
-  }, [venue]);
+    setActiveImg(galleryImages[0]);
+  }, [galleryImages]);
 
-  const offer = venue.offers[activeTab] ?? venue.offers[0];
+  useEffect(() => {
+    setActiveTab(0);
+    setSelectedOfferId(null);
+    setConfirmedSlot(null);
+  }, [restaurantId]);
+
+  const hasOffers = offers.length > 0;
+  const offer = hasOffers ? offers[activeTab] ?? offers[0] : null;
   const enabled = !!selectedOfferId;
   const activeConfirmed =
     confirmedSlot && confirmedSlot.offerId === selectedOfferId ? confirmedSlot : null;
@@ -198,7 +282,58 @@ export default function VenueDetail({
       .find(tf => tf.id === timeframeId)?.label;
   };
 
-  if (!offer) return null;
+  if (loading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{
+          background:
+            "radial-gradient(1200px 600px at 70% -10%, #fffaf4 0%, #f7f1e6 40%, #e9dec9 75%, #e5d6c2 100%)",
+        }}
+      >
+        <div className="rounded-2xl bg-white/80 px-6 py-4 text-sm text-stone-600 shadow">
+          Loading venue…
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center"
+        style={{
+          background:
+            "radial-gradient(1200px 600px at 70% -10%, #fffaf4 0%, #f7f1e6 40%, #e9dec9 75%, #e5d6c2 100%)",
+        }}
+      >
+        <div className="rounded-2xl bg-white/80 px-6 py-4 text-sm text-stone-600 shadow">
+          {error}
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (!restaurant) return null;
+
+  const restaurantName = restaurant.Name ?? "";
+  const restaurantCity =
+    restaurant.City?.Name ?? (restaurant as { city?: string | null }).city ?? "";
+  const restaurantBrief = restaurant.Brief ?? restaurant.Description ?? "";
+  const creatorBrief =
+    (restaurant as { CreatorBrief?: string | null; creator_brief?: string | null })
+      .CreatorBrief ??
+    (restaurant as { CreatorBrief?: string | null; creator_brief?: string | null })
+      .creator_brief ??
+    "";
+  const responseHours = (restaurant as { responseHours?: number }).responseHours;
+  const acceptanceRate = (restaurant as { acceptanceRate?: number }).acceptanceRate;
 
   return (
     <motion.div
@@ -228,14 +363,14 @@ export default function VenueDetail({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 22 }}
             className="px-4 pt-2"
-            layoutId={`card-${venue.id}`}
+            layoutId={`card-${restaurantId}`}
           >
             <div className="relative overflow-hidden rounded-[24px]">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.img
                   key={activeImg}
-                  src={activeImg ?? venue.image}
-                  alt={venue.name}
+                  src={activeImg ?? restaurant.Cover?.url ?? ""}
+                  alt={restaurantName}
                   className="h-64 w-full object-cover"
                   initial={{ opacity: 0, scale: 1.02, filter: "blur(6px)" }}
                   animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
@@ -245,7 +380,7 @@ export default function VenueDetail({
               </AnimatePresence>
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-black/0" />
               <motion.div
-                layoutId={`card-grad-${venue.id}`}
+                layoutId={`card-grad-${restaurantId}`}
                 className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent"
               />
             </div>
@@ -281,7 +416,7 @@ export default function VenueDetail({
 
           {/* Venue name under thumbnails */}
           <div className="px-4 mt-2 text-[22px] font-semibold text-stone-900 tracking-tight">
-            {venue.name}
+            {restaurantName}
           </div>
 
         </div>
@@ -295,74 +430,91 @@ export default function VenueDetail({
         >
           <div className="flex items-center justify-between">
             <h3 className="text-stone-900 font-semibold">About</h3>
-            <button
-              onClick={() => setBriefOpen((v) => !v)}
-              className="text-sm text-stone-600 underline"
-            >
-              {briefOpen ? "Hide brief" : "Creator brief"}
-            </button>
+            {creatorBrief && (
+              <button
+                onClick={() => setBriefOpen((v) => !v)}
+                className="text-sm text-stone-600 underline"
+              >
+                {briefOpen ? "Hide brief" : "Creator brief"}
+              </button>
+            )}
           </div>
 
-          <p className="mt-1 text-[13px] leading-6 text-stone-700">{venue.brief}</p>
+          {restaurantBrief && (
+            <p className="mt-1 text-[13px] leading-6 text-stone-700">
+              {restaurantBrief}
+            </p>
+          )}
 
           <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-stone-700">
-              <MapPin className="h-4 w-4" />
-              {venue.city}
-            </div>
+            {restaurantCity && (
+              <div className="flex items-center gap-2 text-sm text-stone-700">
+                <MapPin className="h-4 w-4" />
+                {restaurantCity}
+              </div>
+            )}
 
             <button className="inline-flex items-center gap-2 text-sm text-stone-700">
               <Instagram className="h-4 w-4" /> Visit
             </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-2">
-              <StatPill
-                label="Response"
-                value={responseHours == null ? "—" : fmtHours(responseHours)}
-                sub="avg time"
-                tone={responseTone}
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 text-slate-700/70"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                }
-              />
-
-              <StatPill
-                label="Acceptance"
-                value={acceptanceRate == null ? "—" : `${Math.round(acceptanceRate)}%`}
-                sub="approved"
-                tone={acceptanceTone}
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 text-slate-700/70"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
-                  </svg>
-                }
-              />
-          </div>
+          {(responseHours != null || acceptanceRate != null) && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {responseHours != null && (
+                <StatPill
+                  label="Response"
+                  value={fmtHours(responseHours)}
+                  sub="avg time"
+                  tone={
+                    responseHours <= 6 ? "good" : responseHours <= 24 ? "neutral" : "warn"
+                  }
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4 text-slate-700/70"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  }
+                />
+              )}
+              {acceptanceRate != null && (
+                <StatPill
+                  label="Acceptance"
+                  value={`${Math.round(acceptanceRate)}%`}
+                  sub="approved"
+                  tone={
+                    acceptanceRate >= 70 ? "good" : acceptanceRate >= 40 ? "neutral" : "warn"
+                  }
+                  icon={
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-4 w-4 text-slate-700/70"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.7"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20 6L9 17l-5-5" />
+                    </svg>
+                  }
+                />
+              )}
+            </div>
+          )}
         </motion.section>
 
         {/* Creator Brief */}
         <AnimatePresence initial={false}>
-          {briefOpen && (
+          {briefOpen && creatorBrief && (
             <motion.section
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -371,20 +523,11 @@ export default function VenueDetail({
             >
               <h3 className="text-stone-900 font-semibold text-sm">Creator Brief</h3>
               <p className="mt-2 text-[13px] leading-6 text-stone-700">
-                Keep it tasteful and upbeat. Tag @venue and #clarisapp. Focus on ambience,
-                signature dishes, and your personality.
+                {creatorBrief}
               </p>
             </motion.section>
           )}
         </AnimatePresence>
-
-        {/* Featured collabs strip */}
-        <div className="mt-4 px-4">
-          <FeaturedCollabsStrip
-            collabs={demoFeaturedCollabs}
-            onViewAll={() => console.log("View all featured collabs")}
-          />
-        </div>
 
         {/* Bridge CTA */}
         <AnimatePresence initial={false}>
@@ -407,143 +550,154 @@ export default function VenueDetail({
         </AnimatePresence>
 
         {/* Tabs */}
-        <div className="mx-4 mt-4 relative rounded-2xl p-1 bg-white/45 backdrop-blur-xl ring-1 ring-white/50 flex">
-          {venue.offers.map((o, i) => (
-            <button
-              key={o.id}
-              onClick={() => setActiveTab(i)}
-              aria-pressed={i === activeTab}
-              className={`relative z-10 flex-1 py-2 text-sm font-medium transition-colors ${
-                i === activeTab ? "text-[#FF5A7A]" : "text-stone-700"
-              }`}
-            >
-              {o.title}
-            </button>
-          ))}
-          <motion.div
-            layout
-            className="absolute top-1 bottom-1 rounded-xl bg-white shadow-[0_1px_8px_rgba(0,0,0,.06)]"
-            style={{
-              left: `calc(${(100 / venue.offers.length) * activeTab}% + 0.25rem)`,
-              width: `calc(${100 / venue.offers.length}% - 0.5rem)`,
-            }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          />
-          <motion.div
-            key={activeTab}
-            className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF5A7A] to-[#FF3A6E]"
-            style={{
-              left: `calc(${(100 / venue.offers.length) * activeTab}% + 0.25rem)`,
-              width: `calc(${100 / venue.offers.length}% - 0.5rem)`,
-            }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            layout
-          />
-        </div>
+        {hasOffers && (
+          <div className="mx-4 mt-4 relative rounded-2xl p-1 bg-white/45 backdrop-blur-xl ring-1 ring-white/50 flex">
+            {offers.map((o, i) => (
+              <button
+                key={o.id}
+                onClick={() => setActiveTab(i)}
+                aria-pressed={i === activeTab}
+                className={`relative z-10 flex-1 py-2 text-sm font-medium transition-colors ${
+                  i === activeTab ? "text-[#FF5A7A]" : "text-stone-700"
+                }`}
+              >
+                {o.title}
+              </button>
+            ))}
+            <motion.div
+              layout
+              className="absolute top-1 bottom-1 rounded-xl bg-white shadow-[0_1px_8px_rgba(0,0,0,.06)]"
+              style={{
+                left: `calc(${(100 / offers.length) * activeTab}% + 0.25rem)`,
+                width: `calc(${100 / offers.length}% - 0.5rem)`,
+              }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+            <motion.div
+              key={activeTab}
+              className="pointer-events-none absolute bottom-0 h-0.5 rounded-full bg-gradient-to-r from-[#FF5A7A] to-[#FF3A6E]"
+              style={{
+                left: `calc(${(100 / offers.length) * activeTab}% + 0.25rem)`,
+                width: `calc(${100 / offers.length}% - 0.5rem)`,
+              }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              layout
+            />
+          </div>
+        )}
 
         {/* Offer card */}
-        <AnimatePresence mode="wait">
-          {!sheetOpen && (
-            <motion.section
-              key={offer.id}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-              className="mx-4 mt-4"
-            >
-              <OfferCard
-                offerId={offer.id}
-                title={offer.title}
-                plates={offer.plates ?? 0}
-                drinks={offer.drinks ?? 0}
-                dessert={offer.dessert ?? 0}
-                champagne={offer.champagne ?? 0}
-                mission={offer.mission}
-                isSelected={selectedOfferId === offer.id}
-                onToggle={() =>
-                  setSelectedOfferId((prev) => (prev === offer.id ? null : offer.id))
-                }
-                collabsLeft={3}
-              />
-            </motion.section>
-          )}
-        </AnimatePresence>
+        {offer ? (
+          <>
+            <AnimatePresence mode="wait">
+              {!sheetOpen && (
+                <motion.section
+                  key={offer.id}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.25 }}
+                  className="mx-4 mt-4"
+                >
+                  <OfferCard
+                    offerId={offer.id}
+                    title={offer.title}
+                    plates={offer.plates ?? 0}
+                    drinks={offer.drinks ?? 0}
+                    dessert={offer.dessert ?? 0}
+                    champagne={offer.champagne ?? 0}
+                    mission={offer.description}
+                    isSelected={selectedOfferId === offer.id}
+                    onToggle={() =>
+                      setSelectedOfferId((prev) => (prev === offer.id ? null : offer.id))
+                    }
+                  />
+                </motion.section>
+              )}
+            </AnimatePresence>
 
-        <p className="mx-4 mt-3 text-sm text-stone-600">
-          Choose the high-quality content you’ll craft in return for the complimentary experience
-        </p>
+            <p className="mx-4 mt-3 text-sm text-stone-600">
+              Choose the high-quality content you’ll craft in return for the complimentary experience
+            </p>
 
-        {/* Sticky CTA */}
-        <div className="fixed inset-x-0 bottom-3 px-4">
-          <div className="mx-auto max-w-sm rounded-2xl bg-white/70 backdrop-blur-lg ring-1 ring-white/50 p-2">
-            <div className="px-2 pb-2 text-center text-xs text-stone-600">
-              {enabled
-                ? activeConfirmed
-                  ? `${offer.title} · ${activeConfirmed.timeLabel}`
-                  : offer.title
-                : "Pick an offer to continue"}
+            {/* Sticky CTA */}
+            <div className="fixed inset-x-0 bottom-3 px-4">
+              <div className="mx-auto max-w-sm rounded-2xl bg-white/70 backdrop-blur-lg ring-1 ring-white/50 p-2">
+                <div className="px-2 pb-2 text-center text-xs text-stone-600">
+                  {enabled
+                    ? activeConfirmed
+                      ? `${offer.title} · ${activeConfirmed.timeLabel}`
+                      : offer.title
+                    : "Pick an offer to continue"}
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  animate={
+                    enabled
+                      ? {
+                          opacity: 1,
+                          scale: 1,
+                          boxShadow:
+                            "0 4px 12px rgba(255,90,122,0.25), 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+                          background: "linear-gradient(135deg, #fefefe 0%, #f5f5f5 100%)",
+                          color: "#FF5A7A",
+                          borderColor: "#FF5A7A",
+                        }
+                      : {
+                          opacity: 0.6,
+                          scale: 1,
+                          background: "linear-gradient(to right, #FF5A7A, #FF3A6E)",
+                          color: "#ffffff",
+                          borderColor: "transparent",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                        }
+                  }
+                  disabled={!enabled}
+                  className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all"
+                  onClick={() => enabled && setSheetOpen(true)}
+                >
+                  {activeConfirmed?.timeLabel
+                    ? `Confirm ${activeConfirmed.timeLabel}`
+                    : "Select date & time"}
+                </motion.button>
+              </div>
             </div>
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              animate={
-                enabled
-                  ? {
-                      opacity: 1,
-                      scale: 1,
-                      boxShadow:
-                        "0 4px 12px rgba(255,90,122,0.25), 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
-                      background: "linear-gradient(135deg, #fefefe 0%, #f5f5f5 100%)",
-                      color: "#FF5A7A",
-                      borderColor: "#FF5A7A",
-                    }
-                  : {
-                      opacity: 0.6,
-                      scale: 1,
-                      background: "linear-gradient(to right, #FF5A7A, #FF3A6E)",
-                      color: "#ffffff",
-                      borderColor: "transparent",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                    }
-              }
-              disabled={!enabled}
-              className="w-full rounded-[15px] px-4 py-2 font-medium border-[3px] disabled:cursor-not-allowed transition-all"
-              onClick={() => enabled && setSheetOpen(true)}
-            >
-              {activeConfirmed?.timeLabel
-                ? `Confirm ${activeConfirmed.timeLabel}`
-                : "Select date & time"}
-            </motion.button>
+          </>
+        ) : (
+          <div className="mx-4 mt-6 rounded-2xl bg-white/70 p-4 text-sm text-stone-600">
+            No offers available right now.
           </div>
-        </div>
+        )}
       </div>
 
-      <DateTimeSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        offerId={selectedOfferId ?? offer.id}
-        venueId={venue.id}
-        timeframesByDow={weeklyTimeframes}
-        onConfirm={(payload) => {
-          const timeframeLabel = getTimeframeLabel(payload.timeframeId);
-          setConfirmedSlot({ ...payload, timeframeLabel });
+      {offer && (
+        <DateTimeSheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          offerId={selectedOfferId ?? offer.id}
+          venueId={restaurantId}
+          timeframesByDow={weeklyTimeframes}
+          onConfirm={(payload) => {
+            const timeframeLabel = getTimeframeLabel(payload.timeframeId);
+            setConfirmedSlot({ ...payload, timeframeLabel });
 
-          const matchedOffer =
-            venue.offers.find(currentOffer => currentOffer.id === payload.offerId) ?? offer;
+            const matchedOffer =
+              offers.find(currentOffer => currentOffer.id === payload.offerId) ?? offer;
 
-          navigate("/booking/preview", {
-            state: {
-              date: payload.date,
-              time: payload.timeLabel,
-              meal: timeframeLabel,
-              venueId: venue.id,
-              venueName: venue.name,
-              offerId: matchedOffer.id,
-              offerTitle: matchedOffer.title,
-            },
-          });
-        }}
-      />
+            navigate("/booking/preview", {
+              state: {
+                date: payload.date,
+                time: payload.timeLabel,
+                meal: timeframeLabel,
+                venueId: restaurantId,
+                venueName: restaurantName,
+                offerId: matchedOffer.id,
+                offerTitle: matchedOffer.title,
+              },
+            });
+          }}
+        />
+      )}
     </motion.div>
   );
 }
@@ -560,7 +714,7 @@ function OfferCard({
   onToggle,
   offerId,
   pinned = false,
-  collabsLeft = 5,
+  collabsLeft,
 }: {
   title: string;
   plates: number;
@@ -580,6 +734,8 @@ function OfferCard({
       : title.toLowerCase().includes("reel")
       ? "Reel Content"
       : "Creator Content";
+
+  const hasMission = Boolean(mission);
 
   return (
     <motion.button
@@ -615,9 +771,11 @@ function OfferCard({
             Selected
           </span>
         )}
-        <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/8 px-2.5 py-1 text-[10px] font-medium text-[#FF5A7A]">
-          {collabsLeft} left
-        </span>
+        {collabsLeft != null && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#FF5A7A]/8 px-2.5 py-1 text-[10px] font-medium text-[#FF5A7A]">
+            {collabsLeft} left
+          </span>
+        )}
       </div>
 
       {/* Title + Content Type Pill */}
@@ -684,13 +842,15 @@ function OfferCard({
       </div>
 
       {/* Mission collapsible */}
-      <motion.div
-        initial={false}
-        animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
-        className="overflow-hidden"
-      >
-        <p className="mt-4 text-[13px] leading-relaxed text-stone-500">{mission}</p>
-      </motion.div>
+      {hasMission && (
+        <motion.div
+          initial={false}
+          animate={{ height: isSelected ? "auto" : 0, opacity: isSelected ? 1 : 0 }}
+          className="overflow-hidden"
+        >
+          <p className="mt-4 text-[13px] leading-relaxed text-stone-500">{mission}</p>
+        </motion.div>
+      )}
 
       {/* Bottom hint */}
       <div className="mt-4 flex items-center justify-between gap-3">
