@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { getMonthAvailability } from "../../services/calendarAvailability";
 
 export type Slot = {
   label: string;
@@ -106,6 +107,9 @@ export default function DateTimeSheet({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
+  const [availableDaySet, setAvailableDaySet] = useState<Set<string>>(new Set());
+  const [remainingByDay, setRemainingByDay] = useState<Map<string, number>>(new Map());
   const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
 
   useEffect(() => {
@@ -119,6 +123,52 @@ export default function DateTimeSheet({
     if (!open) return;
     setViewDate(clampDate(selectedDate ?? today));
   }, [open, selectedDate, today]);
+
+  useEffect(() => {
+    if (!open) return;
+    const numericOfferId = Number(offerId);
+    if (!Number.isFinite(numericOfferId)) return;
+    let cancelled = false;
+
+    async function loadAvailability() {
+      setLoadingCalendar(true);
+      try {
+        const days = await getMonthAvailability(
+          numericOfferId,
+          viewDate.getFullYear(),
+          viewDate.getMonth()
+        );
+        if (cancelled) return;
+        const nextSet = new Set<string>();
+        const nextRemaining = new Map<string, number>();
+        days.forEach(day => {
+          if (day.available) {
+            nextSet.add(day.date);
+          }
+          if (typeof day.remaining_slots === "number") {
+            nextRemaining.set(day.date, day.remaining_slots);
+          }
+        });
+        setAvailableDaySet(nextSet);
+        setRemainingByDay(nextRemaining);
+      } catch (err) {
+        console.error("load availability failed", err);
+        if (!cancelled) {
+          setAvailableDaySet(new Set());
+          setRemainingByDay(new Map());
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingCalendar(false);
+        }
+      }
+    }
+
+    loadAvailability();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, viewDate, offerId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -219,10 +269,17 @@ export default function DateTimeSheet({
     return cells;
   }, [viewDate]);
 
-  const handleSelectDate = useCallback((date: Date | null) => {
-    if (!date) return;
-    setSelectedDate(clampDate(date));
-  }, []);
+  const handleSelectDate = useCallback(
+    (date: Date | null) => {
+      if (!date) return;
+      const dateKey = ymd(date);
+      const isPast = date.getTime() < today.getTime();
+      const isAvailable = availableDaySet.size ? availableDaySet.has(dateKey) : true;
+      if (isPast || !isAvailable) return;
+      setSelectedDate(clampDate(date));
+    },
+    [availableDaySet, today]
+  );
 
   const goMonth = useCallback(
     (direction: 1 | -1) => {
@@ -289,6 +346,10 @@ export default function DateTimeSheet({
                   ))}
                 </div>
 
+                {loadingCalendar && (
+                  <div className="text-xs text-stone-400">Loading availability…</div>
+                )}
+
                 <div className="relative">
                   <AnimatePresence initial={false} custom={monthDirection}>
                     <motion.div
@@ -306,19 +367,29 @@ export default function DateTimeSheet({
                         }
                         const isToday = ymd(date) === ymd(today);
                         const isSelected = selectedDateKey === ymd(date);
+                        const dateKey = ymd(date);
+                        const isPast = date.getTime() < today.getTime();
+                        const isAvailable = availableDaySet.size ? availableDaySet.has(dateKey) : true;
+                        const isDisabled = isPast || !isAvailable;
+                        const remainingSlots = remainingByDay.get(dateKey);
                         return (
                           <button
                             key={key}
                             onClick={() => handleSelectDate(date)}
+                            disabled={isDisabled}
                             className={`relative flex h-10 items-center justify-center text-sm transition-all ${
-                              isSelected
+                              isDisabled
+                                ? "cursor-not-allowed text-stone-300"
+                                : isSelected
                                 ? "text-stone-900"
                                 : "text-stone-500 hover:text-stone-700"
                             }`}
                           >
                             <span
                               className={`inline-flex min-w-[2.25rem] items-center justify-center rounded-full px-2 py-1 ${
-                                isSelected
+                                isDisabled
+                                  ? "bg-white/40 text-stone-300"
+                                  : isSelected
                                   ? "bg-white text-stone-900 shadow-[0_6px_16px_rgba(0,0,0,.12)]"
                                   : isToday
                                   ? "text-stone-900"
@@ -327,6 +398,9 @@ export default function DateTimeSheet({
                             >
                               {date.getDate()}
                             </span>
+                            {!isDisabled && remainingSlots !== undefined && (
+                              <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-stone-400" />
+                            )}
                           </button>
                         );
                       })}
@@ -447,4 +521,3 @@ export default function DateTimeSheet({
     </AnimatePresence>
   );
 }
-
