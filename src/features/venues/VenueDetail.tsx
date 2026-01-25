@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Instagram, Info } from "lucide-react";
 import DateTimeSheet, { Timeframe } from "./DateTimeSheet";
 import { useNavigate } from "react-router-dom";
+import {
+  fetchAvailableDaysFromMicroservice,
+  fetchCalendarRawData,
+} from "../../services/calendarAvailability";
 
 // --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
 const PlateIcon = () => (
@@ -187,6 +191,13 @@ export default function VenueDetail({
     timeframeId?: string;
     timeframeLabel?: string;
   } | null>(null);
+  const [availabilityByOffer, setAvailabilityByOffer] = useState<Record<string, Set<string>>>({});
+  const [remainingByOffer, setRemainingByOffer] = useState<
+    Record<string, Record<string, { remaining_slots: number }>>
+  >({});
+  const [availabilityRangeByOffer, setAvailabilityRangeByOffer] = useState<
+    Record<string, { from: number; to: number }>
+  >({});
   const navigate = useNavigate();
 
   const restaurantId = useMemo(() => Number(venue.id), [venue.id]);
@@ -359,6 +370,81 @@ export default function VenueDetail({
       .flat()
       .find(tf => tf.id === timeframeId)?.label;
   };
+
+  const handleOfferTap = (offerId: string) => {
+    const next = selectedOfferId === offerId ? null : offerId;
+    setSelectedOfferId(next);
+    setSheetOpen(Boolean(next));
+  };
+
+  const loadCalendarAvailability = useCallback(
+    async (offerId: string, fromMs: number, toMs: number) => {
+      const numericOfferId = Number(offerId);
+      if (!Number.isFinite(numericOfferId)) return;
+      const cachedRange = availabilityRangeByOffer[offerId];
+      if (
+        cachedRange &&
+        cachedRange.from === fromMs &&
+        cachedRange.to === toMs &&
+        availabilityByOffer[offerId]
+      ) {
+        return;
+      }
+
+      try {
+        const raw = await fetchCalendarRawData(numericOfferId, fromMs, toMs);
+        const payload = {
+          offer_id: numericOfferId,
+          from: fromMs,
+          to: toMs,
+          book: raw.book.map(booking => ({
+            timestamp: booking.timestamp,
+            status: String(booking.status ?? "CONFIRMED").toUpperCase(),
+            timeslot_id: booking.timeslot_id,
+          })),
+          offer_timeslot: raw.offer_timeslot.map(timeslot => ({
+            timeslot_id: timeslot.timeslot_id,
+            active: Boolean(timeslot.active),
+          })),
+        };
+
+        const availableDays = await fetchAvailableDaysFromMicroservice(payload);
+        const nextSet = new Set<string>();
+        const remainingMap: Record<string, { remaining_slots: number }> = {};
+
+        availableDays.forEach(day => {
+          if (day.available) {
+            nextSet.add(day.date);
+            if (typeof day.remaining_slots === "number") {
+              remainingMap[day.date] = { remaining_slots: day.remaining_slots };
+            }
+          }
+        });
+
+        setAvailabilityByOffer(prev => ({ ...prev, [offerId]: nextSet }));
+        setRemainingByOffer(prev => ({ ...prev, [offerId]: remainingMap }));
+        setAvailabilityRangeByOffer(prev => ({ ...prev, [offerId]: { from: fromMs, to: toMs } }));
+      } catch (err) {
+        console.error("Failed to load calendar availability", err);
+        setAvailabilityByOffer(prev => ({ ...prev, [offerId]: new Set() }));
+        setRemainingByOffer(prev => ({ ...prev, [offerId]: {} }));
+        setAvailabilityRangeByOffer(prev => ({ ...prev, [offerId]: { from: fromMs, to: toMs } }));
+      }
+    },
+    [availabilityByOffer, availabilityRangeByOffer]
+  );
+
+  const handleMonthRangeChange = (fromMs: number, toMs: number) => {
+    if (!selectedOfferId) return;
+    void loadCalendarAvailability(selectedOfferId, fromMs, toMs);
+  };
+
+  useEffect(() => {
+    if (!sheetOpen) return;
+    if (!selectedOfferId) return;
+    const { fromMs, toMs } = getMonthRange(new Date());
+    void loadCalendarAvailability(selectedOfferId, fromMs, toMs);
+  }, [sheetOpen, selectedOfferId, loadCalendarAvailability]);
 
   if (loading) {
     return (
@@ -688,9 +774,7 @@ export default function VenueDetail({
                     champagne={offer.champagne ?? 0}
                     mission={offer.description}
                     isSelected={selectedOfferId === offer.id}
-                    onToggle={() =>
-                      setSelectedOfferId((prev) => (prev === offer.id ? null : offer.id))
-                    }
+                    onToggle={() => handleOfferTap(offer.id)}
                   />
                 </motion.section>
               )}
@@ -756,6 +840,9 @@ export default function VenueDetail({
           onClose={() => setSheetOpen(false)}
           offerId={selectedOfferId ?? offer.id}
           venueId={restaurantId}
+          availableDaySet={availabilityByOffer[selectedOfferId ?? offer.id]}
+          availableDays={remainingByOffer[selectedOfferId ?? offer.id]}
+          onRangeChange={handleMonthRangeChange}
           timeframesByDow={weeklyTimeframes}
           onConfirm={(payload) => {
             const timeframeLabel = getTimeframeLabel(payload.timeframeId);
@@ -780,6 +867,12 @@ export default function VenueDetail({
       )}
     </motion.div>
   );
+}
+
+function getMonthRange(date: Date) {
+  const from = new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
+  const to = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+  return { fromMs: from.getTime(), toMs: to.getTime() };
 }
 
 /* OfferCard - Cartoon Friendly Instagram-native */
