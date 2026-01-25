@@ -149,8 +149,8 @@ type ServiceOffer = {
 
 const DETAIL_ENDPOINT =
   "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/get_restaurant_and_service_Upgrade";
-const TURBO_OFFERS_ENDPOINT =
-  "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/<NEW_ENDPOINT_PATH>";
+const OFFER_UPGRADE_URL =
+  "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/offer_upgrade";
 const HARDCODED_VENUE_ID = 1018;
 const turboOffersCache = new Map<number, TurboOffer[]>();
 
@@ -248,7 +248,7 @@ export default function VenueDetail({
     setTurboOffersLoading(true);
     setTurboOffersError(null);
 
-    fetch(TURBO_OFFERS_ENDPOINT, {
+    fetch(OFFER_UPGRADE_URL, {
       method: "GET",
       signal: controller.signal,
     })
