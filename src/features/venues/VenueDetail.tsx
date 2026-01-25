@@ -117,6 +117,16 @@ type ActionTurbo = {
   [key: string]: unknown;
 };
 
+type TurboOffer = {
+  id: number;
+  OfferName: string;
+  timeslot_id: number[];
+  weekdaysturbo_id: number[];
+  actions_turbo_id: number;
+  restaurant_turbo_id: number;
+  Offer_cover?: { url?: string } | null;
+};
+
 type Service = {
   id: number;
   _actions_turbo?: ActionTurbo | null;
@@ -134,10 +144,22 @@ type ServiceOffer = {
   daysDeadline?: number;
   dessert?: number;
   champagne?: number;
+  image?: string;
 };
 
 const DETAIL_ENDPOINT =
   "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/get_restaurant_and_service_Upgrade";
+const TURBO_OFFERS_ENDPOINT =
+  "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/<NEW_ENDPOINT_PATH>";
+const HARDCODED_VENUE_ID = 1018;
+const turboOffersCache = new Map<number, TurboOffer[]>();
+
+const mapTurboOfferToOfferCard = (offer: TurboOffer): ServiceOffer => ({
+  id: String(offer.id),
+  title: offer.OfferName,
+  description: "Details available after booking confirmation.",
+  image: offer.Offer_cover?.url ?? undefined,
+});
 
 export default function VenueDetail({
   venue,
@@ -154,6 +176,9 @@ export default function VenueDetail({
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [turboOffers, setTurboOffers] = useState<TurboOffer[]>([]);
+  const [turboOffersLoading, setTurboOffersLoading] = useState(false);
+  const [turboOffersError, setTurboOffersError] = useState<string | null>(null);
   const [confirmedSlot, setConfirmedSlot] = useState<{
     iso: string;
     date: string;
@@ -165,6 +190,7 @@ export default function VenueDetail({
   const navigate = useNavigate();
 
   const restaurantId = useMemo(() => Number(venue.id), [venue.id]);
+  const shouldUseTurboOffers = restaurantId === HARDCODED_VENUE_ID;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -202,7 +228,50 @@ export default function VenueDetail({
     return () => controller.abort();
   }, [restaurantId]);
 
-  const offers = useMemo<ServiceOffer[]>(
+  useEffect(() => {
+    if (!shouldUseTurboOffers) {
+      setTurboOffers([]);
+      setTurboOffersError(null);
+      setTurboOffersLoading(false);
+      return;
+    }
+
+    const cachedOffers = turboOffersCache.get(restaurantId);
+    if (cachedOffers) {
+      setTurboOffers(cachedOffers);
+      setTurboOffersError(null);
+      setTurboOffersLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setTurboOffersLoading(true);
+    setTurboOffersError(null);
+
+    fetch(TURBO_OFFERS_ENDPOINT, {
+      method: "GET",
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`Unexpected response: ${res.status}`);
+        return (await res.json()) as TurboOffer[];
+      })
+      .then((data) => {
+        const normalized = Array.isArray(data) ? data : [];
+        turboOffersCache.set(restaurantId, normalized);
+        setTurboOffers(normalized);
+      })
+      .catch((err) => {
+        if ((err as { name?: string }).name === "AbortError") return;
+        console.error("Failed to load turbo offers", err);
+        setTurboOffersError("Unable to load offers.");
+      })
+      .finally(() => setTurboOffersLoading(false));
+
+    return () => controller.abort();
+  }, [restaurantId, shouldUseTurboOffers]);
+
+  const serviceOffers = useMemo<ServiceOffer[]>(
     () =>
       services.map((service) => ({
         id: String(service.id),
@@ -216,6 +285,15 @@ export default function VenueDetail({
       })),
     [services]
   );
+
+  const turboServiceOffers = useMemo<ServiceOffer[]>(
+    () => turboOffers.map(mapTurboOfferToOfferCard),
+    [turboOffers]
+  );
+
+  const offers = shouldUseTurboOffers ? turboServiceOffers : serviceOffers;
+  const offersLoading = shouldUseTurboOffers ? turboOffersLoading : false;
+  const offersError = shouldUseTurboOffers ? turboOffersError : null;
 
   // ---- GALLERY STATE (thumbnail selector) ----
   const galleryImages = useMemo(() => {
@@ -581,7 +659,15 @@ export default function VenueDetail({
         )}
 
         {/* Offer card */}
-        {offer ? (
+        {offersLoading ? (
+          <div className="mx-4 mt-6 rounded-2xl bg-white/70 p-4 text-sm text-stone-600">
+            Loading offers…
+          </div>
+        ) : offersError ? (
+          <div className="mx-4 mt-6 rounded-2xl bg-white/70 p-4 text-sm text-stone-600">
+            {offersError}
+          </div>
+        ) : offer ? (
           <>
             <AnimatePresence mode="wait">
               {!sheetOpen && (
