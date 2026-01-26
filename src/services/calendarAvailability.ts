@@ -15,6 +15,8 @@ type RawOfferTimeslot = {
 type RawCalendarResponse = {
   book?: RawBooking[];
   offer_timeslot?: Array<RawOfferTimeslot & { [key: string]: unknown }>;
+  from?: number;
+  to?: number;
 };
 
 type CalendarAvailabilityResponse = {
@@ -23,12 +25,22 @@ type CalendarAvailabilityResponse = {
 
 const normalizeStatus = (status: string) => status.toUpperCase();
 
-export const getOfferAvailableDays = async (
-  offerId: number,
-  from: number,
-  to: number,
-  signal?: AbortSignal
-): Promise<Set<string>> => {
+type FetchMonthAvailabilityParams = {
+  offerId: number;
+  from: number;
+  to: number;
+  signal?: AbortSignal;
+};
+
+const getTimestamp = (value: unknown, fallback: number) =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+
+export const fetchMonthAvailability = async ({
+  offerId,
+  from,
+  to,
+  signal,
+}: FetchMonthAvailabilityParams): Promise<Set<string>> => {
   const rawResponse = await fetch(RAW_CALENDAR_URL, {
     method: 'POST',
     headers: {
@@ -48,10 +60,14 @@ export const getOfferAvailableDays = async (
 
   const rawData = (await rawResponse.json()) as RawCalendarResponse;
 
+  const payloadFrom = getTimestamp(rawData.from, from);
+  const payloadTo = getTimestamp(rawData.to, to);
+
   const book = Array.isArray(rawData.book)
     ? rawData.book.map((entry) => ({
-        ...entry,
+        timestamp: entry.timestamp,
         status: typeof entry.status === 'string' ? normalizeStatus(entry.status) : entry.status,
+        timeslot_id: entry.timeslot_id,
       }))
     : [];
 
@@ -68,9 +84,8 @@ export const getOfferAvailableDays = async (
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      offer_id: offerId,
-      from,
-      to,
+      from: payloadFrom,
+      to: payloadTo,
       book,
       offer_timeslot: offerTimeslot,
     }),
