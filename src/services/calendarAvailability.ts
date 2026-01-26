@@ -1,4 +1,4 @@
-import { request } from "./xano";
+import { getAuthToken } from "./xano";
 
 const RAW_DATA_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/calendar/raw/Data";
 const MICROSERVICE_URL = "https://calendar-microservice.vercel.app/api/calendar";
@@ -40,10 +40,37 @@ export async function fetchCalendarRawData(offerId: number, fromMs: number, toMs
     to: toMs,
   };
 
-  const data = await request<CalendarRawData>(RAW_DATA_URL, {
+  const headers = new Headers({
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  });
+  let token = getAuthToken();
+  if (!token) {
+    token = import.meta.env.VITE_XANO_TOKEN || "";
+  }
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(RAW_DATA_URL, {
     method: "POST",
+    headers,
     body: JSON.stringify(payload),
   });
+
+  console.log("[calendar] raw data", { status: response.status, payload });
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = await response.text();
+    console.error(text.slice(0, 100));
+    throw new Error("Invalid response from Xano, expected JSON");
+  }
+
+  const data = (await response.json()) as CalendarRawData & { message?: string };
+  if (!response.ok) {
+    throw new Error(data.message || response.statusText);
+  }
 
   return {
     book: data.book ?? [],
@@ -59,6 +86,17 @@ export async function fetchAvailableDaysFromMicroservice(payload: CalendarAvaila
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+  });
+
+  console.log("[calendar] microservice", {
+    status: response.status,
+    payload: {
+      offer_id: payload.offer_id,
+      from: payload.from,
+      to: payload.to,
+      book_count: payload.book.length,
+      offer_timeslot_count: payload.offer_timeslot.length,
+    },
   });
 
   if (!response.ok) {

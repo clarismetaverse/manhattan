@@ -22,6 +22,8 @@ export interface DateTimeSheetProps {
   venueId: string | number;
   availableDaySet?: Set<string>;
   availableDays?: Record<string, { remaining_slots: number }>;
+  availabilityLoading?: boolean;
+  availabilityError?: string | null;
   onRangeChange?: (fromTs: number, toTs: number) => void;
   timeframesByDow?: Record<number, Timeframe[]>;
   resolveTimeframes?: (
@@ -103,6 +105,8 @@ export default function DateTimeSheet({
   venueId,
   availableDaySet,
   availableDays,
+  availabilityLoading = false,
+  availabilityError = null,
   onRangeChange,
   timeframesByDow,
   resolveTimeframes,
@@ -205,18 +209,22 @@ export default function DateTimeSheet({
 
   const availableDaysWithSlots =
     availableDays && Object.keys(availableDays).length > 0 ? availableDays : undefined;
+  const availabilityDisabled = availabilityLoading || Boolean(availabilityError);
   const hasAvailability =
-    Boolean(availableDaysWithSlots) || (availableDaySet && availableDaySet.size > 0);
+    Boolean(availableDaysWithSlots) ||
+    availableDaySet !== undefined ||
+    availabilityDisabled;
 
   const isDayAvailable = useCallback(
     (dateKey: string) => {
+      if (availabilityDisabled) return false;
       if (!hasAvailability) return true;
       if (availableDaysWithSlots) {
         return Boolean(availableDaysWithSlots[dateKey]);
       }
       return availableDaySet?.has(dateKey) ?? true;
     },
-    [availableDaySet, availableDaysWithSlots, hasAvailability]
+    [availableDaySet, availableDaysWithSlots, availabilityDisabled, hasAvailability]
   );
 
   const calendarDays = useMemo(() => {
@@ -390,6 +398,12 @@ export default function DateTimeSheet({
                     </motion.div>
                   </AnimatePresence>
                 </div>
+                {(availabilityLoading || availabilityError) && (
+                  <div className="text-xs text-stone-500">
+                    {availabilityLoading && "Loading availability…"}
+                    {availabilityError && !availabilityLoading && availabilityError}
+                  </div>
+                )}
 
                 {selectedDate && timeframes.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">

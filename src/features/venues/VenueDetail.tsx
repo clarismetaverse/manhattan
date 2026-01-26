@@ -192,6 +192,12 @@ export default function VenueDetail({
     timeframeLabel?: string;
   } | null>(null);
   const [availabilityByOffer, setAvailabilityByOffer] = useState<Record<string, Set<string>>>({});
+  const [availabilityLoadingByOffer, setAvailabilityLoadingByOffer] = useState<
+    Record<string, boolean>
+  >({});
+  const [availabilityErrorByOffer, setAvailabilityErrorByOffer] = useState<
+    Record<string, string | null>
+  >({});
   const [remainingByOffer, setRemainingByOffer] = useState<
     Record<string, Record<string, { remaining_slots: number }>>
   >({});
@@ -392,6 +398,8 @@ export default function VenueDetail({
       }
 
       try {
+        setAvailabilityLoadingByOffer(prev => ({ ...prev, [offerId]: true }));
+        setAvailabilityErrorByOffer(prev => ({ ...prev, [offerId]: null }));
         const raw = await fetchCalendarRawData(numericOfferId, fromMs, toMs);
         const payload = {
           offer_id: numericOfferId,
@@ -424,11 +432,17 @@ export default function VenueDetail({
         setAvailabilityByOffer(prev => ({ ...prev, [offerId]: nextSet }));
         setRemainingByOffer(prev => ({ ...prev, [offerId]: remainingMap }));
         setAvailabilityRangeByOffer(prev => ({ ...prev, [offerId]: { from: fromMs, to: toMs } }));
+        setAvailabilityLoadingByOffer(prev => ({ ...prev, [offerId]: false }));
       } catch (err) {
         console.error("Failed to load calendar availability", err);
         setAvailabilityByOffer(prev => ({ ...prev, [offerId]: new Set() }));
         setRemainingByOffer(prev => ({ ...prev, [offerId]: {} }));
         setAvailabilityRangeByOffer(prev => ({ ...prev, [offerId]: { from: fromMs, to: toMs } }));
+        setAvailabilityLoadingByOffer(prev => ({ ...prev, [offerId]: false }));
+        setAvailabilityErrorByOffer(prev => ({
+          ...prev,
+          [offerId]: "Unable to load availability. Please try again.",
+        }));
       }
     },
     [availabilityByOffer, availabilityRangeByOffer]
@@ -842,6 +856,8 @@ export default function VenueDetail({
           venueId={restaurantId}
           availableDaySet={availabilityByOffer[selectedOfferId ?? offer.id]}
           availableDays={remainingByOffer[selectedOfferId ?? offer.id]}
+          availabilityLoading={availabilityLoadingByOffer[selectedOfferId ?? offer.id]}
+          availabilityError={availabilityErrorByOffer[selectedOfferId ?? offer.id]}
           onRangeChange={handleMonthRangeChange}
           timeframesByDow={weeklyTimeframes}
           onConfirm={(payload) => {
