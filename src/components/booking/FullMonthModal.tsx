@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, startOfWeek, endOfWeek, isSameMonth, isSameDay, isToday } from 'date-fns';
+import { getOfferAvailableDays } from '@/services/calendarAvailability';
 
 interface Timeframe {
   id: number;
@@ -24,6 +25,7 @@ interface FullMonthModalProps {
   timeframes: Timeframe[];
   selectedDate: Date | null;
   currentMonth: Date;
+  offerId: number;
 }
 
 export const FullMonthModal: React.FC<FullMonthModalProps> = ({
@@ -32,10 +34,13 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
   onSelectDate,
   timeframes,
   selectedDate,
-  currentMonth
+  currentMonth,
+  offerId
 }) => {
   const [displayMonth, setDisplayMonth] = useState(currentMonth);
   const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(selectedDate);
+  const [availableDays, setAvailableDays] = useState<Set<string> | null>(null);
+  const [loadingDays, setLoadingDays] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,12 +51,45 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
 
   // Check if a date is available based on timeframes
   const isDateAvailable = (date: Date) => {
+    if (availableDays) {
+      return availableDays.has(format(date, 'yyyy-MM-dd'));
+    }
+
     const dayName = format(date, 'EEEE');
     return timeframes.some(timeframe => 
       timeframe.Visibility && 
       timeframe.weekdays.some(weekday => weekday.day === dayName)
     );
   };
+
+  useEffect(() => {
+    if (!isOpen || !offerId) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const start = startOfMonth(displayMonth).getTime();
+    const end = endOfMonth(displayMonth).getTime();
+
+    setLoadingDays(true);
+
+    getOfferAvailableDays(offerId, start, end, controller.signal)
+      .then((days) => {
+        setAvailableDays(days);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Error fetching availability:', error);
+        setAvailableDays(null);
+      })
+      .finally(() => {
+        setLoadingDays(false);
+      });
+
+    return () => controller.abort();
+  }, [isOpen, offerId, displayMonth]);
 
   // Generate calendar grid (6 weeks = 42 days)
   const generateCalendarDays = () => {
@@ -159,6 +197,11 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
 
         {/* Full Calendar Container */}
         <div className="bg-white/2 border border-white/5 rounded-2xl p-5 mb-5">
+          {loadingDays && (
+            <div className="text-center text-xs text-[#9e9e9e] mb-3">
+              Loading availability...
+            </div>
+          )}
           <div className="grid grid-cols-7 gap-[6px]">
             {/* Day headers */}
             {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
