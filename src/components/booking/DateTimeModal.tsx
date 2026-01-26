@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { format, addDays, startOfWeek, isSameDay, isToday, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, addDays, startOfWeek, isSameDay, isToday, startOfMonth, endOfMonth } from 'date-fns';
 import { FullMonthModal } from './FullMonthModal';
+import { getOfferAvailableDays } from '@/services/calendarAvailability';
 
 interface TimeSlot {
   id: string;
@@ -49,6 +48,8 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [showFullMonthModal, setShowFullMonthModal] = useState(false);
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [availableDays, setAvailableDays] = useState<Set<string> | null>(null);
+  const [loadingDays, setLoadingDays] = useState(false);
 
   // Fetch timeframes from Xano API
   useEffect(() => {
@@ -56,6 +57,35 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
       fetchTimeframes();
     }
   }, [isOpen, restaurantId, offerId]);
+
+  useEffect(() => {
+    if (!isOpen || !offerId) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const start = startOfMonth(weekStart).getTime();
+    const end = endOfMonth(weekStart).getTime();
+
+    setLoadingDays(true);
+
+    getOfferAvailableDays(offerId, start, end, controller.signal)
+      .then((days) => {
+        setAvailableDays(days);
+      })
+      .catch((error) => {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+        console.error('Error fetching availability:', error);
+        setAvailableDays(null);
+      })
+      .finally(() => {
+        setLoadingDays(false);
+      });
+
+    return () => controller.abort();
+  }, [isOpen, offerId, weekStart]);
 
   const fetchTimeframes = async () => {
     setLoading(true);
@@ -87,6 +117,10 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
 
   // Check if a date is available based on timeframes
   const isDateAvailable = (date: Date) => {
+    if (availableDays) {
+      return availableDays.has(format(date, 'yyyy-MM-dd'));
+    }
+
     const dayName = format(date, 'EEEE');
     return timeframes.some(timeframe => 
       timeframe.Visibility && 
@@ -153,13 +187,6 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
     setSelectedDate(null);
   };
 
-  // Generate month days for month view
-  const generateMonthDays = () => {
-    const start = startOfMonth(weekStart);
-    const end = endOfMonth(weekStart);
-    return eachDayOfInterval({ start, end });
-  };
-
   const timeSlots = selectedDate ? getTimeSlots(selectedDate) : [];
 
   console.log('DateTimeModal: isOpen =', isOpen, 'Component rendering with new bottom sheet implementation');
@@ -209,6 +236,11 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
         
         {/* Calendar Container */}
         <div className="bg-white/2 border border-white/5 rounded-2xl p-5 mb-5">
+          {loadingDays && (
+            <div className="text-center text-xs text-[#9e9e9e] mb-3">
+              Loading availability...
+            </div>
+          )}
           <div className="grid grid-cols-7 gap-2">
             {/* Day headers */}
             {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
@@ -323,6 +355,7 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
         timeframes={timeframes}
         selectedDate={selectedDate}
         currentMonth={weekStart}
+        offerId={offerId}
       />
     </div>
   );
