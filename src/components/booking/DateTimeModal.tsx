@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { format, addDays, startOfWeek, isSameDay, isToday, startOfMonth, endOfMonth } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek, isSameDay, isToday, startOfMonth, endOfMonth } from 'date-fns';
 import { FullMonthModal } from './FullMonthModal';
-import { getOfferAvailableDays } from '@/services/calendarAvailability';
+
+const CALENDAR_DAYS_URL = 'https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/signupupgrade/calendardays';
+
+interface CalendarDayResponse {
+  date: string;
+  available: boolean;
+  remaining_slots?: number;
+}
 
 interface TimeSlot {
   id: string;
@@ -35,6 +42,46 @@ interface DateTimeModalProps {
   offerId: number;
 }
 
+const fetchCalendarDays = async (
+  offerId: number,
+  from: string,
+  to: string,
+  signal?: AbortSignal
+): Promise<Set<string>> => {
+  console.log('[CalendarDays] request', { offer_upgrade_id: offerId, from, to });
+  
+  const response = await fetch(CALENDAR_DAYS_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      offer_upgrade_id: Number(offerId),
+      from,
+      to,
+    }),
+    signal,
+  });
+
+  if (!response.ok) {
+    throw new Error(`CalendarDays request failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log('[CalendarDays] response', data);
+
+  const availableDays = new Set<string>();
+  if (Array.isArray(data.available_days)) {
+    data.available_days.forEach((day: CalendarDayResponse) => {
+      if (day.available) {
+        availableDays.add(day.date);
+      }
+    });
+  }
+  return availableDays;
+};
+
 export const DateTimeModal: React.FC<DateTimeModalProps> = ({
   isOpen,
   onClose,
@@ -58,18 +105,30 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
     }
   }, [isOpen, restaurantId, offerId]);
 
+  // Fetch available days from CalendarDays endpoint
   useEffect(() => {
-    if (!isOpen || !offerId) {
+    if (!isOpen) {
+      return;
+    }
+
+    const numericOfferId = Number(offerId);
+    if (!numericOfferId || isNaN(numericOfferId)) {
+      console.log('[CalendarDays] skipping fetch - invalid offerId:', offerId);
       return;
     }
 
     const controller = new AbortController();
-    const start = startOfMonth(weekStart).getTime();
-    const end = endOfMonth(weekStart).getTime();
+    const monthStart = startOfMonth(weekStart);
+    const monthEnd = endOfMonth(weekStart);
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+    const from = format(calendarStart, 'yyyy-MM-dd');
+    const to = format(calendarEnd, 'yyyy-MM-dd');
 
     setLoadingDays(true);
 
-    getOfferAvailableDays(offerId, start, end, controller.signal)
+    fetchCalendarDays(numericOfferId, from, to, controller.signal)
       .then((days) => {
         setAvailableDays(days);
       })
@@ -77,7 +136,7 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        console.error('Error fetching availability:', error);
+        console.error('[CalendarDays] error', error);
         setAvailableDays(null);
       })
       .finally(() => {
