@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, addDays, startOfWeek, isSameDay, isToday, startOfMonth, endOfMonth } from 'date-fns';
 import { FullMonthModal } from './FullMonthModal';
-import { getOfferAvailableDays } from '@/services/calendarAvailability';
+import { fetchMonthAvailability } from '@/services/calendarAvailability';
 
 interface TimeSlot {
   id: string;
@@ -50,6 +50,10 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [availableDays, setAvailableDays] = useState<Set<string> | null>(null);
   const [loadingDays, setLoadingDays] = useState(false);
+  const [fullMonthDisplayMonth, setFullMonthDisplayMonth] = useState(startOfMonth(new Date()));
+  const [fullMonthAvailableDates, setFullMonthAvailableDates] = useState<Set<string> | undefined>(undefined);
+  const [fullMonthLoading, setFullMonthLoading] = useState(false);
+  const [fullMonthAvailabilityWarning, setFullMonthAvailabilityWarning] = useState(false);
 
   // Fetch timeframes from Xano API
   useEffect(() => {
@@ -58,18 +62,26 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
     }
   }, [isOpen, restaurantId, offerId]);
 
+  const getUtcMonthRange = (value: Date) => {
+    const monthStart = startOfMonth(value);
+    const monthEnd = endOfMonth(value);
+    return {
+      from: Date.UTC(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate()),
+      to: Date.UTC(monthEnd.getFullYear(), monthEnd.getMonth(), monthEnd.getDate()),
+    };
+  };
+
   useEffect(() => {
     if (!isOpen || !offerId) {
       return;
     }
 
     const controller = new AbortController();
-    const start = startOfMonth(weekStart).getTime();
-    const end = endOfMonth(weekStart).getTime();
+    const { from, to } = getUtcMonthRange(weekStart);
 
     setLoadingDays(true);
 
-    getOfferAvailableDays(offerId, start, end, controller.signal)
+    fetchMonthAvailability({ offerId, from, to, signal: controller.signal })
       .then((days) => {
         setAvailableDays(days);
       })
@@ -86,6 +98,46 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
 
     return () => controller.abort();
   }, [isOpen, offerId, weekStart]);
+
+  useEffect(() => {
+    if (showFullMonthModal) {
+      setFullMonthDisplayMonth(startOfMonth(weekStart));
+    }
+  }, [showFullMonthModal, weekStart]);
+
+  useEffect(() => {
+    if (!showFullMonthModal || !offerId) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      const { from, to } = getUtcMonthRange(fullMonthDisplayMonth);
+      setFullMonthLoading(true);
+
+      fetchMonthAvailability({ offerId, from, to, signal: controller.signal })
+        .then((days) => {
+          setFullMonthAvailableDates(days);
+          setFullMonthAvailabilityWarning(false);
+        })
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+          }
+          console.error('Error fetching full month availability:', error);
+          setFullMonthAvailableDates(undefined);
+          setFullMonthAvailabilityWarning(true);
+        })
+        .finally(() => {
+          setFullMonthLoading(false);
+        });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [showFullMonthModal, offerId, fullMonthDisplayMonth]);
 
   const fetchTimeframes = async () => {
     setLoading(true);
@@ -354,8 +406,11 @@ export const DateTimeModal: React.FC<DateTimeModalProps> = ({
         }}
         timeframes={timeframes}
         selectedDate={selectedDate}
-        currentMonth={weekStart}
-        offerId={offerId}
+        currentMonth={fullMonthDisplayMonth}
+        availableDates={fullMonthAvailableDates}
+        availabilityNotice={fullMonthAvailabilityWarning ? 'Availability may be limited.' : undefined}
+        isLoadingAvailability={fullMonthLoading}
+        onMonthChange={setFullMonthDisplayMonth}
       />
     </div>
   );

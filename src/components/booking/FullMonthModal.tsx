@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, startOfWeek, endOfWeek, isSameMonth, isSameDay, isToday } from 'date-fns';
-import { getOfferAvailableDays } from '@/services/calendarAvailability';
 
 interface Timeframe {
   id: number;
@@ -25,7 +24,10 @@ interface FullMonthModalProps {
   timeframes: Timeframe[];
   selectedDate: Date | null;
   currentMonth: Date;
-  offerId: number;
+  availableDates?: Set<string>;
+  availabilityNotice?: string;
+  isLoadingAvailability?: boolean;
+  onMonthChange?: (month: Date) => void;
 }
 
 export const FullMonthModal: React.FC<FullMonthModalProps> = ({
@@ -35,12 +37,13 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
   timeframes,
   selectedDate,
   currentMonth,
-  offerId
+  availableDates,
+  availabilityNotice,
+  isLoadingAvailability,
+  onMonthChange
 }) => {
   const [displayMonth, setDisplayMonth] = useState(currentMonth);
   const [tempSelectedDate, setTempSelectedDate] = useState<Date | null>(selectedDate);
-  const [availableDays, setAvailableDays] = useState<Set<string> | null>(null);
-  const [loadingDays, setLoadingDays] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -51,8 +54,8 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
 
   // Check if a date is available based on timeframes
   const isDateAvailable = (date: Date) => {
-    if (availableDays) {
-      return availableDays.has(format(date, 'yyyy-MM-dd'));
+    if (availableDates) {
+      return availableDates.has(format(date, 'yyyy-MM-dd'));
     }
 
     const dayName = format(date, 'EEEE');
@@ -61,35 +64,6 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
       timeframe.weekdays.some(weekday => weekday.day === dayName)
     );
   };
-
-  useEffect(() => {
-    if (!isOpen || !offerId) {
-      return;
-    }
-
-    const controller = new AbortController();
-    const start = startOfMonth(displayMonth).getTime();
-    const end = endOfMonth(displayMonth).getTime();
-
-    setLoadingDays(true);
-
-    getOfferAvailableDays(offerId, start, end, controller.signal)
-      .then((days) => {
-        setAvailableDays(days);
-      })
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === 'AbortError') {
-          return;
-        }
-        console.error('Error fetching availability:', error);
-        setAvailableDays(null);
-      })
-      .finally(() => {
-        setLoadingDays(false);
-      });
-
-    return () => controller.abort();
-  }, [isOpen, offerId, displayMonth]);
 
   // Generate calendar grid (6 weeks = 42 days)
   const generateCalendarDays = () => {
@@ -108,12 +82,17 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
   };
 
   const handleMonthNavigation = (direction: 'prev' | 'next') => {
-    setDisplayMonth(prev => direction === 'next' ? addMonths(prev, 1) : subMonths(prev, 1));
+    setDisplayMonth(prev => {
+      const nextMonth = direction === 'next' ? addMonths(prev, 1) : subMonths(prev, 1);
+      onMonthChange?.(nextMonth);
+      return nextMonth;
+    });
   };
 
   const handleQuickMonthSelect = (monthIndex: number) => {
     const newMonth = new Date(displayMonth.getFullYear(), monthIndex, 1);
     setDisplayMonth(newMonth);
+    onMonthChange?.(newMonth);
   };
 
   const handleSelectDate = () => {
@@ -197,9 +176,14 @@ export const FullMonthModal: React.FC<FullMonthModalProps> = ({
 
         {/* Full Calendar Container */}
         <div className="bg-white/2 border border-white/5 rounded-2xl p-5 mb-5">
-          {loadingDays && (
+          {isLoadingAvailability && (
             <div className="text-center text-xs text-[#9e9e9e] mb-3">
               Loading availability...
+            </div>
+          )}
+          {availabilityNotice && !isLoadingAvailability && (
+            <div className="text-center text-[11px] text-[#9e9e9e] mb-3">
+              {availabilityNotice}
             </div>
           )}
           <div className="grid grid-cols-7 gap-[6px]">
