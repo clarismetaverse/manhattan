@@ -14,64 +14,14 @@ export type Timeframe = {
   start: { h: number; m: number };
   end: { h: number; m: number };
   stepMins?: number;
+  timeslotId?: number;
 };
 
 export interface DateTimeSheetProps {
   open: boolean;
   onClose: () => void;
-
-  /**
-   * offerId -> usalo come offer_upgrade_id (string o number serializzato)
-   * Esempio: "1"
-   */
-  offerId: string;
-
-  venueId: string | number;
-
-  /**
-   * Se li passi, il componente NON fa fetch interno.
-   * Se NON li passi, userà calendarDaysUrl per chiamare CalendarDays.
-   */
-  availableDaySet?: Set<string>;
-  availableDays?: Record<string, { remaining_slots: number }>;
-  availabilityLoading?: boolean;
-  availabilityError?: string | null;
-
-  /**
-   * URL del tuo endpoint Xano (CalendarDays) o di un gateway.
-   * Deve accettare POST { offer_upgrade_id, from, to } e ritornare { available_days: [...] }.
-   * Se non lo passi, devi gestire availability dall’esterno.
-   */
-  calendarDaysUrl?: string;
-
-  /**
-   * Opzionale: headers extra (es. Authorization) se CalendarDays è protetto.
-   */
-  calendarDaysHeaders?: Record<string, string>;
-
-  /**
-   * Se vuoi ancora gestire il range fuori, puoi usarlo.
-   * Se invece usi calendarDaysUrl, questo non è necessario.
-   */
-  onRangeChange?: (fromTs: number, toTs: number) => void;
-
-  /**
-   * Timeframes/slots (come prima)
-   */
-  timeframesByDow?: Record<number, Timeframe[]>;
-  resolveTimeframes?: (
-    dateISO: string,
-    offerId: string,
-    venueId: string | number
-  ) => Promise<Timeframe[]>;
-
-  fetchSlots?: (
-    dateISO: string,
-    timeframe: Timeframe | null,
-    offerId: string,
-    venueId: string | number
-  ) => Promise<Slot[] | null>;
-
+  offerId: string; // offer_upgrade_id
+  venueId: string | number; // not used by microservice, but kept for your app
   onConfirm: (payload: {
     iso: string;
     date: string;
@@ -81,6 +31,9 @@ export interface DateTimeSheetProps {
   }) => void;
 }
 
+const RAW_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/calendar/raw/Data";
+const MICRO_URL = "https://calendar-microservice.vercel.app/api/calendar";
+
 const transition = {
   type: "spring" as const,
   stiffness: 260,
@@ -89,31 +42,36 @@ const transition = {
 
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-/**
- * YYYY-MM-DD in UTC (evita shift timezone)
- */
-function ymdUTC(date: Date) {
-  const y = date.getUTCFullYear();
-  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(date.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+function ymd(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function makeKey(date: Date) {
   return `${date.getFullYear()}-${date.getMonth()}`;
 }
 
-function clampDateLocal(date: Date) {
+function clampDate(date: Date) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy;
 }
 
-function synthesizeFromTimeframe(dateISO: string, tf: Timeframe): Slot[] {
-  const step = tf.stepMins ?? 30;
+function minsToHm(mins: number) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return { h, m };
+}
 
-  // costruiamo una base in locale ma coerente (solo per UI)
-  const base = new Date(`${dateISO}T00:00:00`);
+function hmToLabel(h: number, m: number) {
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function synthesizeFromTimeframe(date: string, tf: Timeframe): Slot[] {
+  const step = tf.stepMins ?? 30;
+  const base = new Date(`${date}T00:00:00`);
   const start = new Date(base);
   start.setHours(tf.start.h, tf.start.m, 0, 0);
   const end = new Date(base);
@@ -123,7 +81,7 @@ function synthesizeFromTimeframe(dateISO: string, tf: Timeframe): Slot[] {
   for (let t = start.getTime(); t <= end.getTime(); t += step * 60_000) {
     const dt = new Date(t);
     slots.push({
-      label: dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+      label: dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       iso: dt.toISOString(),
     });
   }
@@ -131,24 +89,30 @@ function synthesizeFromTimeframe(dateISO: string, tf: Timeframe): Slot[] {
 }
 
 function getMonthRangeISO(viewDate: Date) {
-  // primo giorno del mese
-  const from = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), 1, 0, 0, 0, 0));
-  // ultimo giorno del mese
-  const to = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 0, 0, 0, 0));
-  return {
-    fromISO: ymdUTC(from),
-    toISO: ymdUTC(to),
-    fromMs: from.getTime(),
-    toMs: to.getTime(),
-  };
+  const from = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1, 0, 0, 0, 0);
+  const to = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 0, 0, 0, 0);
+  return { fromISO: ymd(from), toISO: ymd(to) };
 }
 
-type CalendarDaysResponse = {
-  available_days?: Array<{
-    date: string; // YYYY-MM-DD
-    available?: boolean;
-    remaining_slots?: number;
+type RawResponse = {
+  book?: Array<{ timestamp: number; status: string; timeslot_id: number }>;
+  offer_timeslot?: Array<{
+    timeslot_id: number;
+    active: boolean;
+    capacity_override?: number;
+    slot_limit?: string;
+    slot_limit_value?: number;
+    _timeslot?: Array<{
+      id: number;
+      Active: boolean;
+      Start_time: number; // minutes
+      End_time: number; // minutes
+    }>;
   }>;
+};
+
+type MicroResponse = {
+  available_days?: Array<{ date: string; available: boolean; remaining_slots: number }>;
 };
 
 export default function DateTimeSheet({
@@ -156,24 +120,19 @@ export default function DateTimeSheet({
   onClose,
   offerId,
   venueId,
-
-  availableDaySet,
-  availableDays,
-  availabilityLoading = false,
-  availabilityError = null,
-
-  calendarDaysUrl,
-  calendarDaysHeaders,
-
-  onRangeChange,
-  timeframesByDow,
-  resolveTimeframes,
-  fetchSlots,
   onConfirm,
 }: DateTimeSheetProps) {
-  const todayLocal = useMemo(() => clampDateLocal(new Date()), []);
-  const [viewDate, setViewDate] = useState<Date>(todayLocal);
-  const [selectedDate, setSelectedDate] = useState<Date>(todayLocal);
+  const today = useMemo(() => clampDate(new Date()), []);
+  const [viewDate, setViewDate] = useState<Date>(today);
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
+
+  const [raw, setRaw] = useState<RawResponse | null>(null);
+
+  const [availableDays, setAvailableDays] = useState<Record<string, { remaining_slots: number }>>(
+    {}
+  );
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
   const [timeframes, setTimeframes] = useState<Timeframe[]>([]);
   const [activeTf, setActiveTf] = useState<Timeframe | null>(null);
@@ -183,17 +142,10 @@ export default function DateTimeSheet({
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
 
-  /**
-   * Availability interna (se non viene passata dal parent)
-   */
-  const shouldFetchAvailabilityInternally =
-    !availableDays && !availableDaySet && calendarDaysUrl;
-
-  const [localAvailabilityLoading, setLocalAvailabilityLoading] = useState(false);
-  const [localAvailabilityError, setLocalAvailabilityError] = useState<string | null>(null);
-  const [localAvailableDays, setLocalAvailableDays] = useState<
-    Record<string, { remaining_slots: number }>
-  >({});
+  const offerUpgradeIdNum = useMemo(() => {
+    const n = Number(offerId);
+    return Number.isFinite(n) ? n : null;
+  }, [offerId]);
 
   useEffect(() => {
     if (!open) {
@@ -204,165 +156,162 @@ export default function DateTimeSheet({
 
   useEffect(() => {
     if (!open) return;
-    setViewDate(clampDateLocal(selectedDate ?? todayLocal));
-  }, [open, selectedDate, todayLocal]);
+    setViewDate(clampDate(selectedDate ?? today));
+  }, [open, selectedDate, today]);
 
-  /**
-   * Fetch availability del mese quando:
-   * - apri sheet
-   * - cambi mese (viewDate)
-   */
+  // 1) Load RAW + call microservice every time month changes (or open)
   useEffect(() => {
-    if (!open) return;
-    if (!shouldFetchAvailabilityInternally) return;
-
     let cancelled = false;
 
-    async function fetchMonthAvailability() {
+    async function loadMonthAvailability() {
+      if (!open) return;
+      if (!offerUpgradeIdNum) {
+        setAvailabilityError("Invalid offerId");
+        setAvailableDays({});
+        setRaw(null);
+        return;
+      }
+
+      const { fromISO, toISO } = getMonthRangeISO(viewDate);
+
+      setAvailabilityLoading(true);
+      setAvailabilityError(null);
+
       try {
-        setLocalAvailabilityLoading(true);
-        setLocalAvailabilityError(null);
-
-        const { fromISO, toISO } = getMonthRangeISO(viewDate);
-
-        // opzionale: notifica parent
-        const { fromMs, toMs } = getMonthRangeISO(viewDate);
-        onRangeChange?.(fromMs, toMs);
-
-        const offer_upgrade_id = Number(offerId);
-        const res = await fetch(calendarDaysUrl!, {
+        // RAW
+        const rawRes = await fetch(RAW_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(calendarDaysHeaders || {}),
-          },
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({
-            offer_upgrade_id,
+            offer_upgrade_id: offerUpgradeIdNum,
             from: fromISO,
             to: toISO,
           }),
         });
 
-        if (!res.ok) {
-          const txt = await res.text().catch(() => "");
-          throw new Error(`CalendarDays failed: ${res.status} ${txt}`);
-        }
+        const rawJson: RawResponse = await rawRes.json();
+        const book = Array.isArray(rawJson.book) ? rawJson.book : [];
+        const offer_timeslot = Array.isArray(rawJson.offer_timeslot) ? rawJson.offer_timeslot : [];
 
-        const data = (await res.json()) as CalendarDaysResponse;
-        const list = Array.isArray(data.available_days) ? data.available_days : [];
+        if (cancelled) return;
+        setRaw({ book, offer_timeslot });
+
+        // MICRO
+        const microRes = await fetch(MICRO_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            from: fromISO,
+            to: toISO,
+            book,
+            offer_timeslot,
+          }),
+        });
+
+        const microJson: MicroResponse = await microRes.json();
+        const days = Array.isArray(microJson.available_days) ? microJson.available_days : [];
 
         const map: Record<string, { remaining_slots: number }> = {};
-        for (const d of list) {
+        for (const d of days) {
           if (!d?.date) continue;
-          if (d.available === false) continue;
-          const remaining = Number.isFinite(d.remaining_slots) ? (d.remaining_slots as number) : 0;
-          if (remaining <= 0) continue;
-          map[d.date] = { remaining_slots: remaining };
+          if (d.available && typeof d.remaining_slots === "number") {
+            map[d.date] = { remaining_slots: d.remaining_slots };
+          }
         }
 
-        if (!cancelled) setLocalAvailableDays(map);
+        if (!cancelled) setAvailableDays(map);
       } catch (e: any) {
-        if (!cancelled) setLocalAvailabilityError(e?.message || "Failed to load availability");
-        if (!cancelled) setLocalAvailableDays({});
-      } finally {
-        if (!cancelled) setLocalAvailabilityLoading(false);
-      }
-    }
-
-    fetchMonthAvailability();
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    open,
-    viewDate,
-    shouldFetchAvailabilityInternally,
-    calendarDaysUrl,
-    calendarDaysHeaders,
-    offerId,
-    onRangeChange,
-  ]);
-
-  /**
-   * Timeframes loader (come prima)
-   */
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadTimeframes() {
-      if (!selectedDate) return;
-      setLoadingSlots(true);
-      setSelectedSlot(null);
-
-      const dateISO = ymdUTC(new Date(Date.UTC(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        0, 0, 0, 0
-      )));
-
-      let tfs: Timeframe[] = [];
-
-      if (resolveTimeframes) {
-        try {
-          tfs = (await resolveTimeframes(dateISO, offerId, venueId)) || [];
-        } catch (err) {
-          console.error("resolveTimeframes failed", err);
-          tfs = [];
+        if (!cancelled) {
+          setAvailabilityError(e?.message || "Failed to load availability");
+          setAvailableDays({});
+          setRaw(null);
         }
-      } else if (timeframesByDow) {
-        const dow = selectedDate.getDay();
-        tfs = timeframesByDow[dow] || [];
-      }
-
-      if (!cancelled) {
-        setTimeframes(tfs);
-        setActiveTf(tfs[0] ?? null);
-        setLoadingSlots(false);
+      } finally {
+        if (!cancelled) setAvailabilityLoading(false);
       }
     }
 
-    loadTimeframes();
+    loadMonthAvailability();
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, resolveTimeframes, timeframesByDow, offerId, venueId]);
+  }, [open, viewDate, offerUpgradeIdNum]);
 
-  /**
-   * Slots loader (come prima)
-   */
+  // 2) Build timeframes from RAW when selectedDate changes
+  useEffect(() => {
+    if (!raw?.offer_timeslot || !selectedDate) {
+      setTimeframes([]);
+      setActiveTf(null);
+      return;
+    }
+
+    const dateISO = ymd(selectedDate);
+    const dayInfo = availableDays[dateISO];
+    const dayRemaining = dayInfo?.remaining_slots ?? 0;
+
+    // If day not present in availableDays => treat as unavailable
+    if (!dayInfo || dayRemaining <= 0) {
+      setTimeframes([]);
+      setActiveTf(null);
+      return;
+    }
+
+    const tfs: Timeframe[] = [];
+    for (const ots of raw.offer_timeslot) {
+      if (!ots?.active) continue;
+      const ts = Array.isArray(ots._timeslot) ? ots._timeslot : [];
+      for (const t of ts) {
+        if (!t?.Active) continue;
+        const start = minsToHm(t.Start_time);
+        const end = minsToHm(t.End_time);
+        const label = `${hmToLabel(start.h, start.m)} - ${hmToLabel(end.h, end.m)}`;
+
+        tfs.push({
+          id: `timeslot-${ots.timeslot_id}-${t.id}`,
+          label,
+          start,
+          end,
+          stepMins: 30,
+          timeslotId: ots.timeslot_id,
+        });
+      }
+    }
+
+    // stable order by start time
+    tfs.sort((a, b) => (a.start.h * 60 + a.start.m) - (b.start.h * 60 + b.start.m));
+
+    setTimeframes(tfs);
+    setActiveTf(tfs[0] ?? null);
+    setSelectedSlot(null);
+  }, [raw, selectedDate, availableDays]);
+
+  // 3) Build slots from timeframe
   useEffect(() => {
     let cancelled = false;
 
     async function loadSlots() {
-      if (!selectedDate) return;
+      if (!selectedDate || !activeTf) {
+        setSlots([]);
+        return;
+      }
       setLoadingSlots(true);
       setSelectedSlot(null);
 
-      const dateISO = ymdUTC(new Date(Date.UTC(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        0, 0, 0, 0
-      )));
+      const dateISO = ymd(selectedDate);
+      const dayInfo = availableDays[dateISO];
+      const dayRemaining = dayInfo?.remaining_slots ?? 0;
 
-      let result: Slot[] | null = null;
-
-      if (fetchSlots) {
-        try {
-          result = await fetchSlots(dateISO, activeTf, offerId, venueId);
-        } catch (err) {
-          console.error("fetchSlots failed", err);
-          result = null;
-        }
+      // if day has no remaining slots -> no slots
+      if (!dayInfo || dayRemaining <= 0) {
+        setSlots([]);
+        setLoadingSlots(false);
+        return;
       }
 
-      if ((!result || result.length === 0) && activeTf) {
-        result = synthesizeFromTimeframe(dateISO, activeTf);
-      }
+      const synthesized = synthesizeFromTimeframe(dateISO, activeTf);
 
       if (!cancelled) {
-        setSlots(result ?? []);
+        setSlots(synthesized);
         setLoadingSlots(false);
       }
     }
@@ -371,42 +320,16 @@ export default function DateTimeSheet({
     return () => {
       cancelled = true;
     };
-  }, [activeTf, selectedDate, fetchSlots, offerId, venueId]);
+  }, [activeTf, selectedDate, availableDays]);
 
-  /**
-   * Availability “effettiva” usata dal componente:
-   * - se arriva dall’esterno => usa quella
-   * - altrimenti => usa quella interna
-   */
-  const effectiveAvailableDays =
-    availableDays && Object.keys(availableDays).length > 0
-      ? availableDays
-      : shouldFetchAvailabilityInternally
-      ? localAvailableDays
-      : undefined;
-
-  const effectiveAvailabilityLoading = shouldFetchAvailabilityInternally
-    ? localAvailabilityLoading
-    : availabilityLoading;
-
-  const effectiveAvailabilityError = shouldFetchAvailabilityInternally
-    ? localAvailabilityError
-    : availabilityError;
-
-  const availabilityDisabled = effectiveAvailabilityLoading || Boolean(effectiveAvailabilityError);
-  const hasAvailability =
-    Boolean(effectiveAvailableDays) || availableDaySet !== undefined || availabilityDisabled;
+  const availabilityDisabled = availabilityLoading || Boolean(availabilityError);
 
   const isDayAvailable = useCallback(
     (dateKey: string) => {
       if (availabilityDisabled) return false;
-      if (!hasAvailability) return true;
-      if (effectiveAvailableDays) {
-        return Boolean(effectiveAvailableDays[dateKey]);
-      }
-      return availableDaySet?.has(dateKey) ?? true;
+      return Boolean(availableDays[dateKey]);
     },
-    [availableDaySet, effectiveAvailableDays, availabilityDisabled, hasAvailability]
+    [availableDays, availabilityDisabled]
   );
 
   const calendarDays = useMemo(() => {
@@ -416,22 +339,17 @@ export default function DateTimeSheet({
     const totalDays = end.getDate();
 
     const cells: Array<{ date: Date | null; key: string }> = [];
-    for (let i = 0; i < startWeekday; i += 1) {
-      cells.push({ date: null, key: `blank-${i}` });
-    }
+    for (let i = 0; i < startWeekday; i += 1) cells.push({ date: null, key: `blank-${i}` });
 
     for (let day = 1; day <= totalDays; day += 1) {
       const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-      const dUtcKey = ymdUTC(new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)));
-      cells.push({ date: d, key: dUtcKey });
+      cells.push({ date: d, key: ymd(d) });
     }
 
     const remainder = cells.length % 7;
     if (remainder !== 0) {
       const pads = 7 - remainder;
-      for (let i = 0; i < pads; i += 1) {
-        cells.push({ date: null, key: `pad-${i}` });
-      }
+      for (let i = 0; i < pads; i += 1) cells.push({ date: null, key: `pad-${i}` });
     }
 
     return cells;
@@ -440,31 +358,21 @@ export default function DateTimeSheet({
   const handleSelectDate = useCallback(
     (date: Date | null) => {
       if (!date) return;
-
-      const dateKey = ymdUTC(
-        new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0))
-      );
-
-      const isPast = clampDateLocal(date).getTime() < todayLocal.getTime();
+      const dateKey = ymd(date);
+      const isPast = date.getTime() < today.getTime();
       const isAvailable = isDayAvailable(dateKey);
       if (isPast || !isAvailable) return;
-
-      setSelectedDate(clampDateLocal(date));
+      setSelectedDate(clampDate(date));
     },
-    [isDayAvailable, todayLocal]
+    [isDayAvailable, today]
   );
 
-  const goMonth = useCallback(
-    (direction: 1 | -1) => {
-      setMonthDirection(direction);
-      setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
-    },
-    []
-  );
+  const goMonth = useCallback((direction: 1 | -1) => {
+    setMonthDirection(direction);
+    setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
+  }, []);
 
-  const selectedDateKey = selectedDate
-    ? ymdUTC(new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0, 0)))
-    : null;
+  const selectedDateKey = selectedDate ? ymd(selectedDate) : null;
 
   return (
     <AnimatePresence>
@@ -544,23 +452,18 @@ export default function DateTimeSheet({
                       {calendarDays.map(({ date, key }) => {
                         if (!date) return <div key={key} className="h-10" />;
 
-                        const dateKey = key; // già UTC ymd
-                        const isToday =
-                          ymdUTC(
-                            new Date(Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate(), 0, 0, 0, 0))
-                          ) === dateKey;
-
-                        const isSelected = selectedDateKey === dateKey;
-
-                        const isPast = clampDateLocal(date).getTime() < todayLocal.getTime();
+                        const isToday = ymd(date) === ymd(today);
+                        const isSelected = selectedDateKey === ymd(date);
+                        const dateKey = ymd(date);
+                        const isPast = date.getTime() < today.getTime();
                         const isAvailable = isDayAvailable(dateKey);
                         const isDisabled = isPast || !isAvailable;
 
-                        const remainingSlots = effectiveAvailableDays?.[dateKey]?.remaining_slots;
+                        const remainingSlots = availableDays?.[dateKey]?.remaining_slots;
 
                         return (
                           <button
-                            key={dateKey}
+                            key={key}
                             onClick={isDisabled ? undefined : () => handleSelectDate(date)}
                             disabled={isDisabled}
                             className={`relative flex h-10 items-center justify-center text-sm transition-all ${
@@ -585,11 +488,7 @@ export default function DateTimeSheet({
                               {date.getDate()}
                             </span>
 
-                            {hasAvailability && !isDisabled && isAvailable && remainingSlots === undefined && (
-                              <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-stone-400" />
-                            )}
-
-                            {hasAvailability && !isDisabled && isAvailable && remainingSlots !== undefined && (
+                            {!isDisabled && remainingSlots !== undefined && (
                               <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-stone-100 px-1 text-[9px] text-stone-500 shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
                                 {remainingSlots}
                               </span>
@@ -601,10 +500,10 @@ export default function DateTimeSheet({
                   </AnimatePresence>
                 </div>
 
-                {(effectiveAvailabilityLoading || effectiveAvailabilityError) && (
+                {(availabilityLoading || availabilityError) && (
                   <div className="text-xs text-stone-500">
-                    {effectiveAvailabilityLoading && "Loading availability…"}
-                    {effectiveAvailabilityError && !effectiveAvailabilityLoading && effectiveAvailabilityError}
+                    {availabilityLoading && "Loading availability…"}
+                    {availabilityError && !availabilityLoading && availabilityError}
                   </div>
                 )}
 
@@ -639,7 +538,7 @@ export default function DateTimeSheet({
                         exit={{ opacity: 0, y: -6 }}
                         className="text-sm text-stone-500"
                       >
-                        Loading availability…
+                        Loading slots…
                       </motion.div>
                     )}
 
@@ -702,21 +601,24 @@ export default function DateTimeSheet({
                   disabled={!selectedSlot}
                   onClick={() => {
                     if (!selectedSlot) return;
-
                     onConfirm({
                       iso: selectedSlot.iso,
-                      date: ymdUTC(new Date(selectedSlot.iso)),
+                      date: ymd(new Date(selectedSlot.iso)),
                       timeLabel: selectedSlot.label,
                       offerId,
                       timeframeId: activeTf?.id,
                     });
-
                     onClose();
                   }}
                   className="mt-4 w-full rounded-2xl px-4 py-3 text-center font-semibold disabled:cursor-not-allowed"
                 >
                   {selectedSlot ? `Confirm ${selectedSlot.label}` : "Select a time"}
                 </motion.button>
+
+                {/* tiny debug (optional) */}
+                <div className="pt-2 text-[10px] text-stone-400">
+                  offer_upgrade_id: {offerId} · venueId: {String(venueId)}
+                </div>
               </div>
             </div>
           </motion.section>
