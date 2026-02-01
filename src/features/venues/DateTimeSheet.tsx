@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+
 export type Slot = {
   label: string;
   iso: string;
@@ -18,34 +19,66 @@ export type Timeframe = {
 export interface DateTimeSheetProps {
   open: boolean;
   onClose: () => void;
+
+  /**
+   * offerId -> usalo come offer_upgrade_id (string o number serializzato)
+   * Esempio: "1"
+   */
   offerId: string;
+
   venueId: string | number;
+
+  /**
+   * Se li passi, il componente NON fa fetch interno.
+   * Se NON li passi, userà calendarDaysUrl per chiamare CalendarDays.
+   */
   availableDaySet?: Set<string>;
   availableDays?: Record<string, { remaining_slots: number }>;
   availabilityLoading?: boolean;
   availabilityError?: string | null;
+
+  /**
+   * URL del tuo endpoint Xano (CalendarDays) o di un gateway.
+   * Deve accettare POST { offer_upgrade_id, from, to } e ritornare { available_days: [...] }.
+   * Se non lo passi, devi gestire availability dall’esterno.
+   */
+  calendarDaysUrl?: string;
+
+  /**
+   * Opzionale: headers extra (es. Authorization) se CalendarDays è protetto.
+   */
+  calendarDaysHeaders?: Record<string, string>;
+
+  /**
+   * Se vuoi ancora gestire il range fuori, puoi usarlo.
+   * Se invece usi calendarDaysUrl, questo non è necessario.
+   */
   onRangeChange?: (fromTs: number, toTs: number) => void;
+
+  /**
+   * Timeframes/slots (come prima)
+   */
   timeframesByDow?: Record<number, Timeframe[]>;
   resolveTimeframes?: (
     dateISO: string,
     offerId: string,
     venueId: string | number
   ) => Promise<Timeframe[]>;
+
   fetchSlots?: (
     dateISO: string,
     timeframe: Timeframe | null,
     offerId: string,
     venueId: string | number
   ) => Promise<Slot[] | null>;
-  onConfirm: (
-    payload: {
-      iso: string;
-      date: string;
-      timeLabel: string;
-      offerId: string;
-      timeframeId?: string;
-    }
-  ) => void;
+
+  onConfirm: (payload: {
+    iso: string;
+    date: string;
+    timeLabel: string;
+    offerId: string;
+    timeframeId?: string;
+  }) => void;
 }
 
 const transition = {
@@ -56,26 +89,31 @@ const transition = {
 
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function ymd(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+/**
+ * YYYY-MM-DD in UTC (evita shift timezone)
+ */
+function ymdUTC(date: Date) {
+  const y = date.getUTCFullYear();
+  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(date.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function makeKey(date: Date) {
   return `${date.getFullYear()}-${date.getMonth()}`;
 }
 
-function clampDate(date: Date) {
+function clampDateLocal(date: Date) {
   const copy = new Date(date);
   copy.setHours(0, 0, 0, 0);
   return copy;
 }
 
-function synthesizeFromTimeframe(date: string, tf: Timeframe): Slot[] {
+function synthesizeFromTimeframe(dateISO: string, tf: Timeframe): Slot[] {
   const step = tf.stepMins ?? 30;
-  const base = new Date(`${date}T00:00:00`);
+
+  // costruiamo una base in locale ma coerente (solo per UI)
+  const base = new Date(`${dateISO}T00:00:00`);
   const start = new Date(base);
   start.setHours(tf.start.h, tf.start.m, 0, 0);
   const end = new Date(base);
@@ -92,36 +130,70 @@ function synthesizeFromTimeframe(date: string, tf: Timeframe): Slot[] {
   return slots;
 }
 
-function getMonthRange(date: Date) {
-  const from = new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0);
-  const to = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
-  return { fromMs: from.getTime(), toMs: to.getTime() };
+function getMonthRangeISO(viewDate: Date) {
+  // primo giorno del mese
+  const from = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth(), 1, 0, 0, 0, 0));
+  // ultimo giorno del mese
+  const to = new Date(Date.UTC(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 0, 0, 0, 0));
+  return {
+    fromISO: ymdUTC(from),
+    toISO: ymdUTC(to),
+    fromMs: from.getTime(),
+    toMs: to.getTime(),
+  };
 }
+
+type CalendarDaysResponse = {
+  available_days?: Array<{
+    date: string; // YYYY-MM-DD
+    available?: boolean;
+    remaining_slots?: number;
+  }>;
+};
 
 export default function DateTimeSheet({
   open,
   onClose,
   offerId,
   venueId,
+
   availableDaySet,
   availableDays,
   availabilityLoading = false,
   availabilityError = null,
+
+  calendarDaysUrl,
+  calendarDaysHeaders,
+
   onRangeChange,
   timeframesByDow,
   resolveTimeframes,
   fetchSlots,
   onConfirm,
 }: DateTimeSheetProps) {
-  const today = useMemo(() => clampDate(new Date()), []);
-  const [viewDate, setViewDate] = useState<Date>(today);
-  const [selectedDate, setSelectedDate] = useState<Date>(today);
+  const todayLocal = useMemo(() => clampDateLocal(new Date()), []);
+  const [viewDate, setViewDate] = useState<Date>(todayLocal);
+  const [selectedDate, setSelectedDate] = useState<Date>(todayLocal);
+
   const [timeframes, setTimeframes] = useState<Timeframe[]>([]);
   const [activeTf, setActiveTf] = useState<Timeframe | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
-  const [loading, setLoading] = useState(false);
+
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
+
+  /**
+   * Availability interna (se non viene passata dal parent)
+   */
+  const shouldFetchAvailabilityInternally =
+    !availableDays && !availableDaySet && calendarDaysUrl;
+
+  const [localAvailabilityLoading, setLocalAvailabilityLoading] = useState(false);
+  const [localAvailabilityError, setLocalAvailabilityError] = useState<string | null>(null);
+  const [localAvailableDays, setLocalAvailableDays] = useState<
+    Record<string, { remaining_slots: number }>
+  >({});
 
   useEffect(() => {
     if (!open) {
@@ -132,17 +204,103 @@ export default function DateTimeSheet({
 
   useEffect(() => {
     if (!open) return;
-    setViewDate(clampDate(selectedDate ?? today));
-  }, [open, selectedDate, today]);
+    setViewDate(clampDateLocal(selectedDate ?? todayLocal));
+  }, [open, selectedDate, todayLocal]);
 
+  /**
+   * Fetch availability del mese quando:
+   * - apri sheet
+   * - cambi mese (viewDate)
+   */
+  useEffect(() => {
+    if (!open) return;
+    if (!shouldFetchAvailabilityInternally) return;
+
+    let cancelled = false;
+
+    async function fetchMonthAvailability() {
+      try {
+        setLocalAvailabilityLoading(true);
+        setLocalAvailabilityError(null);
+
+        const { fromISO, toISO } = getMonthRangeISO(viewDate);
+
+        // opzionale: notifica parent
+        const { fromMs, toMs } = getMonthRangeISO(viewDate);
+        onRangeChange?.(fromMs, toMs);
+
+        const offer_upgrade_id = Number(offerId);
+        const res = await fetch(calendarDaysUrl!, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(calendarDaysHeaders || {}),
+          },
+          body: JSON.stringify({
+            offer_upgrade_id,
+            from: fromISO,
+            to: toISO,
+          }),
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          throw new Error(`CalendarDays failed: ${res.status} ${txt}`);
+        }
+
+        const data = (await res.json()) as CalendarDaysResponse;
+        const list = Array.isArray(data.available_days) ? data.available_days : [];
+
+        const map: Record<string, { remaining_slots: number }> = {};
+        for (const d of list) {
+          if (!d?.date) continue;
+          if (d.available === false) continue;
+          const remaining = Number.isFinite(d.remaining_slots) ? (d.remaining_slots as number) : 0;
+          if (remaining <= 0) continue;
+          map[d.date] = { remaining_slots: remaining };
+        }
+
+        if (!cancelled) setLocalAvailableDays(map);
+      } catch (e: any) {
+        if (!cancelled) setLocalAvailabilityError(e?.message || "Failed to load availability");
+        if (!cancelled) setLocalAvailableDays({});
+      } finally {
+        if (!cancelled) setLocalAvailabilityLoading(false);
+      }
+    }
+
+    fetchMonthAvailability();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    viewDate,
+    shouldFetchAvailabilityInternally,
+    calendarDaysUrl,
+    calendarDaysHeaders,
+    offerId,
+    onRangeChange,
+  ]);
+
+  /**
+   * Timeframes loader (come prima)
+   */
   useEffect(() => {
     let cancelled = false;
 
     async function loadTimeframes() {
       if (!selectedDate) return;
-      setLoading(true);
+      setLoadingSlots(true);
       setSelectedSlot(null);
-      const dateISO = ymd(selectedDate);
+
+      const dateISO = ymdUTC(new Date(Date.UTC(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        0, 0, 0, 0
+      )));
+
       let tfs: Timeframe[] = [];
 
       if (resolveTimeframes) {
@@ -160,9 +318,7 @@ export default function DateTimeSheet({
       if (!cancelled) {
         setTimeframes(tfs);
         setActiveTf(tfs[0] ?? null);
-      }
-      if (!cancelled) {
-        setLoading(false);
+        setLoadingSlots(false);
       }
     }
 
@@ -172,14 +328,24 @@ export default function DateTimeSheet({
     };
   }, [selectedDate, resolveTimeframes, timeframesByDow, offerId, venueId]);
 
+  /**
+   * Slots loader (come prima)
+   */
   useEffect(() => {
     let cancelled = false;
 
     async function loadSlots() {
       if (!selectedDate) return;
-      setLoading(true);
+      setLoadingSlots(true);
       setSelectedSlot(null);
-      const dateISO = ymd(selectedDate);
+
+      const dateISO = ymdUTC(new Date(Date.UTC(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        0, 0, 0, 0
+      )));
+
       let result: Slot[] | null = null;
 
       if (fetchSlots) {
@@ -197,7 +363,7 @@ export default function DateTimeSheet({
 
       if (!cancelled) {
         setSlots(result ?? []);
-        setLoading(false);
+        setLoadingSlots(false);
       }
     }
 
@@ -207,24 +373,40 @@ export default function DateTimeSheet({
     };
   }, [activeTf, selectedDate, fetchSlots, offerId, venueId]);
 
-  const availableDaysWithSlots =
-    availableDays && Object.keys(availableDays).length > 0 ? availableDays : undefined;
-  const availabilityDisabled = availabilityLoading || Boolean(availabilityError);
+  /**
+   * Availability “effettiva” usata dal componente:
+   * - se arriva dall’esterno => usa quella
+   * - altrimenti => usa quella interna
+   */
+  const effectiveAvailableDays =
+    availableDays && Object.keys(availableDays).length > 0
+      ? availableDays
+      : shouldFetchAvailabilityInternally
+      ? localAvailableDays
+      : undefined;
+
+  const effectiveAvailabilityLoading = shouldFetchAvailabilityInternally
+    ? localAvailabilityLoading
+    : availabilityLoading;
+
+  const effectiveAvailabilityError = shouldFetchAvailabilityInternally
+    ? localAvailabilityError
+    : availabilityError;
+
+  const availabilityDisabled = effectiveAvailabilityLoading || Boolean(effectiveAvailabilityError);
   const hasAvailability =
-    Boolean(availableDaysWithSlots) ||
-    availableDaySet !== undefined ||
-    availabilityDisabled;
+    Boolean(effectiveAvailableDays) || availableDaySet !== undefined || availabilityDisabled;
 
   const isDayAvailable = useCallback(
     (dateKey: string) => {
       if (availabilityDisabled) return false;
       if (!hasAvailability) return true;
-      if (availableDaysWithSlots) {
-        return Boolean(availableDaysWithSlots[dateKey]);
+      if (effectiveAvailableDays) {
+        return Boolean(effectiveAvailableDays[dateKey]);
       }
       return availableDaySet?.has(dateKey) ?? true;
     },
-    [availableDaySet, availableDaysWithSlots, availabilityDisabled, hasAvailability]
+    [availableDaySet, effectiveAvailableDays, availabilityDisabled, hasAvailability]
   );
 
   const calendarDays = useMemo(() => {
@@ -240,7 +422,8 @@ export default function DateTimeSheet({
 
     for (let day = 1; day <= totalDays; day += 1) {
       const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-      cells.push({ date: d, key: ymd(d) });
+      const dUtcKey = ymdUTC(new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)));
+      cells.push({ date: d, key: dUtcKey });
     }
 
     const remainder = cells.length % 7;
@@ -257,34 +440,41 @@ export default function DateTimeSheet({
   const handleSelectDate = useCallback(
     (date: Date | null) => {
       if (!date) return;
-      const dateKey = ymd(date);
-      const isPast = date.getTime() < today.getTime();
+
+      const dateKey = ymdUTC(
+        new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0))
+      );
+
+      const isPast = clampDateLocal(date).getTime() < todayLocal.getTime();
       const isAvailable = isDayAvailable(dateKey);
       if (isPast || !isAvailable) return;
-      setSelectedDate(clampDate(date));
+
+      setSelectedDate(clampDateLocal(date));
     },
-    [isDayAvailable, today]
+    [isDayAvailable, todayLocal]
   );
 
   const goMonth = useCallback(
     (direction: 1 | -1) => {
       setMonthDirection(direction);
-      setViewDate(prev => {
-        const next = new Date(prev.getFullYear(), prev.getMonth() + direction, 1);
-        const range = getMonthRange(next);
-        onRangeChange?.(range.fromMs, range.toMs);
-        return next;
-      });
+      setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
     },
-    [onRangeChange]
+    []
   );
 
-  const selectedDateKey = selectedDate ? ymd(selectedDate) : null;
+  const selectedDateKey = selectedDate
+    ? ymdUTC(new Date(Date.UTC(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate(), 0, 0, 0, 0)))
+    : null;
 
   return (
     <AnimatePresence>
       {open && (
-        <motion.div className="fixed inset-0 z-[60]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+        <motion.div
+          className="fixed inset-0 z-[60]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
           <motion.div
             className="absolute inset-0 bg-black/40"
             initial={{ opacity: 0 }}
@@ -292,6 +482,7 @@ export default function DateTimeSheet({
             exit={{ opacity: 0 }}
             onClick={onClose}
           />
+
           <motion.section
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -301,6 +492,7 @@ export default function DateTimeSheet({
           >
             <div className="relative px-5 pt-4 pb-6">
               <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-white/60" />
+
               <button
                 onClick={onClose}
                 className="absolute right-5 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/70 text-stone-600 ring-1 ring-white/60"
@@ -318,9 +510,11 @@ export default function DateTimeSheet({
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
+
                   <div className="text-sm font-semibold text-stone-700">
                     {viewDate.toLocaleDateString([], { month: "long", year: "numeric" })}
                   </div>
+
                   <button
                     onClick={() => goMonth(1)}
                     className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/70 text-stone-600 ring-1 ring-white/60"
@@ -348,19 +542,25 @@ export default function DateTimeSheet({
                       className="grid grid-cols-7 gap-2"
                     >
                       {calendarDays.map(({ date, key }) => {
-                        if (!date) {
-                          return <div key={key} className="h-10" />;
-                        }
-                        const isToday = ymd(date) === ymd(today);
-                        const isSelected = selectedDateKey === ymd(date);
-                        const dateKey = ymd(date);
-                        const isPast = date.getTime() < today.getTime();
+                        if (!date) return <div key={key} className="h-10" />;
+
+                        const dateKey = key; // già UTC ymd
+                        const isToday =
+                          ymdUTC(
+                            new Date(Date.UTC(todayLocal.getFullYear(), todayLocal.getMonth(), todayLocal.getDate(), 0, 0, 0, 0))
+                          ) === dateKey;
+
+                        const isSelected = selectedDateKey === dateKey;
+
+                        const isPast = clampDateLocal(date).getTime() < todayLocal.getTime();
                         const isAvailable = isDayAvailable(dateKey);
                         const isDisabled = isPast || !isAvailable;
-                        const remainingSlots = availableDaysWithSlots?.[dateKey]?.remaining_slots;
+
+                        const remainingSlots = effectiveAvailableDays?.[dateKey]?.remaining_slots;
+
                         return (
                           <button
-                            key={key}
+                            key={dateKey}
                             onClick={isDisabled ? undefined : () => handleSelectDate(date)}
                             disabled={isDisabled}
                             className={`relative flex h-10 items-center justify-center text-sm transition-all ${
@@ -384,9 +584,11 @@ export default function DateTimeSheet({
                             >
                               {date.getDate()}
                             </span>
+
                             {hasAvailability && !isDisabled && isAvailable && remainingSlots === undefined && (
                               <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-stone-400" />
                             )}
+
                             {hasAvailability && !isDisabled && isAvailable && remainingSlots !== undefined && (
                               <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-stone-100 px-1 text-[9px] text-stone-500 shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
                                 {remainingSlots}
@@ -398,10 +600,11 @@ export default function DateTimeSheet({
                     </motion.div>
                   </AnimatePresence>
                 </div>
-                {(availabilityLoading || availabilityError) && (
+
+                {(effectiveAvailabilityLoading || effectiveAvailabilityError) && (
                   <div className="text-xs text-stone-500">
-                    {availabilityLoading && "Loading availability…"}
-                    {availabilityError && !availabilityLoading && availabilityError}
+                    {effectiveAvailabilityLoading && "Loading availability…"}
+                    {effectiveAvailabilityError && !effectiveAvailabilityLoading && effectiveAvailabilityError}
                   </div>
                 )}
 
@@ -428,7 +631,7 @@ export default function DateTimeSheet({
 
                 <div className="min-h-[4rem]">
                   <AnimatePresence initial={false}>
-                    {loading && (
+                    {loadingSlots && (
                       <motion.div
                         key="loading"
                         initial={{ opacity: 0, y: 6 }}
@@ -439,7 +642,8 @@ export default function DateTimeSheet({
                         Loading availability…
                       </motion.div>
                     )}
-                    {!loading && slots.length === 0 && (
+
+                    {!loadingSlots && slots.length === 0 && (
                       <motion.div
                         key="empty"
                         initial={{ opacity: 0, y: 6 }}
@@ -450,7 +654,8 @@ export default function DateTimeSheet({
                         No availability for this date.
                       </motion.div>
                     )}
-                    {!loading && slots.length > 0 && (
+
+                    {!loadingSlots && slots.length > 0 && (
                       <motion.div
                         key="slots"
                         initial={{ opacity: 0, y: 6 }}
@@ -497,13 +702,15 @@ export default function DateTimeSheet({
                   disabled={!selectedSlot}
                   onClick={() => {
                     if (!selectedSlot) return;
+
                     onConfirm({
                       iso: selectedSlot.iso,
-                      date: ymd(new Date(selectedSlot.iso)),
+                      date: ymdUTC(new Date(selectedSlot.iso)),
                       timeLabel: selectedSlot.label,
                       offerId,
                       timeframeId: activeTf?.id,
                     });
+
                     onClose();
                   }}
                   className="mt-4 w-full rounded-2xl px-4 py-3 text-center font-semibold disabled:cursor-not-allowed"
