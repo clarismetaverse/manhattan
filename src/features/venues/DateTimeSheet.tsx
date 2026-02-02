@@ -23,6 +23,12 @@ export interface DateTimeSheetProps {
   onClose: () => void;
   offerId: string; // offer_upgrade_id
   venueId: string | number; // not used here but kept for app consistency
+  availableDaySet?: Set<string>;
+  availableDays?: Record<string, { remaining_slots: number }>;
+  availabilityLoading?: boolean;
+  availabilityError?: string | null;
+  onRangeChange?: (fromMs: number, toMs: number) => void;
+  timeframesByDow?: Record<number, Timeframe[]>;
   onConfirm: (payload: {
     iso: string;
     date: string;
@@ -400,4 +406,179 @@ export default function DateTimeSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={transition}
-            className
+            className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-auto rounded-t-3xl bg-white px-4 pb-6 pt-3"
+          >
+            {/* Handle */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" />
+
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-stone-800">Select Date & Time</h2>
+              <button
+                onClick={onClose}
+                className="rounded-full p-1 text-stone-500 hover:bg-stone-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {availabilityError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                {availabilityError}
+              </div>
+            )}
+
+            {/* Month navigation */}
+            <div className="mb-4 flex items-center justify-between">
+              <button
+                onClick={() => goMonth(-1)}
+                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="font-medium text-stone-800">
+                {viewDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </span>
+              <button
+                onClick={() => goMonth(1)}
+                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Weekday headers */}
+            <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-stone-500">
+              {weekdayLabels.map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
+
+            {/* Calendar grid */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={makeKey(viewDate)}
+                initial={{ opacity: 0, x: monthDirection > 0 ? 30 : -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: monthDirection > 0 ? -30 : 30 }}
+                transition={{ duration: 0.2 }}
+                className="mb-6 grid grid-cols-7 gap-1"
+              >
+                {calendarDays.map(({ date, key }) => {
+                  if (!date) {
+                    return <div key={key} className="h-10" />;
+                  }
+                  const dateKey = ymd(date);
+                  const isPast = date.getTime() < today.getTime();
+                  const isAvailable = isDayAvailable(dateKey);
+                  const isSelected = dateKey === selectedDateKey;
+                  const disabled = isPast || !isAvailable || availabilityDisabled;
+
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleSelectDate(date)}
+                      disabled={disabled}
+                      className={[
+                        "flex h-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                        isSelected
+                          ? "bg-[#FF5A7A] text-white"
+                          : disabled
+                          ? "text-stone-300 cursor-not-allowed"
+                          : "text-stone-700 hover:bg-stone-100",
+                      ].join(" ")}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Timeframes */}
+            {timeframes.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium text-stone-600">Select a time range</p>
+                <div className="flex flex-wrap gap-2">
+                  {timeframes.map((tf) => (
+                    <button
+                      key={tf.id}
+                      onClick={() => {
+                        setActiveTf(tf);
+                        setSelectedSlot(null);
+                      }}
+                      className={[
+                        "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                        activeTf?.id === tf.id
+                          ? "bg-[#FF5A7A] text-white"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200",
+                      ].join(" ")}
+                    >
+                      {tf.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Time slots */}
+            {loadingSlots ? (
+              <div className="text-center text-sm text-stone-500">Loading slots...</div>
+            ) : slots.length > 0 ? (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium text-stone-600">Available times</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.iso}
+                      onClick={() => setSelectedSlot(slot)}
+                      disabled={slot.disabled}
+                      className={[
+                        "rounded-lg py-2 text-sm font-medium transition-colors",
+                        selectedSlot?.iso === slot.iso
+                          ? "bg-[#FF5A7A] text-white"
+                          : slot.disabled
+                          ? "bg-stone-50 text-stone-300 cursor-not-allowed"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200",
+                      ].join(" ")}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : activeTf && selectedDate ? (
+              <div className="mb-4 text-center text-sm text-stone-500">
+                No available slots for this timeframe.
+              </div>
+            ) : null}
+
+            {/* Confirm button */}
+            <button
+              onClick={() => {
+                if (!selectedSlot || !selectedDate) return;
+                onConfirm({
+                  iso: selectedSlot.iso,
+                  date: ymd(selectedDate),
+                  timeLabel: selectedSlot.label,
+                  offerId,
+                  timeframeId: activeTf?.id,
+                });
+                onClose();
+              }}
+              disabled={!selectedSlot}
+              className={[
+                "w-full rounded-xl py-3 text-base font-semibold transition-colors",
+                selectedSlot
+                  ? "bg-[#FF5A7A] text-white"
+                  : "bg-stone-200 text-stone-400 cursor-not-allowed",
+              ].join(" ")}
+            >
+              Confirm
+            </button>
+          </motion.section>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
