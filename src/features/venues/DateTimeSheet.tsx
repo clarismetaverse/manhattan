@@ -400,4 +400,167 @@ export default function DateTimeSheet({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={transition}
-            className
+            className="absolute bottom-0 left-0 right-0 max-h-[85vh] rounded-t-3xl bg-white overflow-hidden flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <h2 className="text-lg font-semibold">Select Date & Time</h2>
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Month navigation */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => goMonth(-1)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={makeKey(viewDate)}
+                    initial={{ opacity: 0, x: monthDirection * 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: monthDirection * -20 }}
+                    className="font-medium"
+                  >
+                    {viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                  </motion.span>
+                </AnimatePresence>
+                <button
+                  onClick={() => goMonth(1)}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Weekday headers */}
+              <div className="grid grid-cols-7 gap-1 text-center text-sm text-gray-500">
+                {weekdayLabels.map((d) => (
+                  <div key={d}>{d}</div>
+                ))}
+              </div>
+
+              {/* Calendar grid */}
+              {availabilityLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : availabilityError ? (
+                <div className="text-center py-8 text-red-500 text-sm">{availabilityError}</div>
+              ) : (
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map(({ date, key }) => {
+                    if (!date) return <div key={key} />;
+                    const dateKey = ymd(date);
+                    const isPast = date.getTime() < today.getTime();
+                    const isAvailable = isDayAvailable(dateKey);
+                    const isSelected = selectedDateKey === dateKey;
+                    const isToday = dateKey === ymd(today);
+
+                    return (
+                      <button
+                        key={key}
+                        disabled={isPast || !isAvailable}
+                        onClick={() => handleSelectDate(date)}
+                        className={`aspect-square flex items-center justify-center text-sm rounded-full transition-colors ${
+                          isSelected
+                            ? "bg-black text-white"
+                            : isPast || !isAvailable
+                            ? "text-gray-300 cursor-not-allowed"
+                            : isToday
+                            ? "border border-black"
+                            : "hover:bg-gray-100"
+                        }`}
+                      >
+                        {date.getDate()}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Timeframe tabs */}
+              {timeframes.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {timeframes.map((tf) => (
+                    <button
+                      key={tf.id}
+                      onClick={() => setActiveTf(tf)}
+                      className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                        activeTf?.id === tf.id
+                          ? "bg-black text-white"
+                          : "bg-gray-100 hover:bg-gray-200"
+                      }`}
+                    >
+                      {tf.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Time slots */}
+              {loadingSlots ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : slots.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.iso}
+                      disabled={slot.disabled}
+                      onClick={() => setSelectedSlot(slot)}
+                      className={`py-3 rounded-lg text-sm transition-colors ${
+                        selectedSlot?.iso === slot.iso
+                          ? "bg-black text-white"
+                          : slot.disabled
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                          : "bg-gray-100 hover:bg-gray-200"
+                      }`}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+              ) : selectedDate && timeframes.length === 0 ? (
+                <p className="text-center text-gray-500 text-sm py-4">
+                  No available times for this date
+                </p>
+              ) : null}
+            </div>
+
+            {/* Confirm button */}
+            <div className="p-4 border-t">
+              <button
+                disabled={!selectedSlot}
+                onClick={() => {
+                  if (selectedSlot && selectedDate) {
+                    onConfirm({
+                      iso: selectedSlot.iso,
+                      date: ymd(selectedDate),
+                      timeLabel: selectedSlot.label,
+                      offerId,
+                      timeframeId: activeTf?.id,
+                    });
+                  }
+                }}
+                className={`w-full py-3 rounded-full font-medium transition-colors ${
+                  selectedSlot
+                    ? "bg-black text-white"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Confirm
+              </button>
+            </div>
+          </motion.section>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
