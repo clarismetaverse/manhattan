@@ -854,6 +854,12 @@ export default function VenueDetail({
           onClose={() => setSheetOpen(false)}
           offerId={selectedOfferId ?? offer.id}
           venueId={restaurantId}
+          availableDaySet={availabilityByOffer[selectedOfferId ?? offer.id]}
+          availableDays={remainingByOffer[selectedOfferId ?? offer.id]}
+          availabilityLoading={availabilityLoadingByOffer[selectedOfferId ?? offer.id]}
+          availabilityError={availabilityErrorByOffer[selectedOfferId ?? offer.id]}
+          onRangeChange={handleMonthRangeChange}
+          timeframesByDow={weeklyTimeframes}
           onConfirm={(payload) => {
             const timeframeLabel = getTimeframeLabel(payload.timeframeId);
             setConfirmedSlot({ ...payload, timeframeLabel });
