@@ -1,45 +1,125 @@
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
+
+export type Slot = {
+  label: string;
+  iso: string;
+  disabled?: boolean;
+};
 
 export type Timeframe = {
   id: string;
   label: string;
   start: { h: number; m: number };
   end: { h: number; m: number };
-  stepMins: number;
+  stepMins?: number;
+  timeslotId?: number;
 };
 
-type DateTimeSheetProps = {
+export interface DateTimeSheetProps {
   open: boolean;
   onClose: () => void;
-  offerId: string;
-  venueId?: number;
-  offerTitle?: string;
+  offerId: string; // offer_upgrade_id
+  venueId: string | number; // not used here but kept for app consistency
   availableDaySet?: Set<string>;
   availableDays?: Record<string, { remaining_slots: number }>;
   availabilityLoading?: boolean;
   availabilityError?: string | null;
   onRangeChange?: (fromMs: number, toMs: number) => void;
   timeframesByDow?: Record<number, Timeframe[]>;
-  onConfirm: (slot: {
+  onConfirm: (payload: {
     iso: string;
     date: string;
     timeLabel: string;
     offerId: string;
     timeframeId?: string;
   }) => void;
+}
+
+const RAW_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/calendar/raw/Data";
+const MICRO_URL = "https://calendar-microservice.vercel.app/api/calendar";
+
+const transition = {
+  type: "spring" as const,
+  stiffness: 260,
+  damping: 30,
 };
 
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const ymd = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function ymd(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-const getMonthDays = (year: number, month: number) => {
-  const firstDay = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  return { firstDay, daysInMonth };
+function makeKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
+function clampDate(date: Date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function minsToHm(mins: number) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return { h, m };
+}
+
+function hmToLabel(h: number, m: number) {
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function synthesizeFromTimeframe(date: string, tf: Timeframe): Slot[] {
+  const step = tf.stepMins ?? 30;
+  const base = new Date(`${date}T00:00:00`);
+  const start = new Date(base);
+  start.setHours(tf.start.h, tf.start.m, 0, 0);
+  const end = new Date(base);
+  end.setHours(tf.end.h, tf.end.m, 0, 0);
+
+  const slots: Slot[] = [];
+  for (let t = start.getTime(); t <= end.getTime(); t += step * 60_000) {
+    const dt = new Date(t);
+    slots.push({
+      label: dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      iso: dt.toISOString(),
+    });
+  }
+  return slots;
+}
+
+function getMonthRangeISO(viewDate: Date) {
+  const from = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1, 0, 0, 0, 0);
+  const to = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 0, 0, 0, 0);
+  return { fromISO: ymd(from), toISO: ymd(to) };
+}
+
+type RawResponse = {
+  book?: Array<{ timestamp: number; status: string; timeslot_id: number }>;
+  offer_timeslot?: Array<{
+    timeslot_id: number;
+    active: boolean;
+    capacity_override?: number;
+    slot_limit?: string;
+    slot_limit_value?: number;
+    _timeslot?: Array<{
+      id: number;
+      Active: boolean;
+      Start_time: number; // minutes
+      End_time: number; // minutes
+    }>;
+  }>;
+};
+
+type MicroResponse = {
+  available_days?: Array<{ date: string; available: boolean; remaining_slots: number }>;
 };
 
 export default function DateTimeSheet({
@@ -47,248 +127,458 @@ export default function DateTimeSheet({
   onClose,
   offerId,
   venueId,
-  offerTitle,
-  availableDaySet = new Set(),
-  availableDays = {},
-  availabilityLoading,
-  availabilityError,
-  onRangeChange,
-  timeframesByDow = {},
   onConfirm,
 }: DateTimeSheetProps) {
-  const [viewDate, setViewDate] = useState(() => new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const today = useMemo(() => clampDate(new Date()), []);
+  const [viewDate, setViewDate] = useState<Date>(today);
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
 
-  const { firstDay, daysInMonth } = useMemo(
-    () => getMonthDays(viewDate.getFullYear(), viewDate.getMonth()),
-    [viewDate]
+  const [raw, setRaw] = useState<RawResponse | null>(null);
+
+  const [availableDays, setAvailableDays] = useState<Record<string, { remaining_slots: number }>>(
+    {}
   );
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
-  const timeframes = useMemo(() => {
-    if (!selectedDate) return [];
-    const dow = selectedDate.getDay();
-    return timeframesByDow[dow] ?? [];
-  }, [selectedDate, timeframesByDow]);
+  const [timeframes, setTimeframes] = useState<Timeframe[]>([]);
+  const [activeTf, setActiveTf] = useState<Timeframe | null>(null);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
-  const slots = useMemo(() => {
-    if (!activeTimeframe) return [];
-    const { start, end, stepMins } = activeTimeframe;
-    const result: { iso: string; label: string }[] = [];
-    let h = start.h;
-    let m = start.m;
-    while (h < end.h || (h === end.h && m < end.m)) {
-      const label = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-      result.push({ iso: label, label });
-      m += stepMins;
-      if (m >= 60) {
-        h += Math.floor(m / 60);
-        m = m % 60;
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
+
+  const offerUpgradeIdNum = useMemo(() => {
+    const n = Number(offerId);
+    return Number.isFinite(n) ? n : null;
+  }, [offerId]);
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedSlot(null);
+      setActiveTf(null);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setViewDate(clampDate(selectedDate ?? today));
+  }, [open, selectedDate, today]);
+
+  // 1) RAW + microservice quando cambia il mese (o open)
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadMonthAvailability() {
+      if (!open) return;
+
+      if (!offerUpgradeIdNum) {
+        setAvailabilityError("Invalid offerId");
+        setAvailableDays({});
+        setRaw(null);
+        return;
+      }
+
+      const { fromISO, toISO } = getMonthRangeISO(viewDate);
+
+      setAvailabilityLoading(true);
+      setAvailabilityError(null);
+
+      try {
+        // RAW
+        const rawRes = await fetch(RAW_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            offer_upgrade_id: offerUpgradeIdNum,
+            from: fromISO,
+            to: toISO,
+          }),
+        });
+
+        if (!rawRes.ok) throw new Error(`RAW error ${rawRes.status}`);
+
+        const rawJson: RawResponse = await rawRes.json();
+        const book = Array.isArray(rawJson.book) ? rawJson.book : [];
+        const offer_timeslot = Array.isArray(rawJson.offer_timeslot) ? rawJson.offer_timeslot : [];
+
+        if (cancelled) return;
+        setRaw({ book, offer_timeslot });
+
+        // MICRO (NB: il micro richiede anche offer_upgrade_id)
+        const microRes = await fetch(MICRO_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            offer_upgrade_id: offerUpgradeIdNum,
+            from: fromISO,
+            to: toISO,
+            book,
+            offer_timeslot,
+          }),
+        });
+
+        if (!microRes.ok) throw new Error(`MICRO error ${microRes.status}`);
+
+        const microJson: MicroResponse = await microRes.json();
+        const days = Array.isArray(microJson.available_days) ? microJson.available_days : [];
+
+        const map: Record<string, { remaining_slots: number }> = {};
+        for (const d of days) {
+          if (!d?.date) continue;
+          if (d.available && typeof d.remaining_slots === "number") {
+            map[d.date] = { remaining_slots: d.remaining_slots };
+          }
+        }
+
+        if (!cancelled) setAvailableDays(map);
+      } catch (e: any) {
+        if (!cancelled) {
+          setAvailabilityError(e?.message || "Failed to load availability");
+          setAvailableDays({});
+          setRaw(null);
+        }
+      } finally {
+        if (!cancelled) setAvailabilityLoading(false);
       }
     }
-    return result;
-  }, [activeTimeframe]);
 
-  const goMonth = (dir: 1 | -1) => {
-    const next = new Date(viewDate.getFullYear(), viewDate.getMonth() + dir, 1);
-    setViewDate(next);
-    setSelectedDate(null);
-    setActiveTimeframe(null);
-    setSelectedSlot(null);
-    if (onRangeChange) {
-      const from = next.getTime();
-      const to = new Date(next.getFullYear(), next.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
-      onRangeChange(from, to);
+    loadMonthAvailability();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, viewDate, offerUpgradeIdNum]);
+
+  // 2) timeframes dal RAW quando cambia selectedDate
+  useEffect(() => {
+    if (!raw?.offer_timeslot || !selectedDate) {
+      setTimeframes([]);
+      setActiveTf(null);
+      return;
     }
-  };
 
-  const handleSelectDate = (d: Date) => {
-    setSelectedDate(d);
-    setActiveTimeframe(null);
+    const dateISO = ymd(selectedDate);
+    const dayInfo = availableDays[dateISO];
+    const dayRemaining = dayInfo?.remaining_slots ?? 0;
+
+    if (!dayInfo || dayRemaining <= 0) {
+      setTimeframes([]);
+      setActiveTf(null);
+      return;
+    }
+
+    const tfs: Timeframe[] = [];
+    for (const ots of raw.offer_timeslot) {
+      if (!ots?.active) continue;
+      const ts = Array.isArray(ots._timeslot) ? ots._timeslot : [];
+      for (const t of ts) {
+        if (!t?.Active) continue;
+        const start = minsToHm(t.Start_time);
+        const end = minsToHm(t.End_time);
+        const label = `${hmToLabel(start.h, start.m)} - ${hmToLabel(end.h, end.m)}`;
+
+        tfs.push({
+          id: `timeslot-${ots.timeslot_id}-${t.id}`,
+          label,
+          start,
+          end,
+          stepMins: 30,
+          timeslotId: ots.timeslot_id,
+        });
+      }
+    }
+
+    tfs.sort((a, b) => (a.start.h * 60 + a.start.m) - (b.start.h * 60 + b.start.m));
+
+    setTimeframes(tfs);
+    setActiveTf(tfs[0] ?? null);
     setSelectedSlot(null);
-  };
+  }, [raw, selectedDate, availableDays]);
 
-  const handleConfirm = () => {
-    if (!selectedDate || !selectedSlot) return;
-    const dateStr = ymd(selectedDate);
-    onConfirm({
-      iso: `${dateStr}T${selectedSlot}`,
-      date: dateStr,
-      timeLabel: selectedSlot,
-      offerId,
-      timeframeId: activeTimeframe?.id,
-    });
-    onClose();
-  };
+  // 3) slots dalla timeframe
+  useEffect(() => {
+    let cancelled = false;
 
-  if (!open) return null;
+    async function loadSlots() {
+      if (!selectedDate || !activeTf) {
+        setSlots([]);
+        return;
+      }
+      setLoadingSlots(true);
+      setSelectedSlot(null);
+
+      const dateISO = ymd(selectedDate);
+      const dayInfo = availableDays[dateISO];
+      const dayRemaining = dayInfo?.remaining_slots ?? 0;
+
+      if (!dayInfo || dayRemaining <= 0) {
+        setSlots([]);
+        setLoadingSlots(false);
+        return;
+      }
+
+      const synthesized = synthesizeFromTimeframe(dateISO, activeTf);
+
+      if (!cancelled) {
+        setSlots(synthesized);
+        setLoadingSlots(false);
+      }
+    }
+
+    loadSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTf, selectedDate, availableDays]);
+
+  const availabilityDisabled = availabilityLoading || Boolean(availabilityError);
+
+  const isDayAvailable = useCallback(
+    (dateKey: string) => {
+      if (availabilityDisabled) return false;
+      return Boolean(availableDays[dateKey]);
+    },
+    [availableDays, availabilityDisabled]
+  );
+
+  const calendarDays = useMemo(() => {
+    const start = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    const end = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
+    const startWeekday = start.getDay();
+    const totalDays = end.getDate();
+
+    const cells: Array<{ date: Date | null; key: string }> = [];
+    for (let i = 0; i < startWeekday; i += 1) cells.push({ date: null, key: `blank-${i}` });
+
+    for (let day = 1; day <= totalDays; day += 1) {
+      const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+      cells.push({ date: d, key: ymd(d) });
+    }
+
+    const remainder = cells.length % 7;
+    if (remainder !== 0) {
+      const pads = 7 - remainder;
+      for (let i = 0; i < pads; i += 1) cells.push({ date: null, key: `pad-${i}` });
+    }
+
+    return cells;
+  }, [viewDate]);
+
+  const handleSelectDate = useCallback(
+    (date: Date | null) => {
+      if (!date) return;
+      const dateKey = ymd(date);
+      const isPast = date.getTime() < today.getTime();
+      const isAvailable = isDayAvailable(dateKey);
+      if (isPast || !isAvailable) return;
+      setSelectedDate(clampDate(date));
+    },
+    [isDayAvailable, today]
+  );
+
+  const goMonth = useCallback((direction: 1 | -1) => {
+    setMonthDirection(direction);
+    setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
+  }, []);
+
+  const selectedDateKey = selectedDate ? ymd(selectedDate) : null;
 
   return (
     <AnimatePresence>
-      <motion.div
-        className="fixed inset-0 z-50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-      >
-        <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-        <motion.section
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="absolute bottom-0 inset-x-0 rounded-t-3xl bg-[#FAF7F0] p-4 max-h-[85vh] overflow-y-auto"
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[60]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => goMonth(-1)}
-              className="p-2 rounded-full hover:bg-white/60 transition"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
+          <motion.div
+            className="absolute inset-0 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
 
-            <div className="text-center">
-              <div className="font-semibold text-stone-800">
-                {viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-              </div>
-              {offerTitle && (
-                <div className="text-xs text-stone-500">{offerTitle}</div>
-              )}
+          <motion.section
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={transition}
+            className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-auto rounded-t-3xl bg-white px-4 pb-6 pt-3"
+          >
+            {/* Handle */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" />
+
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-stone-800">Select Date & Time</h2>
+              <button
+                onClick={onClose}
+                className="rounded-full p-1 text-stone-500 hover:bg-stone-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <button
-              onClick={() => goMonth(1)}
-              className="p-2 rounded-full hover:bg-white/60 transition"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </div>
+            {availabilityError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                {availabilityError}
+              </div>
+            )}
 
-          {/* Close button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/60 transition"
-          >
-            <X className="h-5 w-5 text-stone-500" />
-          </button>
+            {/* Month navigation */}
+            <div className="mb-4 flex items-center justify-between">
+              <button
+                onClick={() => goMonth(-1)}
+                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="font-medium text-stone-800">
+                {viewDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </span>
+              <button
+                onClick={() => goMonth(1)}
+                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
 
-          {/* Loading / Error */}
-          {availabilityLoading && (
-            <div className="text-center text-sm text-stone-500 py-2">Loading availability...</div>
-          )}
-          {availabilityError && (
-            <div className="text-center text-sm text-rose-500 py-2">{availabilityError}</div>
-          )}
+            {/* Weekday headers */}
+            <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-stone-500">
+              {weekdayLabels.map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
 
-          {/* Weekday headers */}
-          <div className="grid grid-cols-7 text-center text-xs text-stone-400 mb-2">
-            {WEEKDAYS.map((w) => (
-              <div key={w}>{w}</div>
-            ))}
-          </div>
+            {/* Calendar grid */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={makeKey(viewDate)}
+                initial={{ opacity: 0, x: monthDirection > 0 ? 30 : -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: monthDirection > 0 ? -30 : 30 }}
+                transition={{ duration: 0.2 }}
+                className="mb-6 grid grid-cols-7 gap-1"
+              >
+                {calendarDays.map(({ date, key }) => {
+                  if (!date) {
+                    return <div key={key} className="h-10" />;
+                  }
+                  const dateKey = ymd(date);
+                  const isPast = date.getTime() < today.getTime();
+                  const isAvailable = isDayAvailable(dateKey);
+                  const isSelected = dateKey === selectedDateKey;
+                  const disabled = isPast || !isAvailable || availabilityDisabled;
 
-          {/* Calendar grid */}
-          <div className="grid grid-cols-7 gap-1 mb-4">
-            {/* Empty cells for offset */}
-            {Array.from({ length: firstDay }).map((_, i) => (
-              <div key={`empty-${i}`} />
-            ))}
-
-            {/* Days */}
-            {Array.from({ length: daysInMonth }).map((_, i) => {
-              const dayNum = i + 1;
-              const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), dayNum);
-              const key = ymd(d);
-              const isAvailable = availableDaySet.has(key);
-              const isSelected = selectedDate && ymd(selectedDate) === key;
-              const remaining = availableDays[key]?.remaining_slots;
-
-              return (
-                <button
-                  key={key}
-                  disabled={!isAvailable}
-                  onClick={() => handleSelectDate(d)}
-                  className={[
-                    "relative h-10 rounded-xl text-sm font-medium transition",
-                    !isAvailable
-                      ? "opacity-30 cursor-not-allowed"
-                      : isSelected
-                      ? "bg-stone-900 text-white shadow-md"
-                      : "bg-white hover:bg-white/80 text-stone-700",
-                  ].join(" ")}
-                >
-                  {dayNum}
-                  {isAvailable && remaining !== undefined && (
-                    <span
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => handleSelectDate(date)}
+                      disabled={disabled}
                       className={[
-                        "absolute -bottom-0.5 left-1/2 -translate-x-1/2 text-[8px] px-1 rounded",
-                        remaining <= 3 ? "bg-rose-100 text-rose-500" : "bg-emerald-50 text-emerald-600",
+                        "flex h-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                        isSelected
+                          ? "bg-[#FF5A7A] text-white"
+                          : disabled
+                          ? "text-stone-300 cursor-not-allowed"
+                          : "text-stone-700 hover:bg-stone-100",
                       ].join(" ")}
                     >
-                      {remaining}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
 
-          {/* Timeframes */}
-          {timeframes.length > 0 && (
-            <div className="flex gap-2 mb-3 flex-wrap">
-              {timeframes.map((tf) => (
-                <button
-                  key={tf.id}
-                  onClick={() => {
-                    setActiveTimeframe(tf);
-                    setSelectedSlot(null);
-                  }}
-                  className={[
-                    "px-4 py-2 rounded-full text-sm font-medium transition",
-                    activeTimeframe?.id === tf.id
-                      ? "bg-stone-900 text-white"
-                      : "bg-white text-stone-700 hover:bg-white/80",
-                  ].join(" ")}
-                >
-                  {tf.label}
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Timeframes */}
+            {timeframes.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium text-stone-600">Select a time range</p>
+                <div className="flex flex-wrap gap-2">
+                  {timeframes.map((tf) => (
+                    <button
+                      key={tf.id}
+                      onClick={() => {
+                        setActiveTf(tf);
+                        setSelectedSlot(null);
+                      }}
+                      className={[
+                        "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                        activeTf?.id === tf.id
+                          ? "bg-[#FF5A7A] text-white"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200",
+                      ].join(" ")}
+                    >
+                      {tf.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-          {/* Time slots */}
-          {slots.length > 0 && (
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {slots.map((s) => (
-                <button
-                  key={s.iso}
-                  onClick={() => setSelectedSlot(s.iso)}
-                  className={[
-                    "py-2 rounded-lg text-sm font-medium transition",
-                    selectedSlot === s.iso
-                      ? "bg-stone-900 text-white"
-                      : "bg-white text-stone-700 hover:bg-white/80",
-                  ].join(" ")}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          )}
+            {/* Time slots */}
+            {loadingSlots ? (
+              <div className="text-center text-sm text-stone-500">Loading slots...</div>
+            ) : slots.length > 0 ? (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium text-stone-600">Available times</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.iso}
+                      onClick={() => setSelectedSlot(slot)}
+                      disabled={slot.disabled}
+                      className={[
+                        "rounded-lg py-2 text-sm font-medium transition-colors",
+                        selectedSlot?.iso === slot.iso
+                          ? "bg-[#FF5A7A] text-white"
+                          : slot.disabled
+                          ? "bg-stone-50 text-stone-300 cursor-not-allowed"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200",
+                      ].join(" ")}
+                    >
+                      {slot.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : activeTf && selectedDate ? (
+              <div className="mb-4 text-center text-sm text-stone-500">
+                No available slots for this timeframe.
+              </div>
+            ) : null}
 
-          {/* CTA */}
-          <button
-            disabled={!selectedSlot}
-            onClick={handleConfirm}
-            className="w-full py-3 rounded-xl bg-stone-900 text-white font-semibold disabled:opacity-40 transition"
-          >
-            Confirm booking
-          </button>
-        </motion.section>
-      </motion.div>
+            {/* Confirm button */}
+            <button
+              onClick={() => {
+                if (!selectedSlot || !selectedDate) return;
+                onConfirm({
+                  iso: selectedSlot.iso,
+                  date: ymd(selectedDate),
+                  timeLabel: selectedSlot.label,
+                  offerId,
+                  timeframeId: activeTf?.id,
+                });
+                onClose();
+              }}
+              disabled={!selectedSlot}
+              className={[
+                "w-full rounded-xl py-3 text-base font-semibold transition-colors",
+                selectedSlot
+                  ? "bg-[#FF5A7A] text-white"
+                  : "bg-stone-200 text-stone-400 cursor-not-allowed",
+              ].join(" ")}
+            >
+              Confirm
+            </button>
+          </motion.section>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }
