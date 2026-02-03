@@ -1,100 +1,125 @@
-import { useState, useEffect, useMemo } from "react";
-import { format, addDays, startOfWeek, endOfWeek, isSameDay, isToday, startOfMonth, endOfMonth, addMonths, isBefore, startOfDay } from "date-fns";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
-const CALENDAR_DAYS_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/signupupgrade/calendardays";
-const TIMEFRAMES_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/get_timeframes_turbo/Upgrade";
-
-interface Timeframe {
-  id: number;
-  Name: string;
-  restaurant_id: number;
-  weekdays: Array<{ id: number; day: string }>;
-  Start: string;
-  Minute_Start: string;
-  End: string;
-  Minute_End: string;
-  Spots: number;
-  Visibility: boolean;
-}
-
-interface TimeSlot {
-  id: string;
+export type Slot = {
   label: string;
-  available: boolean;
-}
-
-interface ConfirmPayload {
-  date: string;
-  timeLabel: string;
-  offerId: string;
-  timeframeId: number;
-}
-
-interface DateTimeSheetProps {
-  open: boolean;
-  onClose: () => void;
-  offerId: string;
-  venueId: number | string;
-  onConfirm: (payload: ConfirmPayload) => void;
-}
-
-const generateMockAvailableDays = (from: string, to: string): Set<string> => {
-  const availableDays = new Set<string>();
-  const startDate = new Date(from);
-  const endDate = new Date(to);
-
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dayOfWeek = d.getDay();
-    if (dayOfWeek !== 0 && (dayOfWeek !== 6 || Math.random() > 0.5)) {
-      availableDays.add(format(d, "yyyy-MM-dd"));
-    }
-  }
-
-  return availableDays;
+  iso: string;
+  disabled?: boolean;
 };
 
-const fetchCalendarDays = async (
-  offerId: number,
-  from: string,
-  to: string,
-  signal?: AbortSignal
-): Promise<Set<string>> => {
-  try {
-    const response = await fetch(CALENDAR_DAYS_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ offer_upgrade_id: offerId, from, to }),
-      signal,
+export type Timeframe = {
+  id: string;
+  label: string;
+  start: { h: number; m: number };
+  end: { h: number; m: number };
+  stepMins?: number;
+  timeslotId?: number;
+};
+
+export interface DateTimeSheetProps {
+  open: boolean;
+  onClose: () => void;
+  offerId: string; // offer_upgrade_id
+  venueId: string | number; // not used here but kept for app consistency
+  availableDaySet?: Set<string>;
+  availableDays?: Record<string, { remaining_slots: number }>;
+  availabilityLoading?: boolean;
+  availabilityError?: string | null;
+  onRangeChange?: (fromMs: number, toMs: number) => void;
+  timeframesByDow?: Record<number, Timeframe[]>;
+  onConfirm: (payload: {
+    iso: string;
+    date: string;
+    timeLabel: string;
+    offerId: string;
+    timeframeId?: string;
+  }) => void;
+}
+
+const RAW_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/calendar/raw/Data";
+const MICRO_URL = "https://calendar-microservice.vercel.app/api/calendar";
+
+const transition = {
+  type: "spring" as const,
+  stiffness: 260,
+  damping: 30,
+};
+
+const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function ymd(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function makeKey(date: Date) {
+  return `${date.getFullYear()}-${date.getMonth()}`;
+}
+
+function clampDate(date: Date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+function minsToHm(mins: number) {
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return { h, m };
+}
+
+function hmToLabel(h: number, m: number) {
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function synthesizeFromTimeframe(date: string, tf: Timeframe): Slot[] {
+  const step = tf.stepMins ?? 30;
+  const base = new Date(`${date}T00:00:00`);
+  const start = new Date(base);
+  start.setHours(tf.start.h, tf.start.m, 0, 0);
+  const end = new Date(base);
+  end.setHours(tf.end.h, tf.end.m, 0, 0);
+
+  const slots: Slot[] = [];
+  for (let t = start.getTime(); t <= end.getTime(); t += step * 60_000) {
+    const dt = new Date(t);
+    slots.push({
+      label: dt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      iso: dt.toISOString(),
     });
-
-    if (!response.ok) {
-      return generateMockAvailableDays(from, to);
-    }
-
-    const data = await response.json();
-    const availableDays = new Set<string>();
-    
-    if (Array.isArray(data.available_days)) {
-      data.available_days.forEach((day: { date: string; available: boolean }) => {
-        if (day.available) {
-          availableDays.add(day.date);
-        }
-      });
-    }
-
-    if (availableDays.size === 0) {
-      return generateMockAvailableDays(from, to);
-    }
-
-    return availableDays;
-  } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw error;
-    }
-    return generateMockAvailableDays(from, to);
   }
+  return slots;
+}
+
+function getMonthRangeISO(viewDate: Date) {
+  const from = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1, 0, 0, 0, 0);
+  const to = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 0, 0, 0, 0);
+  return { fromISO: ymd(from), toISO: ymd(to) };
+}
+
+type RawResponse = {
+  book?: Array<{ timestamp: number; status: string; timeslot_id: number }>;
+  offer_timeslot?: Array<{
+    timeslot_id: number;
+    active: boolean;
+    capacity_override?: number;
+    slot_limit?: string;
+    slot_limit_value?: number;
+    _timeslot?: Array<{
+      id: number;
+      Active: boolean;
+      Start_time: number; // minutes
+      End_time: number; // minutes
+    }>;
+  }>;
+};
+
+type MicroResponse = {
+  available_days?: Array<{ date: string; available: boolean; remaining_slots: number }>;
 };
 
 export default function DateTimeSheet({
@@ -104,266 +129,456 @@ export default function DateTimeSheet({
   venueId,
   onConfirm,
 }: DateTimeSheetProps) {
-  const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [selectedTimeframeId, setSelectedTimeframeId] = useState<number | null>(null);
-  const [availableDays, setAvailableDays] = useState<Set<string>>(new Set());
-  const [loadingDays, setLoadingDays] = useState(false);
-  const [timeframes, setTimeframes] = useState<Timeframe[]>([]);
-  const [loadingTimeframes, setLoadingTimeframes] = useState(false);
+  const today = useMemo(() => clampDate(new Date()), []);
+  const [viewDate, setViewDate] = useState<Date>(today);
+  const [selectedDate, setSelectedDate] = useState<Date>(today);
 
-  // Fetch available days
+  const [raw, setRaw] = useState<RawResponse | null>(null);
+
+  const [availableDays, setAvailableDays] = useState<Record<string, { remaining_slots: number }>>(
+    {}
+  );
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
+
+  const [timeframes, setTimeframes] = useState<Timeframe[]>([]);
+  const [activeTf, setActiveTf] = useState<Timeframe | null>(null);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
+
+  const offerUpgradeIdNum = useMemo(() => {
+    const n = Number(offerId);
+    return Number.isFinite(n) ? n : null;
+  }, [offerId]);
+
+  useEffect(() => {
+    if (!open) {
+      setSelectedSlot(null);
+      setActiveTf(null);
+    }
+  }, [open]);
+
   useEffect(() => {
     if (!open) return;
+    setViewDate(clampDate(selectedDate ?? today));
+  }, [open, selectedDate, today]);
 
-    const numericOfferId = Number(offerId);
-    if (!numericOfferId || isNaN(numericOfferId)) return;
-
-    const controller = new AbortController();
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
-    const from = format(calendarStart, "yyyy-MM-dd");
-    const to = format(calendarEnd, "yyyy-MM-dd");
-
-    setLoadingDays(true);
-
-    fetchCalendarDays(numericOfferId, from, to, controller.signal)
-      .then(setAvailableDays)
-      .catch(() => setAvailableDays(new Set()))
-      .finally(() => setLoadingDays(false));
-
-    return () => controller.abort();
-  }, [open, offerId, currentMonth]);
-
-  // Fetch timeframes
+  // 1) RAW + microservice quando cambia il mese (o open)
   useEffect(() => {
-    if (!open || !venueId || !offerId) return;
+    let cancelled = false;
 
-    const controller = new AbortController();
-    setLoadingTimeframes(true);
+    async function loadMonthAvailability() {
+      if (!open) return;
 
-    fetch(TIMEFRAMES_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ restaurant_id: venueId, offer_id: Number(offerId) }),
-      signal: controller.signal,
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch timeframes");
-        return res.json();
-      })
-      .then(setTimeframes)
-      .catch((err) => {
-        if (err.name !== "AbortError") {
-          console.error("Error fetching timeframes:", err);
+      if (!offerUpgradeIdNum) {
+        setAvailabilityError("Invalid offerId");
+        setAvailableDays({});
+        setRaw(null);
+        return;
+      }
+
+      const { fromISO, toISO } = getMonthRangeISO(viewDate);
+
+      setAvailabilityLoading(true);
+      setAvailabilityError(null);
+
+      try {
+        // RAW
+        const rawRes = await fetch(RAW_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            offer_upgrade_id: offerUpgradeIdNum,
+            from: fromISO,
+            to: toISO,
+          }),
+        });
+
+        if (!rawRes.ok) throw new Error(`RAW error ${rawRes.status}`);
+
+        const rawJson: RawResponse = await rawRes.json();
+        const book = Array.isArray(rawJson.book) ? rawJson.book : [];
+        const offer_timeslot = Array.isArray(rawJson.offer_timeslot) ? rawJson.offer_timeslot : [];
+
+        if (cancelled) return;
+        setRaw({ book, offer_timeslot });
+
+        // MICRO (NB: il micro richiede anche offer_upgrade_id)
+        const microRes = await fetch(MICRO_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            offer_upgrade_id: offerUpgradeIdNum,
+            from: fromISO,
+            to: toISO,
+            book,
+            offer_timeslot,
+          }),
+        });
+
+        if (!microRes.ok) throw new Error(`MICRO error ${microRes.status}`);
+
+        const microJson: MicroResponse = await microRes.json();
+        const days = Array.isArray(microJson.available_days) ? microJson.available_days : [];
+
+        const map: Record<string, { remaining_slots: number }> = {};
+        for (const d of days) {
+          if (!d?.date) continue;
+          if (d.available && typeof d.remaining_slots === "number") {
+            map[d.date] = { remaining_slots: d.remaining_slots };
+          }
         }
-      })
-      .finally(() => setLoadingTimeframes(false));
 
-    return () => controller.abort();
-  }, [open, venueId, offerId]);
-
-  // Generate calendar days
-  const calendarDays = useMemo(() => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
-    const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
-    const days: Date[] = [];
-    let day = calendarStart;
-    while (day <= calendarEnd) {
-      days.push(day);
-      day = addDays(day, 1);
+        if (!cancelled) setAvailableDays(map);
+      } catch (e: any) {
+        if (!cancelled) {
+          setAvailabilityError(e?.message || "Failed to load availability");
+          setAvailableDays({});
+          setRaw(null);
+        }
+      } finally {
+        if (!cancelled) setAvailabilityLoading(false);
+      }
     }
-    return days;
-  }, [currentMonth]);
 
-  // Get time slots for selected date
-  const timeSlots = useMemo<TimeSlot[]>(() => {
-    if (!selectedDate) return [];
+    loadMonthAvailability();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, viewDate, offerUpgradeIdNum]);
 
-    const dayName = format(selectedDate, "EEEE");
-    const availableTimeframes = timeframes.filter(
-      (tf) => tf.Visibility && tf.weekdays.some((wd) => wd.day === dayName)
-    );
+  // 2) timeframes dal RAW quando cambia selectedDate
+  useEffect(() => {
+    if (!raw?.offer_timeslot || !selectedDate) {
+      setTimeframes([]);
+      setActiveTf(null);
+      return;
+    }
 
-    const slots: TimeSlot[] = [];
-    availableTimeframes.forEach((tf) => {
-      const startHour = parseInt(tf.Start, 10);
-      const endHour = parseInt(tf.End, 10);
+    const dateISO = ymd(selectedDate);
+    const dayInfo = availableDays[dateISO];
+    const dayRemaining = dayInfo?.remaining_slots ?? 0;
 
-      for (let hour = startHour; hour < endHour; hour++) {
-        const label = `${hour.toString().padStart(2, "0")}:${tf.Minute_Start}`;
-        slots.push({
-          id: `${tf.id}-${hour}`,
+    if (!dayInfo || dayRemaining <= 0) {
+      setTimeframes([]);
+      setActiveTf(null);
+      return;
+    }
+
+    const tfs: Timeframe[] = [];
+    for (const ots of raw.offer_timeslot) {
+      if (!ots?.active) continue;
+      const ts = Array.isArray(ots._timeslot) ? ots._timeslot : [];
+      for (const t of ts) {
+        if (!t?.Active) continue;
+        const start = minsToHm(t.Start_time);
+        const end = minsToHm(t.End_time);
+        const label = `${hmToLabel(start.h, start.m)} - ${hmToLabel(end.h, end.m)}`;
+
+        tfs.push({
+          id: `timeslot-${ots.timeslot_id}-${t.id}`,
           label,
-          available: tf.Spots > 0,
+          start,
+          end,
+          stepMins: 30,
+          timeslotId: ots.timeslot_id,
         });
       }
-    });
-
-    return slots.sort((a, b) => a.label.localeCompare(b.label));
-  }, [selectedDate, timeframes]);
-
-  const handleDateSelect = (date: Date) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    if (availableDays.has(dateStr) && !isBefore(date, startOfDay(new Date()))) {
-      setSelectedDate(date);
-      setSelectedTime(null);
-      setSelectedTimeframeId(null);
     }
-  };
 
-  const handleTimeSelect = (slot: TimeSlot) => {
-    if (slot.available) {
-      setSelectedTime(slot.label);
-      const tfId = parseInt(slot.id.split("-")[0], 10);
-      setSelectedTimeframeId(tfId);
+    tfs.sort((a, b) => (a.start.h * 60 + a.start.m) - (b.start.h * 60 + b.start.m));
+
+    setTimeframes(tfs);
+    setActiveTf(tfs[0] ?? null);
+    setSelectedSlot(null);
+  }, [raw, selectedDate, availableDays]);
+
+  // 3) slots dalla timeframe
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSlots() {
+      if (!selectedDate || !activeTf) {
+        setSlots([]);
+        return;
+      }
+      setLoadingSlots(true);
+      setSelectedSlot(null);
+
+      const dateISO = ymd(selectedDate);
+      const dayInfo = availableDays[dateISO];
+      const dayRemaining = dayInfo?.remaining_slots ?? 0;
+
+      if (!dayInfo || dayRemaining <= 0) {
+        setSlots([]);
+        setLoadingSlots(false);
+        return;
+      }
+
+      const synthesized = synthesizeFromTimeframe(dateISO, activeTf);
+
+      if (!cancelled) {
+        setSlots(synthesized);
+        setLoadingSlots(false);
+      }
     }
-  };
 
-  const handleConfirm = () => {
-    if (selectedDate && selectedTime && selectedTimeframeId !== null) {
-      onConfirm({
-        date: format(selectedDate, "yyyy-MM-dd"),
-        timeLabel: selectedTime,
-        offerId,
-        timeframeId: selectedTimeframeId,
-      });
-      onClose();
+    loadSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTf, selectedDate, availableDays]);
+
+  const availabilityDisabled = availabilityLoading || Boolean(availabilityError);
+
+  const isDayAvailable = useCallback(
+    (dateKey: string) => {
+      if (availabilityDisabled) return false;
+      return Boolean(availableDays[dateKey]);
+    },
+    [availableDays, availabilityDisabled]
+  );
+
+  const calendarDays = useMemo(() => {
+    const start = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1);
+    const end = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0);
+    const startWeekday = start.getDay();
+    const totalDays = end.getDate();
+
+    const cells: Array<{ date: Date | null; key: string }> = [];
+    for (let i = 0; i < startWeekday; i += 1) cells.push({ date: null, key: `blank-${i}` });
+
+    for (let day = 1; day <= totalDays; day += 1) {
+      const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+      cells.push({ date: d, key: ymd(d) });
     }
-  };
 
-  const navigateMonth = (direction: "prev" | "next") => {
-    setCurrentMonth((prev) => addMonths(prev, direction === "next" ? 1 : -1));
-    setSelectedDate(null);
-    setSelectedTime(null);
-  };
+    const remainder = cells.length % 7;
+    if (remainder !== 0) {
+      const pads = 7 - remainder;
+      for (let i = 0; i < pads; i += 1) cells.push({ date: null, key: `pad-${i}` });
+    }
+
+    return cells;
+  }, [viewDate]);
+
+  const handleSelectDate = useCallback(
+    (date: Date | null) => {
+      if (!date) return;
+      const dateKey = ymd(date);
+      const isPast = date.getTime() < today.getTime();
+      const isAvailable = isDayAvailable(dateKey);
+      if (isPast || !isAvailable) return;
+      setSelectedDate(clampDate(date));
+    },
+    [isDayAvailable, today]
+  );
+
+  const goMonth = useCallback((direction: 1 | -1) => {
+    setMonthDirection(direction);
+    setViewDate(prev => new Date(prev.getFullYear(), prev.getMonth() + direction, 1));
+  }, []);
+
+  const selectedDateKey = selectedDate ? ymd(selectedDate) : null;
 
   return (
-    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent side="bottom" className="rounded-t-3xl p-0 max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="sticky top-0 z-10 bg-white px-4 py-3 border-b flex items-center justify-between">
-          <button onClick={onClose} className="p-2 -ml-2 rounded-full hover:bg-stone-100">
-            <X className="h-5 w-5 text-stone-600" />
-          </button>
-          <h2 className="text-lg font-semibold text-stone-900">Select Date & Time</h2>
-          <div className="w-9" />
-        </div>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-[60]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="absolute inset-0 bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
 
-        <div className="overflow-y-auto p-4 space-y-6">
-          {/* Month Navigation */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigateMonth("prev")}
-              className="p-2 rounded-lg hover:bg-stone-100"
-            >
-              <ChevronLeft className="h-5 w-5 text-stone-600" />
-            </button>
-            <span className="text-base font-medium text-stone-900">
-              {format(currentMonth, "MMMM yyyy")}
-            </span>
-            <button
-              onClick={() => navigateMonth("next")}
-              className="p-2 rounded-lg hover:bg-stone-100"
-            >
-              <ChevronRight className="h-5 w-5 text-stone-600" />
-            </button>
-          </div>
+          <motion.section
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={transition}
+            className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-auto rounded-t-3xl bg-white px-4 pb-6 pt-3"
+          >
+            {/* Handle */}
+            <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-300" />
 
-          {/* Calendar Grid */}
-          <div className="space-y-2">
-            {loadingDays && (
-              <p className="text-center text-xs text-stone-400">Loading availability...</p>
-            )}
-            <div className="grid grid-cols-7 gap-1">
-              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-                <div key={d} className="text-center text-xs font-medium text-stone-400 py-2">
-                  {d}
-                </div>
-              ))}
-              {calendarDays.map((date, idx) => {
-                const dateStr = format(date, "yyyy-MM-dd");
-                const inMonth = date.getMonth() === currentMonth.getMonth();
-                const isAvailable = availableDays.has(dateStr) && !isBefore(date, startOfDay(new Date()));
-                const isSelected = selectedDate && isSameDay(date, selectedDate);
-                const isTodayDate = isToday(date);
-
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleDateSelect(date)}
-                    disabled={!isAvailable || !inMonth}
-                    className={`aspect-square flex items-center justify-center rounded-lg text-sm transition-all ${
-                      isSelected
-                        ? "bg-[#FF5A7A] text-white font-medium"
-                        : isAvailable && inMonth
-                        ? `bg-stone-50 text-stone-900 hover:bg-stone-100 ${isTodayDate ? "ring-1 ring-[#FF5A7A]" : ""}`
-                        : "text-stone-300 cursor-not-allowed"
-                    }`}
-                  >
-                    {format(date, "d")}
-                  </button>
-                );
-              })}
+            {/* Header */}
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-stone-800">Select Date & Time</h2>
+              <button
+                onClick={onClose}
+                className="rounded-full p-1 text-stone-500 hover:bg-stone-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          </div>
 
-          {/* Time Slots */}
-          {selectedDate && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-stone-700">Available Times</h3>
-              {loadingTimeframes ? (
-                <p className="text-center text-xs text-stone-400">Loading times...</p>
-              ) : timeSlots.length > 0 ? (
-                <div className="grid grid-cols-4 gap-2">
-                  {timeSlots.map((slot) => (
+            {availabilityError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+                {availabilityError}
+              </div>
+            )}
+
+            {/* Month navigation */}
+            <div className="mb-4 flex items-center justify-between">
+              <button
+                onClick={() => goMonth(-1)}
+                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="font-medium text-stone-800">
+                {viewDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </span>
+              <button
+                onClick={() => goMonth(1)}
+                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Weekday headers */}
+            <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-stone-500">
+              {weekdayLabels.map((d) => (
+                <div key={d}>{d}</div>
+              ))}
+            </div>
+
+            {/* Calendar grid */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={makeKey(viewDate)}
+                initial={{ opacity: 0, x: monthDirection > 0 ? 30 : -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: monthDirection > 0 ? -30 : 30 }}
+                transition={{ duration: 0.2 }}
+                className="mb-6 grid grid-cols-7 gap-1"
+              >
+                {calendarDays.map(({ date, key }) => {
+                  if (!date) {
+                    return <div key={key} className="h-10" />;
+                  }
+                  const dateKey = ymd(date);
+                  const isPast = date.getTime() < today.getTime();
+                  const isAvailable = isDayAvailable(dateKey);
+                  const isSelected = dateKey === selectedDateKey;
+                  const disabled = isPast || !isAvailable || availabilityDisabled;
+
+                  return (
                     <button
-                      key={slot.id}
-                      onClick={() => handleTimeSelect(slot)}
-                      disabled={!slot.available}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                        selectedTime === slot.label
+                      key={key}
+                      onClick={() => handleSelectDate(date)}
+                      disabled={disabled}
+                      className={[
+                        "flex h-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                        isSelected
                           ? "bg-[#FF5A7A] text-white"
-                          : slot.available
-                          ? "bg-stone-100 text-stone-700 hover:bg-stone-200"
-                          : "bg-stone-50 text-stone-300 cursor-not-allowed"
-                      }`}
+                          : disabled
+                          ? "text-stone-300 cursor-not-allowed"
+                          : "text-stone-700 hover:bg-stone-100",
+                      ].join(" ")}
+                    >
+                      {date.getDate()}
+                    </button>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Timeframes */}
+            {timeframes.length > 0 && (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium text-stone-600">Select a time range</p>
+                <div className="flex flex-wrap gap-2">
+                  {timeframes.map((tf) => (
+                    <button
+                      key={tf.id}
+                      onClick={() => {
+                        setActiveTf(tf);
+                        setSelectedSlot(null);
+                      }}
+                      className={[
+                        "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                        activeTf?.id === tf.id
+                          ? "bg-[#FF5A7A] text-white"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200",
+                      ].join(" ")}
+                    >
+                      {tf.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Time slots */}
+            {loadingSlots ? (
+              <div className="text-center text-sm text-stone-500">Loading slots...</div>
+            ) : slots.length > 0 ? (
+              <div className="mb-4">
+                <p className="mb-2 text-sm font-medium text-stone-600">Available times</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.iso}
+                      onClick={() => setSelectedSlot(slot)}
+                      disabled={slot.disabled}
+                      className={[
+                        "rounded-lg py-2 text-sm font-medium transition-colors",
+                        selectedSlot?.iso === slot.iso
+                          ? "bg-[#FF5A7A] text-white"
+                          : slot.disabled
+                          ? "bg-stone-50 text-stone-300 cursor-not-allowed"
+                          : "bg-stone-100 text-stone-700 hover:bg-stone-200",
+                      ].join(" ")}
                     >
                       {slot.label}
                     </button>
                   ))}
                 </div>
-              ) : (
-                <p className="text-center text-sm text-stone-400 py-4">
-                  No available times for this date
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
+            ) : activeTf && selectedDate ? (
+              <div className="mb-4 text-center text-sm text-stone-500">
+                No available slots for this timeframe.
+              </div>
+            ) : null}
 
-        {/* Confirm Button */}
-        <div className="sticky bottom-0 bg-white border-t p-4">
-          <button
-            onClick={handleConfirm}
-            disabled={!selectedDate || !selectedTime}
-            className={`w-full py-3 rounded-xl font-medium text-white transition-all ${
-              selectedDate && selectedTime
-                ? "bg-[#FF5A7A] hover:bg-[#FF3A6E] shadow-lg"
-                : "bg-stone-200 text-stone-400 cursor-not-allowed"
-            }`}
-          >
-            Confirm Booking
-          </button>
-        </div>
-      </SheetContent>
-    </Sheet>
+            {/* Confirm button */}
+            <button
+              onClick={() => {
+                if (!selectedSlot || !selectedDate) return;
+                onConfirm({
+                  iso: selectedSlot.iso,
+                  date: ymd(selectedDate),
+                  timeLabel: selectedSlot.label,
+                  offerId,
+                  timeframeId: activeTf?.id,
+                });
+                onClose();
+              }}
+              disabled={!selectedSlot}
+              className={[
+                "w-full rounded-xl py-3 text-base font-semibold transition-colors",
+                selectedSlot
+                  ? "bg-[#FF5A7A] text-white"
+                  : "bg-stone-200 text-stone-400 cursor-not-allowed",
+              ].join(" ")}
+            >
+              Confirm
+            </button>
+          </motion.section>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
