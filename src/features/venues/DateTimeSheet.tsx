@@ -22,12 +22,6 @@ export interface DateTimeSheetProps {
   onClose: () => void;
   offerId: string; // offer_upgrade_id
   venueId: string | number; // not used here but kept for app consistency
-  availableDaySet?: Set<string>;
-  availableDays?: Record<string, { remaining_slots: number }>;
-  availabilityLoading?: boolean;
-  availabilityError?: string | null;
-  onRangeChange?: (fromMs: number, toMs: number) => void;
-  timeframesByDow?: Record<number, Timeframe[]>;
   onConfirm: (payload: {
     iso: string;
     date: string;
@@ -37,9 +31,11 @@ export interface DateTimeSheetProps {
   }) => void;
 }
 
+/** Endpoints */
 const RAW_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:vGd6XDW3/calendar/raw/Data";
 const MICRO_URL = "https://calendar-microservice.vercel.app/api/calendar";
 
+/** Motion */
 const transition = {
   type: "spring" as const,
   stiffness: 260,
@@ -48,6 +44,7 @@ const transition = {
 
 const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+/** Utils */
 function ymd(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -95,11 +92,13 @@ function synthesizeFromTimeframe(date: string, tf: Timeframe): Slot[] {
 }
 
 function getMonthRangeISO(viewDate: Date) {
+  // month [1..last] inclusive
   const from = new Date(viewDate.getFullYear(), viewDate.getMonth(), 1, 0, 0, 0, 0);
   const to = new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0, 0, 0, 0, 0);
   return { fromISO: ymd(from), toISO: ymd(to) };
 }
 
+/** Types for Xano + micro */
 type RawResponse = {
   book?: Array<{ timestamp: number; status: string; timeslot_id: number }>;
   offer_timeslot?: Array<{
@@ -197,15 +196,15 @@ export default function DateTimeSheet({
         });
 
         if (!rawRes.ok) throw new Error(`RAW error ${rawRes.status}`);
-
         const rawJson: RawResponse = await rawRes.json();
+
         const book = Array.isArray(rawJson.book) ? rawJson.book : [];
         const offer_timeslot = Array.isArray(rawJson.offer_timeslot) ? rawJson.offer_timeslot : [];
 
         if (cancelled) return;
         setRaw({ book, offer_timeslot });
 
-        // MICRO (NB: il micro richiede anche offer_upgrade_id)
+        // MICRO
         const microRes = await fetch(MICRO_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -219,7 +218,6 @@ export default function DateTimeSheet({
         });
 
         if (!microRes.ok) throw new Error(`MICRO error ${microRes.status}`);
-
         const microJson: MicroResponse = await microRes.json();
         const days = Array.isArray(microJson.available_days) ? microJson.available_days : [];
 
@@ -270,9 +268,11 @@ export default function DateTimeSheet({
     const tfs: Timeframe[] = [];
     for (const ots of raw.offer_timeslot) {
       if (!ots?.active) continue;
+
       const ts = Array.isArray(ots._timeslot) ? ots._timeslot : [];
       for (const t of ts) {
         if (!t?.Active) continue;
+
         const start = minsToHm(t.Start_time);
         const end = minsToHm(t.End_time);
         const label = `${hmToLabel(start.h, start.m)} - ${hmToLabel(end.h, end.m)}`;
@@ -288,7 +288,7 @@ export default function DateTimeSheet({
       }
     }
 
-    tfs.sort((a, b) => (a.start.h * 60 + a.start.m) - (b.start.h * 60 + b.start.m));
+    tfs.sort((a, b) => a.start.h * 60 + a.start.m - (b.start.h * 60 + b.start.m));
 
     setTimeframes(tfs);
     setActiveTf(tfs[0] ?? null);
@@ -304,6 +304,7 @@ export default function DateTimeSheet({
         setSlots([]);
         return;
       }
+
       setLoadingSlots(true);
       setSelectedSlot(null);
 
@@ -413,10 +414,7 @@ export default function DateTimeSheet({
             {/* Header */}
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-stone-800">Select Date & Time</h2>
-              <button
-                onClick={onClose}
-                className="rounded-full p-1 text-stone-500 hover:bg-stone-100"
-              >
+              <button onClick={onClose} className="rounded-full p-1 text-stone-500 hover:bg-stone-100">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -429,19 +427,13 @@ export default function DateTimeSheet({
 
             {/* Month navigation */}
             <div className="mb-4 flex items-center justify-between">
-              <button
-                onClick={() => goMonth(-1)}
-                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
-              >
+              <button onClick={() => goMonth(-1)} className="rounded-full p-2 text-stone-600 hover:bg-stone-100">
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <span className="font-medium text-stone-800">
                 {viewDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
               </span>
-              <button
-                onClick={() => goMonth(1)}
-                className="rounded-full p-2 text-stone-600 hover:bg-stone-100"
-              >
+              <button onClick={() => goMonth(1)} className="rounded-full p-2 text-stone-600 hover:bg-stone-100">
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
@@ -464,14 +456,15 @@ export default function DateTimeSheet({
                 className="mb-6 grid grid-cols-7 gap-1"
               >
                 {calendarDays.map(({ date, key }) => {
-                  if (!date) {
-                    return <div key={key} className="h-10" />;
-                  }
+                  if (!date) return <div key={key} className="h-10" />;
+
                   const dateKey = ymd(date);
                   const isPast = date.getTime() < today.getTime();
                   const isAvailable = isDayAvailable(dateKey);
                   const isSelected = dateKey === selectedDateKey;
                   const disabled = isPast || !isAvailable || availabilityDisabled;
+
+                  const remaining = availableDays[dateKey]?.remaining_slots;
 
                   return (
                     <button
@@ -479,7 +472,7 @@ export default function DateTimeSheet({
                       onClick={() => handleSelectDate(date)}
                       disabled={disabled}
                       className={[
-                        "flex h-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                        "relative flex h-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
                         isSelected
                           ? "bg-[#FF5A7A] text-white"
                           : disabled
@@ -488,6 +481,12 @@ export default function DateTimeSheet({
                       ].join(" ")}
                     >
                       {date.getDate()}
+
+                      {!disabled && typeof remaining === "number" && (
+                        <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-full bg-stone-100 px-1 text-[9px] text-stone-600 shadow">
+                          {remaining}
+                        </span>
+                      )}
                     </button>
                   );
                 })}
@@ -552,7 +551,7 @@ export default function DateTimeSheet({
               </div>
             ) : null}
 
-            {/* Confirm button */}
+            {/* Confirm */}
             <button
               onClick={() => {
                 if (!selectedSlot || !selectedDate) return;
@@ -575,6 +574,11 @@ export default function DateTimeSheet({
             >
               Confirm
             </button>
+
+            {/* tiny debug */}
+            <div className="pt-2 text-[10px] text-stone-400">
+              offer_upgrade_id: {offerId} · venueId: {String(venueId)}
+            </div>
           </motion.section>
         </motion.div>
       )}
