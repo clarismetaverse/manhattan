@@ -35,6 +35,7 @@ export interface DateTimeSheetProps {
     timeLabel: string;
     offerId: string;
     timeframeId?: string;
+    timeslotId?: number;
   }) => void;
 }
 
@@ -563,6 +564,7 @@ export default function DateTimeSheet({
                   timeLabel: selectedSlot.label,
                   offerId,
                   timeframeId: activeTf?.id,
+                  timeslotId: activeTf?.timeslotId,
                 });
                 onClose();
               }}
