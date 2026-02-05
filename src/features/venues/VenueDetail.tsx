@@ -7,6 +7,7 @@ import {
   fetchAvailableDaysFromMicroservice,
   fetchCalendarRawData,
 } from "../../services/calendarAvailability";
+import { createBookingUpgrade } from "../../services/bookingUpgrade";
 
 // --- Cartoonish Claris Icons (SVG) - Friendly & Instagram-native ---
 const PlateIcon = () => (
@@ -189,6 +190,7 @@ export default function VenueDetail({
     timeLabel: string;
     offerId: string;
     timeframeId?: string;
+    timeslotId?: number;
     timeframeLabel?: string;
   } | null>(null);
   const [availabilityByOffer, setAvailabilityByOffer] = useState<Record<string, Set<string>>>({});
@@ -860,12 +862,33 @@ export default function VenueDetail({
           availabilityError={availabilityErrorByOffer[selectedOfferId ?? offer.id]}
           onRangeChange={handleMonthRangeChange}
           timeframesByDow={weeklyTimeframes}
-          onConfirm={(payload) => {
+          onConfirm={async (payload) => {
             const timeframeLabel = getTimeframeLabel(payload.timeframeId);
             setConfirmedSlot({ ...payload, timeframeLabel });
 
             const matchedOffer =
               offers.find(currentOffer => currentOffer.id === payload.offerId) ?? offer;
+
+            const date = payload.date;
+            const timestamp = Date.parse(`${date}T00:00:00Z`);
+            const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+            const weekdaysturboId = weekday === 0 ? 7 : weekday;
+
+            try {
+              await createBookingUpgrade({
+                offer_upgrade_id: Number(payload.offerId),
+                date,
+                timestamp,
+                weekdaysturbo_id: weekdaysturboId,
+                timeslot_id: payload.timeslotId,
+                status: "PENDING",
+                SlotLimit: { Type: "", Limit: 0 },
+                Booking_id_fk: 0,
+              });
+            } catch (error) {
+              console.error("Failed to create booking upgrade", error);
+              return;
+            }
 
             navigate("/booking/preview", {
               state: {
