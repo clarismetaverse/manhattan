@@ -12,9 +12,9 @@ export default function FeaturedContentCard({
   creators,
 }: FeaturedContentCardProps) {
   return (
-    <div className="w-72 shrink-0 snap-start rounded-3xl border border-neutral-200 bg-white shadow-sm">
-      <div className="relative overflow-hidden rounded-3xl">
-        <img src={imageUrl} alt={title} className="h-44 w-full object-cover" />
+    <div className="w-80 shrink-0 snap-start rounded-2xl border border-neutral-200 bg-white shadow-sm">
+      <div className="relative overflow-hidden rounded-2xl">
+        <img src={imageUrl} alt={title} className="h-48 w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         <div className="absolute bottom-3 left-4">
           <p className="text-sm font-semibold text-white">{title}</p>

@@ -17,7 +17,7 @@ function getToken() {
   );
 }
 
-export async function searchCreators(q: string): Promise<CreatorLite[]> {
+export async function searchCreators(q: string, signal?: AbortSignal): Promise<CreatorLite[]> {
   const term = (q || "").trim();
   if (!term) return [];
 
@@ -34,6 +34,7 @@ export async function searchCreators(q: string): Promise<CreatorLite[]> {
     method: "POST",
     headers,
     body: JSON.stringify({ q: term }),
+    signal,
   });
 
   if (!res.ok) {

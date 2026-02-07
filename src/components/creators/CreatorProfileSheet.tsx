@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Instagram, Music2, X } from "lucide-react";
+import { Bookmark, Instagram, Music2, X } from "lucide-react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 const backdrop = {
@@ -34,6 +34,7 @@ type CreatorProfileSheetProps = {
 export default function CreatorProfileSheet({ creator, open, onClose }: CreatorProfileSheetProps) {
   const instagramUrl = buildSocialLink("instagram", creator?.IG_account);
   const tiktokUrl = buildSocialLink("tiktok", creator?.Tiktok_account);
+  const hasTikTok = Boolean(creator?.Tiktok_account);
 
   return (
     <AnimatePresence>
@@ -52,7 +53,7 @@ export default function CreatorProfileSheet({ creator, open, onClose }: CreatorP
             aria-label="Close creator profile"
           />
           <motion.div
-            className="relative z-10 w-full max-w-md rounded-t-3xl bg-white p-6 shadow-xl"
+            className="relative z-10 w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl"
             variants={sheet}
             transition={{ type: "spring", stiffness: 260, damping: 30 }}
           >
@@ -78,16 +79,24 @@ export default function CreatorProfileSheet({ creator, open, onClose }: CreatorP
                 <img
                   src={creator.Profile_pic.url}
                   alt={creator.name || "Creator"}
-                  className="h-16 w-16 rounded-2xl object-cover"
+                  className="h-20 w-20 rounded-2xl object-cover"
                 />
               ) : (
-                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-neutral-200 to-neutral-50" />
+                <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-neutral-200 to-neutral-50" />
               )}
               <div>
                 <p className="text-sm font-medium text-neutral-900">
                   {creator?.name || "Unnamed creator"}
                 </p>
-                <p className="text-xs text-neutral-500">Lifestyle • UGC</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-neutral-600">
+                  <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium">UGC-ready</span>
+                  {hasTikTok && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-1 font-medium">
+                      <Music2 className="h-3 w-3" />
+                      TikTok
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -121,13 +130,23 @@ export default function CreatorProfileSheet({ creator, open, onClose }: CreatorP
               </p>
             </div>
 
-            <button
-              type="button"
-              className="mt-6 w-full rounded-full bg-neutral-900 px-4 py-3 text-sm font-medium text-white"
-              onClick={() => window.alert("Invite sent (placeholder).")}
-            >
-              Invite
-            </button>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-medium text-white"
+                onClick={() => console.log("Invite creator", creator)}
+              >
+                Invite
+              </button>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 rounded-full border border-neutral-200 px-4 py-3 text-sm font-medium text-neutral-700"
+                onClick={() => console.log("Save creator", creator)}
+              >
+                <Bookmark className="h-4 w-4" />
+                Save
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}
