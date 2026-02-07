@@ -1,6 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, Clock, Instagram, MapPin } from "lucide-react";
+import { Calendar, Clock, Instagram, MapPin, CalendarClock } from "lucide-react";
+import { toast } from "sonner";
+import RescheduleSheet from "@/components/booking/RescheduleSheet";
 
 type BookingStatus = "CONFIRMED" | "PENDING" | "CANCELLED" | null;
 
@@ -129,10 +131,44 @@ const getStatusLabel = (status: BookingStatus) => status ?? "PENDING";
 const getCollaborationTitle = (booking: Booking) =>
   booking._actions_record_01?.Action_Name || booking._actions_record_01?.Social || "Collaboration";
 
+const RESCHEDULE_API_URL = "https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/Bookings";
+
 export default function TicketListV2() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [rescheduleBooking, setRescheduleBooking] = useState<Booking | null>(null);
+
+  const handleReschedule = useCallback(async (payload: {
+    bookingId: number;
+    newDate: string;
+    newTimeLabel: string;
+    timeslotId?: number;
+  }) => {
+    // PATCH the booking with new date
+    const response = await fetch(`${RESCHEDULE_API_URL}/${payload.bookingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        date: payload.newDate,
+        // Add timeslot_id if available
+        ...(payload.timeslotId && { timeslot_id: payload.timeslotId }),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to reschedule booking");
+    }
+
+    // Update local state
+    setBookings(prev => prev.map(b => 
+      b.id === payload.bookingId 
+        ? { ...b, date: payload.newDate }
+        : b
+    ));
+
+    toast.success("Booking rescheduled successfully!");
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -236,7 +272,11 @@ export default function TicketListV2() {
                 <div className="grid gap-4">
                   <AnimatePresence>
                     {grouped.upcoming.map((booking) => (
-                      <TicketCardV2 key={booking.id} booking={booking} />
+                      <TicketCardV2 
+                        key={booking.id} 
+                        booking={booking} 
+                        onReschedule={() => setRescheduleBooking(booking)}
+                      />
                     ))}
                   </AnimatePresence>
                 </div>
@@ -248,7 +288,11 @@ export default function TicketListV2() {
                 <div className="grid gap-4">
                   <AnimatePresence>
                     {grouped.past.map((booking) => (
-                      <TicketCardV2 key={booking.id} booking={booking} />
+                      <TicketCardV2 
+                        key={booking.id} 
+                        booking={booking} 
+                        onReschedule={() => setRescheduleBooking(booking)}
+                      />
                     ))}
                   </AnimatePresence>
                 </div>
@@ -260,7 +304,11 @@ export default function TicketListV2() {
                 <div className="grid gap-4">
                   <AnimatePresence>
                     {grouped.cancelled.map((booking) => (
-                      <TicketCardV2 key={booking.id} booking={booking} />
+                      <TicketCardV2 
+                        key={booking.id} 
+                        booking={booking} 
+                        onReschedule={() => setRescheduleBooking(booking)}
+                      />
                     ))}
                   </AnimatePresence>
                 </div>
@@ -269,11 +317,22 @@ export default function TicketListV2() {
           </div>
         )}
       </div>
+
+      {/* Reschedule Sheet */}
+      <RescheduleSheet
+        open={rescheduleBooking !== null}
+        onClose={() => setRescheduleBooking(null)}
+        bookingId={rescheduleBooking?.id ?? 0}
+        offerUpgradeId={rescheduleBooking?.offer_upgrade_id ?? 0}
+        currentDate={rescheduleBooking?.date}
+        venueName={rescheduleBooking?._restaurant_turbo?.Name}
+        onReschedule={handleReschedule}
+      />
     </div>
   );
 }
 
-function TicketCardV2({ booking }: { booking: Booking }) {
+function TicketCardV2({ booking, onReschedule }: { booking: Booking; onReschedule: () => void }) {
   const heroUrl = getHeroUrl(booking);
   const dateLabel = formatDate(booking.date);
   const timeLabel = getDisplayTime(booking);
@@ -337,12 +396,19 @@ function TicketCardV2({ booking }: { booking: Booking }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={onReschedule}
+              className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 transition hover:bg-primary/20"
+            >
+              <CalendarClock className="h-4 w-4" />
+              Reschedule
+            </button>
             {restaurant?.Instagram && (
               <a
                 href={restaurant.Instagram}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-[#FF5A7A]/10 px-3 py-1.5 text-xs font-medium text-[#FF5A7A] ring-1 ring-[#FF5A7A]/30 transition hover:bg-[#FF5A7A]/20"
+                className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 transition hover:bg-primary/20"
               >
                 <Instagram className="h-4 w-4" />
                 Instagram
@@ -353,7 +419,7 @@ function TicketCardV2({ booking }: { booking: Booking }) {
                 href={restaurant.Maps_Link}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-black/70 ring-1 ring-black/10 transition hover:bg-white"
+                className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-foreground/70 ring-1 ring-foreground/10 transition hover:bg-white"
               >
                 <MapPin className="h-4 w-4" />
                 Map
