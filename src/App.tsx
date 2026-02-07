@@ -31,6 +31,7 @@ import BookingDetails from "./pages/BookingDetails";
 import VenuesPage from "./app/venues/Page";
 import BookingPreview from "./pages/BookingPreview";
 import BookingPreviewConfirm from "./pages/BookingPreviewConfirm";
+import VenueCreatorsHome from "./features/venues/VenueCreatorsHome";
 
 
 
@@ -74,6 +75,7 @@ const App = () => (
               <Route path="/memberspass/groups" element={<MembersgroupsHomepage />} />
               <Route path="/memberspass/venues" element={<VenuesPage />} />
               <Route path="/memberspass/venues/:id" element={<RestaurantDetail />} />
+              <Route path="/memberspass/creators" element={<VenueCreatorsHome />} />
               <Route path="/memberpass/venues" element={<VenuesPage />} />
               <Route path="/app/venues" element={<VenuesPage />} />
               <Route path="/booking/preview" element={<BookingPreview />} />
