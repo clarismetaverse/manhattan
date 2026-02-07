@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, Lock } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronLeft, Lock, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import CreatorCarousel from "@/components/creators/CreatorCarousel";
-import CreatorSearchBar from "@/components/creators/CreatorSearchBar";
-import FeaturedContentCard from "@/components/creators/FeaturedContentCard";
-import { searchCreators, type CreatorLite } from "@/services/creatorSearch";
+import CreatorCard from "@/components/memberspass/CreatorCard";
+import CreatorSearchSelect from "@/components/memberspass/CreatorSearchSelect";
+import type { CreatorLite } from "@/services/creatorSearch";
 
 const placeholderCreators: CreatorLite[] = [
   {
@@ -32,37 +31,34 @@ const placeholderCreators: CreatorLite[] = [
       url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80",
     },
   },
+  {
+    id: 4,
+    name: "Nina Rossi",
+    IG_account: "nina.ugc",
+    Profile_pic: {
+      url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80",
+    },
+  },
 ];
 
 const featuredContent = [
   {
-    title: "Best UGC — February",
+    title: "Top UGC — February",
     imageUrl:
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80",
-    creators: [
-      {
-        name: "Aria",
-        avatar:
-          "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=200&q=80",
-      },
-      {
-        name: "Luca",
-        avatar:
-          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80",
-      },
-    ],
+    creatorName: "Aria Vela",
+  },
+  {
+    title: "Weekend Venue Highlights",
+    imageUrl:
+      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
+    creatorName: "Kei Nakamura",
   },
   {
     title: "Editors' Picks",
     imageUrl:
       "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=900&q=80",
-    creators: [
-      {
-        name: "Kei",
-        avatar:
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=200&q=80",
-      },
-    ],
+    creatorName: "Nina Rossi",
   },
 ];
 
@@ -71,58 +67,27 @@ export default function MemberspassCreatorHome() {
   const [points] = useState(2450);
   const [cityName] = useState(() => {
     if (typeof window === "undefined") return "your city";
-    // TODO: Replace with owner city from profile endpoint.
     return localStorage.getItem("owner_city") || "your city";
   });
 
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<CreatorLite[]>([]);
   const [lastResults, setLastResults] = useState<CreatorLite[]>([]);
   const [selectedCreator, setSelectedCreator] = useState<CreatorLite | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(async () => {
-      const term = query.trim();
-      if (!term) {
-        setResults([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await searchCreators(term, controller.signal);
-        setResults(data);
-        if (data.length) setLastResults(data);
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        console.error("Creator search failed", error);
-        setResults([]);
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }, 220);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(timeout);
-    };
-  }, [query]);
 
   const displayCreators = useMemo(() => {
-    return lastResults.length ? lastResults : placeholderCreators;
+    return lastResults.length ? lastResults.slice(0, 10) : placeholderCreators;
   }, [lastResults]);
 
+  const premiumCreators = useMemo(() => placeholderCreators.slice(0, 3), []);
+
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
-      <div className="sticky top-0 z-20 border-b border-neutral-100 bg-white/90 backdrop-blur">
+    <div className="min-h-screen bg-[#FAFAFA] text-[#0B0B0F]">
+      <div className="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-4">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="rounded-full border border-neutral-200 p-2 text-neutral-600 hover:text-neutral-900"
+            className="rounded-full border border-neutral-200 bg-white p-2 text-neutral-600 hover:text-neutral-900"
             aria-label="Go back"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -132,35 +97,34 @@ export default function MemberspassCreatorHome() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
-        <section>
+      <div className="mx-auto w-full max-w-md space-y-6 px-4 pb-16 pt-6">
+        <section className="space-y-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold text-neutral-900">New in {cityName}</h2>
-              <p className="mt-2 text-sm text-neutral-500">Invite creators with your points</p>
+              <h2 className="text-2xl font-semibold">Discover creators</h2>
+              <p className="mt-2 text-sm text-neutral-500">Invite with your points</p>
             </div>
-            <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600 shadow-sm">
+            <span className="rounded-full border border-neutral-200 bg-[#FFF1F4] px-3 py-1 text-xs font-semibold text-[#FF5A7A]">
               {points.toLocaleString()} pts
             </span>
           </div>
 
-          <div className="mt-5">
-            <CreatorSearchBar
-              value={query}
-              onChange={setQuery}
-              results={results}
-              loading={loading}
-              onSelect={(creator) => {
-                setSelectedCreator(creator);
-                setQuery(creator.name || "");
-              }}
-            />
-          </div>
+          <CreatorSearchSelect
+            value={query}
+            onChange={setQuery}
+            onSelect={(creator) => {
+              setSelectedCreator(creator);
+              setQuery(creator.name || "");
+            }}
+            onResults={(results) => {
+              if (results.length) setLastResults(results);
+            }}
+          />
 
           {selectedCreator && (
-            <div className="mt-3 flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-2 text-xs text-neutral-600 shadow-sm">
+            <div className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-[#FAFAFA] px-4 py-2 text-xs text-neutral-600">
               <span>
-                Selected: <span className="font-medium text-neutral-900">{selectedCreator.name}</span>
+                Selected: <span className="font-semibold text-neutral-900">{selectedCreator.name}</span>
               </span>
               <button
                 type="button"
@@ -174,39 +138,50 @@ export default function MemberspassCreatorHome() {
               </button>
             </div>
           )}
-
-          {/* TODO: Link saved lists once the route is implemented. */}
-          <button
-            type="button"
-            className="mt-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs text-neutral-700 shadow-sm"
-            onClick={() => navigate("/memberspass/saved-lists")}
-          >
-            Saved lists
-          </button>
         </section>
 
-        <CreatorCarousel title={`New in ${cityName}`} creators={displayCreators} />
-        <CreatorCarousel title="Trending" creators={displayCreators} showSparkle />
-
-        <section className="mt-8">
-          <div className="flex items-center justify-between px-4">
-            <h2 className="text-base font-semibold text-neutral-900">Top featured content</h2>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-base font-semibold text-neutral-900">New in {cityName}</h2>
             <span className="text-xs text-neutral-400">Swipe</span>
           </div>
-          <div className="mt-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory">
-            {featuredContent.map((item) => (
-              <FeaturedContentCard
-                key={item.title}
-                title={item.title}
-                imageUrl={item.imageUrl}
-                creators={item.creators}
-              />
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {displayCreators.map((creator) => (
+              <CreatorCard key={creator.id} creator={creator} />
             ))}
           </div>
         </section>
 
-        <section className="mt-8">
-          <div className="flex items-center justify-between px-4">
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-base font-semibold text-neutral-900">Top featured content</h2>
+            <span className="text-xs text-neutral-400">Swipe</span>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {featuredContent.map((item) => (
+              <div
+                key={item.title}
+                className="w-72 shrink-0 snap-start overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+              >
+                <div className="relative h-48 w-full">
+                  <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                  <div className="absolute bottom-4 left-4">
+                    <p className="text-sm font-semibold text-white">{item.title}</p>
+                    <p className="text-xs text-white/80">{item.creatorName}</p>
+                  </div>
+                  <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[10px] font-semibold text-neutral-800">
+                    <Sparkles className="h-3 w-3" />
+                    UGC
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
             <div>
               <h2 className="text-base font-semibold text-neutral-900">Premium list</h2>
               <p className="mt-1 flex items-center gap-2 text-xs text-neutral-500">
@@ -217,33 +192,14 @@ export default function MemberspassCreatorHome() {
             <button
               type="button"
               onClick={() => window.alert("Unlock flow coming soon.")}
-              className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-700"
+              className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-semibold text-neutral-700"
             >
-              Unlock with points
+              Unlock
             </button>
           </div>
-          <div className="mt-4 flex gap-4 overflow-x-auto px-4 pb-2 snap-x snap-mandatory">
-            {[1, 2].map((item) => (
-              <div
-                key={item}
-                className="relative w-72 shrink-0 snap-start overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
-              >
-                <div className="relative h-48 w-full overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-neutral-100 to-neutral-200 blur-[2px]" />
-                  <div className="absolute left-3 top-3 rounded-full bg-white/80 px-2 py-1 text-[10px] font-medium text-neutral-700">
-                    Pro / Model
-                  </div>
-                </div>
-                <div className="px-4 pb-4 pt-3 blur-[2px]">
-                  <div className="h-4 w-24 rounded-full bg-neutral-200" />
-                  <div className="mt-2 h-3 w-32 rounded-full bg-neutral-200" />
-                </div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/70 text-center">
-                  <Lock className="h-5 w-5 text-neutral-500" />
-                  <p className="text-xs font-semibold text-neutral-700">Locked</p>
-                  <p className="text-[11px] text-neutral-500">Unlock with points</p>
-                </div>
-              </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+            {premiumCreators.map((creator) => (
+              <CreatorCard key={creator.id} creator={creator} locked />
             ))}
           </div>
         </section>
