@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Instagram, Music2, Search } from "lucide-react";
+import { Music2, Search } from "lucide-react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 type CreatorSearchBarProps = {
@@ -33,7 +33,7 @@ export default function CreatorSearchBar({
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+      <div className="flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 shadow-sm">
         <Search className="h-4 w-4 text-neutral-400" />
         <input
           value={value}
@@ -47,7 +47,7 @@ export default function CreatorSearchBar({
         />
       </div>
 
-      {open && (loading || results.length > 0) && (
+      {open && (loading || results.length > 0 || value.trim()) && (
         <div className="absolute z-20 mt-2 w-full rounded-2xl border border-neutral-200 bg-white shadow-lg">
           {loading && (
             <div className="px-4 py-3 text-sm text-neutral-500">Searching creators…</div>
@@ -76,20 +76,12 @@ export default function CreatorSearchBar({
                   <p className="text-sm font-medium text-neutral-900">
                     {creator.name || "Unnamed creator"}
                   </p>
-                  <div className="mt-1 flex items-center gap-2 text-[11px] text-neutral-500">
-                    {creator.Tiktok_account && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5">
-                        <Music2 className="h-3 w-3" />
-                        TikTok
-                      </span>
-                    )}
-                    {creator.IG_account && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5">
-                        <Instagram className="h-3 w-3" />
-                        IG
-                      </span>
-                    )}
-                  </div>
+                  {creator.Tiktok_account && (
+                    <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] text-neutral-500">
+                      <Music2 className="h-3 w-3" />
+                      TikTok
+                    </div>
+                  )}
                 </div>
               </button>
             ))}

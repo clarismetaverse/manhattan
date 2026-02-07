@@ -69,9 +69,10 @@ const featuredContent = [
 export default function MemberspassCreatorHome() {
   const navigate = useNavigate();
   const [points] = useState(2450);
-  const [city] = useState(() => {
+  const [cityName] = useState(() => {
     if (typeof window === "undefined") return "your city";
-    return localStorage.getItem("owner_city") || "your city"; // TODO: replace with owner profile city.
+    // TODO: Replace with owner city from profile endpoint.
+    return localStorage.getItem("owner_city") || "your city";
   });
 
   const [query, setQuery] = useState("");
@@ -81,7 +82,7 @@ export default function MemberspassCreatorHome() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let alive = true;
+    const controller = new AbortController();
     const timeout = window.setTimeout(async () => {
       const term = query.trim();
       if (!term) {
@@ -92,21 +93,20 @@ export default function MemberspassCreatorHome() {
 
       try {
         setLoading(true);
-        const data = await searchCreators(term);
-        if (!alive) return;
+        const data = await searchCreators(term, controller.signal);
         setResults(data);
         if (data.length) setLastResults(data);
       } catch (error) {
-        if (!alive) return;
+        if (controller.signal.aborted) return;
         console.error("Creator search failed", error);
         setResults([]);
       } finally {
-        if (alive) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     }, 220);
 
     return () => {
-      alive = false;
+      controller.abort();
       window.clearTimeout(timeout);
     };
   }, [query]);
@@ -116,8 +116,8 @@ export default function MemberspassCreatorHome() {
   }, [lastResults]);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
-      <div className="sticky top-0 z-20 border-b border-neutral-200 bg-neutral-50/90 backdrop-blur">
+    <div className="min-h-screen bg-white text-neutral-900">
+      <div className="sticky top-0 z-20 border-b border-neutral-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-4">
           <button
             type="button"
@@ -128,18 +128,21 @@ export default function MemberspassCreatorHome() {
             <ChevronLeft className="h-4 w-4" />
           </button>
           <h1 className="text-sm font-semibold text-neutral-900">Creators</h1>
-          <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600">
-            {points.toLocaleString()} pts
-          </span>
+          <div className="h-8 w-8" />
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-md px-4 pb-16 pt-6">
         <section>
-          <h2 className="text-2xl font-semibold text-neutral-900">New in {city}</h2>
-          <p className="mt-2 text-sm text-neutral-500">
-            Invite creators using points you collected with Claris.
-          </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold text-neutral-900">New in {cityName}</h2>
+              <p className="mt-2 text-sm text-neutral-500">Invite creators with your points</p>
+            </div>
+            <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs text-neutral-600 shadow-sm">
+              {points.toLocaleString()} pts
+            </span>
+          </div>
 
           <div className="mt-5">
             <CreatorSearchBar
@@ -155,7 +158,7 @@ export default function MemberspassCreatorHome() {
           </div>
 
           {selectedCreator && (
-            <div className="mt-3 flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-600">
+            <div className="mt-3 flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-2 text-xs text-neutral-600 shadow-sm">
               <span>
                 Selected: <span className="font-medium text-neutral-900">{selectedCreator.name}</span>
               </span>
@@ -171,9 +174,18 @@ export default function MemberspassCreatorHome() {
               </button>
             </div>
           )}
+
+          {/* TODO: Link saved lists once the route is implemented. */}
+          <button
+            type="button"
+            className="mt-4 inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs text-neutral-700 shadow-sm"
+            onClick={() => navigate("/memberspass/saved-lists")}
+          >
+            Saved lists
+          </button>
         </section>
 
-        <CreatorCarousel title={`New in ${city}`} creators={displayCreators} />
+        <CreatorCarousel title={`New in ${cityName}`} creators={displayCreators} />
         <CreatorCarousel title="Trending" creators={displayCreators} showSparkle />
 
         <section className="mt-8">
@@ -214,9 +226,14 @@ export default function MemberspassCreatorHome() {
             {[1, 2].map((item) => (
               <div
                 key={item}
-                className="relative w-64 shrink-0 snap-start overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm"
+                className="relative w-72 shrink-0 snap-start overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
               >
-                <div className="h-44 w-full bg-gradient-to-br from-neutral-100 to-neutral-200 blur-[2px]" />
+                <div className="relative h-48 w-full overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-neutral-100 to-neutral-200 blur-[2px]" />
+                  <div className="absolute left-3 top-3 rounded-full bg-white/80 px-2 py-1 text-[10px] font-medium text-neutral-700">
+                    Pro / Model
+                  </div>
+                </div>
                 <div className="px-4 pb-4 pt-3 blur-[2px]">
                   <div className="h-4 w-24 rounded-full bg-neutral-200" />
                   <div className="mt-2 h-3 w-32 rounded-full bg-neutral-200" />
@@ -224,7 +241,7 @@ export default function MemberspassCreatorHome() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/70 text-center">
                   <Lock className="h-5 w-5 text-neutral-500" />
                   <p className="text-xs font-semibold text-neutral-700">Locked</p>
-                  <p className="text-[11px] text-neutral-500">Requires 1,200 pts</p>
+                  <p className="text-[11px] text-neutral-500">Unlock with points</p>
                 </div>
               </div>
             ))}
