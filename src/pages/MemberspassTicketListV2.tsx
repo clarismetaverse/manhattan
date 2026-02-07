@@ -297,7 +297,7 @@ function TicketCardV2({ booking }: { booking: Booking }) {
       className="relative overflow-hidden rounded-3xl border border-black/5 bg-white/70 shadow-[0_12px_40px_rgba(0,0,0,0.06)] backdrop-blur-md"
     >
       <div className="flex flex-col">
-        <div className="relative h-40 w-full overflow-hidden">
+        <div className="relative h-32 w-full overflow-hidden">
           {heroUrl ? (
             <img src={heroUrl} alt={restaurant?.Name || "Venue"} className="h-full w-full object-cover" />
           ) : (
