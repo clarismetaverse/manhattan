@@ -147,7 +147,9 @@ export default function MemberspassCreatorHome() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
             {displayCreators.map((creator) => (
-              <CreatorCard key={creator.id} creator={creator} />
+              <div key={creator.id} className="w-full shrink-0 snap-start">
+                <CreatorCard creator={creator} />
+              </div>
             ))}
           </div>
         </section>
@@ -199,7 +201,9 @@ export default function MemberspassCreatorHome() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
             {premiumCreators.map((creator) => (
-              <CreatorCard key={creator.id} creator={creator} locked />
+              <div key={creator.id} className="w-full shrink-0 snap-start">
+                <CreatorCard creator={creator} locked />
+              </div>
             ))}
           </div>
         </section>

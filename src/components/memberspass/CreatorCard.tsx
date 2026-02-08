@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Instagram, Lock, Music2 } from "lucide-react";
+import { Lock, Music2 } from "lucide-react";
 import type { CreatorLite } from "@/services/creatorSearch";
 import CreatorProfileSheet from "@/components/memberspass/CreatorProfileSheet";
 
@@ -10,55 +10,55 @@ type CreatorCardProps = {
 
 export default function CreatorCard({ creator, locked }: CreatorCardProps) {
   const [open, setOpen] = useState(false);
+  const img = creator.Profile_pic?.url;
   const hasTikTok = Boolean(creator.Tiktok_account);
-  const platformLabel = hasTikTok ? "TikTok creator" : "Instagram creator";
+  const isUgcReady = true;
+  const isUgcFirst = true;
 
   return (
-    <div className="relative w-[220px] shrink-0 snap-start">
+    <div className="relative w-full shrink-0 snap-start">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative flex w-full flex-col overflow-hidden rounded-3xl border border-neutral-200 bg-white text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+        className="group relative w-full overflow-hidden rounded-3xl border border-neutral-200 bg-white text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
       >
-        <div className="relative h-44 w-full overflow-hidden">
-          {creator.Profile_pic?.url ? (
-            <img
-              src={creator.Profile_pic.url}
-              alt={creator.name || "Creator"}
-              className="h-full w-full object-cover"
-            />
+        <div className="relative h-[420px] w-full">
+          {img ? (
+            <img src={img} alt={creator.name || "Creator"} className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-neutral-100 to-neutral-200" />
+            <div className="h-full w-full bg-neutral-100" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
           {locked && (
-            <div className="absolute inset-0 bg-white/40" />
-          )}
-          {locked && (
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-neutral-900 px-2 py-1 text-[10px] font-semibold text-white">
+            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[10px] font-semibold text-neutral-900">
               <Lock className="h-3 w-3" />
-              Locked
+              Premium
             </span>
           )}
-        </div>
-        <div className="space-y-2 px-4 pb-4 pt-3">
-          <p className="truncate text-base font-semibold text-neutral-900">
-            {creator.name || "Unnamed creator"}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
-              UGC-ready
-            </span>
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
-              UGC first
-            </span>
-            <span className="rounded-full bg-[#FFF1F4] px-2 py-0.5 text-[11px] font-medium text-[#FF5A7A]">
-              {platformLabel}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-neutral-400">
-            {creator.IG_account && <Instagram className="h-4 w-4" />}
-            {creator.Tiktok_account && <Music2 className="h-4 w-4" />}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="text-left">
+              <div className="text-lg font-semibold text-white">
+                {creator.name || "Unnamed creator"}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                {isUgcReady && (
+                  <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
+                    UGC-ready
+                  </span>
+                )}
+                {isUgcFirst && (
+                  <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
+                    UGC first
+                  </span>
+                )}
+                {hasTikTok && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
+                    <Music2 className="h-3 w-3" />
+                    TikTok creator
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </button>
