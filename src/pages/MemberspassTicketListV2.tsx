@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, Clock, Instagram, MapPin, CalendarClock } from "lucide-react";
+import { Calendar, Clock, MapPin, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import RescheduleSheet from "@/components/booking/RescheduleSheet";
 
@@ -382,39 +382,29 @@ function TicketCardV2({ booking, onReschedule }: { booking: Booking; onReschedul
             <p className="text-sm text-black/55">{subtitle}</p>
           </div>
 
-          <div className="space-y-1 text-sm text-black/70">
+          <div className="flex items-center justify-between text-sm text-black/70">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-black/50" />
               <span>{getCollaborationTitle(booking)}</span>
             </div>
-            {slotLimit && (
-              <div className="flex items-center gap-2 text-xs text-black/50">
-                <Clock className="h-4 w-4" />
-                <span>{slotLimit}</span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={onReschedule}
-              className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 transition hover:bg-primary/20"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 transition hover:bg-primary/20"
             >
-              <CalendarClock className="h-4 w-4" />
+              <CalendarClock className="h-3.5 w-3.5" />
               Reschedule
             </button>
-            {restaurant?.Instagram && (
-              <a
-                href={restaurant.Instagram}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/30 transition hover:bg-primary/20"
-              >
-                <Instagram className="h-4 w-4" />
-                Instagram
-              </a>
-            )}
-            {restaurant?.Maps_Link && (
+          </div>
+
+          {slotLimit && (
+            <div className="flex items-center gap-2 text-xs text-black/50">
+              <Clock className="h-4 w-4" />
+              <span>{slotLimit}</span>
+            </div>
+          )}
+
+          {restaurant?.Maps_Link && (
+            <div className="flex flex-wrap items-center gap-2">
               <a
                 href={restaurant.Maps_Link}
                 target="_blank"
@@ -424,8 +414,8 @@ function TicketCardV2({ booking, onReschedule }: { booking: Booking; onReschedul
                 <MapPin className="h-4 w-4" />
                 Map
               </a>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.article>
