@@ -145,9 +145,9 @@ export default function MemberspassCreatorHome() {
             <h2 className="text-base font-semibold text-neutral-900">New in {cityName}</h2>
             <span className="text-xs text-neutral-400">Swipe</span>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
             {displayCreators.map((creator) => (
-              <div key={creator.id} className="w-full shrink-0 snap-start">
+              <div key={creator.id} className="w-[75%] shrink-0 snap-start">
                 <CreatorCard creator={creator} />
               </div>
             ))}
@@ -199,9 +199,9 @@ export default function MemberspassCreatorHome() {
               Unlock
             </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
             {premiumCreators.map((creator) => (
-              <div key={creator.id} className="w-full shrink-0 snap-start">
+              <div key={creator.id} className="w-[75%] shrink-0 snap-start">
                 <CreatorCard creator={creator} locked />
               </div>
             ))}

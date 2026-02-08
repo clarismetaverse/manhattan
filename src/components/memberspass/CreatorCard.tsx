@@ -21,7 +21,7 @@ export default function CreatorCard({ creator, locked }: CreatorCardProps) {
         onClick={() => setOpen(true)}
         className="group relative w-full overflow-hidden rounded-3xl text-left shadow-[0_10px_30px_rgba(0,0,0,0.12)]"
       >
-        <div className="relative h-[340px] w-full">
+        <div className="relative h-[290px] w-full">
           {img ? (
             <img src={img} alt={creator.name || "Creator"} className="h-full w-full object-cover" />
           ) : (
