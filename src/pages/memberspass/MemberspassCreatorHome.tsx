@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Lock, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import CreatorCard from "@/components/memberspass/CreatorCard";
 import CreatorSearchSelect from "@/components/memberspass/CreatorSearchSelect";
 import type { CreatorLite } from "@/services/creatorSearch";
+import { fetchNewInTown } from "@/services/newInTown";
 
 const placeholderCreators: CreatorLite[] = [
   {
@@ -73,10 +74,44 @@ export default function MemberspassCreatorHome() {
   const [query, setQuery] = useState("");
   const [lastResults, setLastResults] = useState<CreatorLite[]>([]);
   const [selectedCreator, setSelectedCreator] = useState<CreatorLite | null>(null);
+  const [newInTown, setNewInTown] = useState<CreatorLite[]>([]);
+  const [newInTownLoading, setNewInTownLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadNewInTown = async () => {
+      setNewInTownLoading(true);
+      try {
+        const items = await fetchNewInTown();
+        if (!active) return;
+        const pageBase = 1000;
+        const mapped = items.map((item, index) => ({
+          id: pageBase + index + 1,
+          name: item.name,
+          IG_account: item.IG_account,
+          Profile_pic: item.Profile_pic,
+        }));
+        setNewInTown(mapped);
+      } finally {
+        if (active) setNewInTownLoading(false);
+      }
+    };
+
+    loadNewInTown();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const displayCreators = useMemo(() => {
-    return lastResults.length ? lastResults.slice(0, 10) : placeholderCreators;
-  }, [lastResults]);
+    if (lastResults.length) return lastResults.slice(0, 10);
+    if (newInTown.length) return newInTown.slice(0, 10);
+    return placeholderCreators;
+  }, [lastResults, newInTown]);
+
+  const showNewInTownSkeletons = newInTownLoading && !lastResults.length && !newInTown.length;
 
   const premiumCreators = useMemo(() => placeholderCreators.slice(0, 3), []);
 
@@ -146,11 +181,17 @@ export default function MemberspassCreatorHome() {
             <span className="text-xs text-neutral-400">Swipe</span>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-            {displayCreators.map((creator) => (
-              <div key={creator.id} className="w-[75%] shrink-0 snap-start">
-                <CreatorCard creator={creator} />
-              </div>
-            ))}
+            {showNewInTownSkeletons
+              ? Array.from({ length: 3 }).map((_, index) => (
+                  <div key={`new-in-town-skeleton-${index}`} className="w-[75%] shrink-0 snap-start">
+                    <div className="h-[290px] w-full rounded-3xl border border-neutral-200 bg-neutral-100 shadow-[0_10px_30px_rgba(0,0,0,0.08)]" />
+                  </div>
+                ))
+              : displayCreators.map((creator) => (
+                  <div key={creator.id} className="w-[75%] shrink-0 snap-start">
+                    <CreatorCard creator={creator} />
+                  </div>
+                ))}
           </div>
         </section>
 
