@@ -24,36 +24,44 @@ export default function CreatorSearchSelect({
   const [results, setResults] = React.useState<CreatorLite[]>([]);
   const boxRef = React.useRef<HTMLDivElement | null>(null);
 
+  const abortRef = React.useRef<AbortController | null>(null);
+
   React.useEffect(() => {
-    let alive = true;
+    const term = value.trim();
+    if (!term) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    // Only show loading if we don't have results yet
+    if (results.length === 0) {
+      setLoading(true);
+    }
+
     const handler = window.setTimeout(async () => {
-      const term = value.trim();
-      if (!term) {
-        setResults([]);
-        setLoading(false);
-        return;
-      }
+      // Abort previous request
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
 
       try {
-        setLoading(true);
-        const data = await searchCreators(term);
-        if (!alive) return;
+        const data = await searchCreators(term, abortRef.current.signal);
         setResults(data);
         if (data.length) onResults?.(data);
       } catch (error) {
-        if (!alive) return;
+        if ((error as Error).name === "AbortError") return;
         console.error("Creator search failed", error);
         setResults([]);
       } finally {
-        if (alive) setLoading(false);
+        setLoading(false);
       }
-    }, 220);
+    }, 300);
 
     return () => {
-      alive = false;
       window.clearTimeout(handler);
     };
-  }, [value, onResults]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
   React.useEffect(() => {
     const handleClick = (event: MouseEvent) => {
