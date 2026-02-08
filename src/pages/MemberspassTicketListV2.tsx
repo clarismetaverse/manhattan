@@ -374,7 +374,7 @@ function TicketCardV2({ booking, onReschedule }: { booking: Booking; onReschedul
           </span>
         </div>
 
-        <div className="space-y-4 p-4">
+        <div className="space-y-3 p-4 pb-3">
           <div className="space-y-1">
             <h3 className="font-serif text-xl leading-tight text-black/90">
               {restaurant?.Name || "Venue"}
