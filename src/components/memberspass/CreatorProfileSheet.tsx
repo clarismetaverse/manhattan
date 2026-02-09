@@ -225,9 +225,9 @@ export default function CreatorProfileSheet({
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-xs font-semibold text-white shadow-lg border border-white/20">
-                              <Lock className="h-3.5 w-3.5" />
-                              Locked for Close Friends
+                            <div className="flex flex-col items-center gap-1 rounded-2xl bg-white/20 backdrop-blur-md px-5 py-3 text-xs font-semibold text-white shadow-lg border border-white/20">
+                              <Lock className="h-4 w-4" />
+                              <span>Locked for Close Friends</span>
                             </div>
                           </div>
                         </div>
