@@ -6,13 +6,25 @@ import CreatorProfileSheet from "@/components/memberspass/CreatorProfileSheet";
 type CreatorCardProps = {
   creator: CreatorLite;
   locked?: boolean;
+  variant?: "memberspass" | "vic";
 };
 
-export default function CreatorCard({ creator, locked }: CreatorCardProps) {
+const roleBadges = (creator: CreatorLite) => {
+  if (creator.Tiktok_account) return ["Influencer"];
+  if (creator.IG_account) return ["Creator"];
+  return ["Pro Model"];
+};
+
+export default function CreatorCard({
+  creator,
+  locked,
+  variant = "memberspass",
+}: CreatorCardProps) {
   const [open, setOpen] = useState(false);
   const img = creator.Profile_pic?.url;
   const isUgcReady = true;
   const isUgcFirst = true;
+  const roles = roleBadges(creator);
 
   return (
     <div className="relative w-full shrink-0 snap-start">
@@ -40,12 +52,21 @@ export default function CreatorCard({ creator, locked }: CreatorCardProps) {
                 {creator.name || "Unnamed creator"}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                {isUgcReady && (
-                  <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
-                    UGC-ready
-                  </span>
-                )}
-                {isUgcFirst && (
+                {variant === "vic"
+                  ? roles.map((role) => (
+                      <span
+                        key={role}
+                        className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900"
+                      >
+                        {role}
+                      </span>
+                    ))
+                  : isUgcReady && (
+                      <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
+                        UGC-ready
+                      </span>
+                    )}
+                {variant !== "vic" && isUgcFirst && (
                   <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
                     UGC first
                   </span>
@@ -56,7 +77,13 @@ export default function CreatorCard({ creator, locked }: CreatorCardProps) {
         </div>
       </button>
 
-      <CreatorProfileSheet creator={creator} open={open} onClose={() => setOpen(false)} locked={locked} />
+      <CreatorProfileSheet
+        creator={creator}
+        open={open}
+        onClose={() => setOpen(false)}
+        locked={locked}
+        variant={variant}
+      />
     </div>
   );
 }
