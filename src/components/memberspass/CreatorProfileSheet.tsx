@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Bookmark, Gift, Grid3X3, Instagram, Lock, Music2, Share2, Star, Ticket, X } from "lucide-react";
+import { Bookmark, Gift, Instagram, Lock, Music2, Share2, Star, Ticket, X } from "lucide-react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 const backdrop = {
@@ -100,177 +100,190 @@ export default function CreatorProfileSheet({
           >
             {isVic ? (
               <>
-                <div className="relative h-[60vh] w-full shrink-0 overflow-hidden">
-                  {heroImage ? (
-                    <motion.img
-                      src={heroImage}
-                      alt={creator?.name || "Creator"}
-                      className="h-full w-full object-cover"
-                      initial={{ scale: 1.03 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                    />
-                  ) : (
-                    <motion.div
-                      className="h-full w-full bg-gradient-to-br from-neutral-200 via-neutral-100 to-white"
-                      initial={{ scale: 1.03 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                  <div className="absolute right-4 top-4 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleToggleFavorite}
-                      aria-pressed={isFavorite}
-                      aria-label={isFavorite ? "Remove favourite" : "Add favourite"}
-                      className="rounded-full bg-white/90 p-2 text-neutral-900 shadow-md transition hover:scale-105 active:scale-95"
-                    >
-                      <Star className={isFavorite ? "h-4 w-4 fill-neutral-900" : "h-4 w-4"} />
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-full bg-white/90 p-2 text-neutral-900 shadow-md transition hover:scale-105 active:scale-95"
-                      onClick={onClose}
-                      aria-label="Close"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <p className="text-3xl font-semibold text-white">
-                      {creator?.name || "Creator profile"}
-                    </p>
-                    <span className="mt-3 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-neutral-900">
-                      {displayRole}
-                    </span>
-                  </div>
-                </div>
-                {/* Action strip under the hero image */}
-                <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-100">
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
-                    onClick={() => {
-                      const galleryEl = document.getElementById("vic-gallery");
-                      galleryEl?.scrollIntoView({ behavior: "smooth" });
-                    }}
-                  >
-                    <Grid3X3 className="h-3.5 w-3.5" />
-                    Gallery
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50"
-                    onClick={() => window.alert("Saved to list")}
-                  >
-                    <Bookmark className="h-3.5 w-3.5" />
-                    Save
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto px-6 pb-32 pt-6">
-                  <p className="text-sm leading-relaxed text-neutral-600">{bioText}</p>
-
-                  {locked && (
-                    <div className="mt-6 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700">
-                        <Lock className="h-3 w-3" />
-                        Premium list
-                      </div>
-                      <p className="mt-2 text-sm text-neutral-500">
-                        This creator is in the premium list. Unlock to access full details and invites.
-                      </p>
+                <div className="flex-1 overflow-y-auto bg-[#FAFAFA] pb-32">
+                  <div className="relative h-[60vh] w-full overflow-hidden">
+                    {heroImage ? (
+                      <motion.img
+                        src={heroImage}
+                        alt={creator?.name || "Creator"}
+                        className="h-full w-full object-cover"
+                        initial={{ scale: 1.03 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      />
+                    ) : (
+                      <motion.div
+                        className="h-full w-full bg-gradient-to-br from-neutral-200 via-neutral-100 to-white"
+                        initial={{ scale: 1.03 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+                    <div className="absolute right-4 top-4 flex items-center gap-2">
                       <button
                         type="button"
-                        className="mt-3 w-full rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
+                        onClick={handleToggleFavorite}
+                        aria-pressed={isFavorite}
+                        aria-label={isFavorite ? "Remove favourite" : "Add favourite"}
+                        className="rounded-full bg-white/90 p-2 text-neutral-900 shadow-md transition hover:scale-105 active:scale-95"
                       >
-                        Unlock
+                        <Star className={isFavorite ? "h-4 w-4 fill-neutral-900" : "h-4 w-4"} />
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full bg-white/90 p-2 text-neutral-900 shadow-md transition hover:scale-105 active:scale-95"
+                        onClick={onClose}
+                        aria-label="Close"
+                      >
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
-                  )}
-
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-neutral-900">Interests</h3>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {interests.map((interest) => (
-                        <span
-                          key={interest}
-                          className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-700"
-                        >
-                          {interest}
-                        </span>
-                      ))}
+                    <div className="absolute bottom-6 left-5 right-5">
+                      <p className="text-3xl font-semibold text-white">
+                        {creator?.name || "Creator profile"}
+                      </p>
+                      <span className="mt-3 inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-neutral-900">
+                        {displayRole}
+                      </span>
                     </div>
                   </div>
 
+                  <div className="px-5 pb-10 pt-6">
+                    <div>
+                      <h3 className="text-sm font-semibold text-neutral-900">About</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-neutral-600">{bioText}</p>
+                    </div>
 
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-neutral-900">Close Friends Gallery</h3>
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      {closeFriendsImages.map((image) => (
-                        <div
-                          key={image.id}
-                          className="relative h-36 w-full overflow-hidden rounded-2xl bg-neutral-200"
+                    {locked && (
+                      <div className="mt-6 rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-neutral-700">
+                          <Lock className="h-3 w-3" />
+                          Premium list
+                        </div>
+                        <p className="mt-2 text-sm text-neutral-500">
+                          This creator is in the premium list. Unlock to access full details and invites.
+                        </p>
+                        <button
+                          type="button"
+                          className="mt-3 w-full rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
                         >
-                          {image.src ? (
-                            <img
-                              src={image.src}
-                              alt="Close friends"
-                              className="h-full w-full object-cover blur-[2px] scale-105"
-                            />
-                          ) : (
-                            <div className="h-full w-full bg-gradient-to-br from-neutral-300 via-neutral-200 to-neutral-100" />
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="flex flex-col items-center gap-1 rounded-2xl bg-white/20 backdrop-blur-md px-5 py-3 text-xs font-semibold text-white shadow-lg border border-white/20">
-                              <Lock className="h-4 w-4" />
-                              <span>Close Friends</span>
+                          Unlock
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="mt-6">
+                      <h3 className="text-sm font-semibold text-neutral-900">Interests</h3>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {interests.map((interest) => (
+                          <span
+                            key={interest}
+                            className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-700"
+                          >
+                            {interest}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <h3 className="text-sm font-semibold text-neutral-900">Gallery</h3>
+                      <div className="mt-3 grid grid-cols-3 gap-2">
+                        {galleryImages.map((image) => (
+                          <div
+                            key={image.id}
+                            className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-200"
+                          >
+                            {image.src ? (
+                              <img src={image.src} alt="Gallery item" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="h-full w-full bg-gradient-to-br from-neutral-300 via-neutral-200 to-neutral-100" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <h3 className="text-sm font-semibold text-neutral-900">Close Friends Gallery</h3>
+                      <div className="mt-3 grid grid-cols-3 gap-3">
+                        {closeFriendsImages.map((image) => (
+                          <div key={image.id} className="space-y-2">
+                            <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-200">
+                              {image.src ? (
+                                <img
+                                  src={image.src}
+                                  alt="Close friends"
+                                  className="h-full w-full object-cover blur-[2px] scale-105"
+                                />
+                              ) : (
+                                <div className="h-full w-full bg-gradient-to-br from-neutral-300 via-neutral-200 to-neutral-100" />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold text-white backdrop-blur-md">
+                                  <Lock className="h-3.5 w-3.5" />
+                                  Locked
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-[11px] font-medium text-neutral-500">Close friends only</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-6">
+                      <h3 className="text-sm font-semibold text-neutral-900">Socials</h3>
+                      <div className="mt-3 space-y-2">
+                        {[
+                          { label: "Instagram", icon: Instagram },
+                          { label: "TikTok", icon: Music2 },
+                        ].map(({ label, icon: Icon }) => (
+                          <div
+                            key={label}
+                            className="flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-600 shadow-sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4 text-neutral-400" />
+                              <span className="font-medium text-neutral-700">{label}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-neutral-500">
+                              <Lock className="h-3 w-3" />
+                              Locked
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-neutral-900">Socials</h3>
-                    <div className="mt-3 rounded-2xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-                      <div className="flex items-center justify-between gap-3 blur-[1px]">
-                        <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                          <Instagram className="h-4 w-4" />
-                          Instagram
-                        </div>
-                        <div className="flex items-center gap-2 text-sm font-medium text-neutral-700">
-                          <Music2 className="h-4 w-4" />
-                          TikTok
-                        </div>
-                      </div>
-                      <div className="mt-3 flex items-center gap-2 text-xs font-semibold text-neutral-500">
-                        <Lock className="h-3 w-3" />
-                        Locked for Close Friends
+                        ))}
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="button"
-                    className="mt-6 flex w-full items-center justify-center gap-2 text-sm font-semibold text-neutral-600"
-                    onClick={() => window.alert("Share profile")}
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share profile
-                  </button>
+                    <div className="mt-6 space-y-3">
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm"
+                        onClick={() => window.alert("Coming soon")}
+                      >
+                        <Bookmark className="h-4 w-4" />
+                        Save to list
+                      </button>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-center gap-2 rounded-full border border-neutral-200 bg-white px-4 py-3 text-sm font-semibold text-neutral-700 shadow-sm"
+                        onClick={() => window.alert("Coming soon")}
+                      >
+                        <Share2 className="h-4 w-4" />
+                        Share profile
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Fixed bottom bar with Gift & Invite */}
-                <div className="absolute bottom-0 left-0 right-0 flex gap-3 border-t border-neutral-100 bg-white px-6 py-4">
+                <div className="flex gap-3 border-t border-neutral-200 bg-white px-5 py-4">
                   <button
                     type="button"
                     className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
-                    onClick={() => window.alert("Gift coming soon")}
+                    onClick={() => window.alert("Coming soon")}
                   >
                     <span className="inline-flex items-center justify-center gap-2">
                       <Gift className="h-4 w-4" />
@@ -280,7 +293,7 @@ export default function CreatorProfileSheet({
                   <button
                     type="button"
                     className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
-                    onClick={() => window.alert("Invite coming soon")}
+                    onClick={() => window.alert("Coming soon")}
                   >
                     <span className="inline-flex items-center justify-center gap-2">
                       <Ticket className="h-4 w-4" />
