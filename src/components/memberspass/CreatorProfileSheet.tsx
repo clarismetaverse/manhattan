@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Instagram, Lock, Music2, X } from "lucide-react";
+import { Bookmark, Gift, Heart, Instagram, Lock, Music2, Ticket, X } from "lucide-react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 const backdrop = {
@@ -28,19 +28,29 @@ type CreatorProfileSheetProps = {
   creator: CreatorLite | null;
   open: boolean;
   locked?: boolean;
+  variant?: "memberspass" | "vic";
   onClose: () => void;
+};
+
+const roleBadges = (creator: CreatorLite | null) => {
+  if (creator?.Tiktok_account) return ["Influencer"];
+  if (creator?.IG_account) return ["Creator"];
+  return ["Pro Model"];
 };
 
 export default function CreatorProfileSheet({
   creator,
   open,
   locked,
+  variant = "memberspass",
   onClose,
 }: CreatorProfileSheetProps) {
   const instagramUrl = buildSocialLink("instagram", creator?.IG_account);
   const tiktokUrl = buildSocialLink("tiktok", creator?.Tiktok_account);
   const hasTikTok = Boolean(creator?.Tiktok_account);
   const platformLabel = hasTikTok ? "TikTok creator" : "Instagram creator";
+  const roles = roleBadges(creator);
+  const isVic = variant === "vic";
 
   return (
     <AnimatePresence>
@@ -95,12 +105,22 @@ export default function CreatorProfileSheet({
                   {creator?.name || "Unnamed creator"}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-neutral-600">
-                  <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium">UGC-ready</span>
-                  <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium">UGC first</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF1F4] px-2 py-1 font-medium text-[#FF5A7A]">
-                    {hasTikTok ? <Music2 className="h-3 w-3" /> : <Instagram className="h-3 w-3" />}
-                    {platformLabel}
-                  </span>
+                  {isVic ? (
+                    roles.map((role) => (
+                      <span key={role} className="rounded-full bg-neutral-100 px-2 py-1 font-medium">
+                        {role}
+                      </span>
+                    ))
+                  ) : (
+                    <>
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium">UGC-ready</span>
+                      <span className="rounded-full bg-neutral-100 px-2 py-1 font-medium">UGC first</span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF1F4] px-2 py-1 font-medium text-[#FF5A7A]">
+                        {hasTikTok ? <Music2 className="h-3 w-3" /> : <Instagram className="h-3 w-3" />}
+                        {platformLabel}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -108,8 +128,9 @@ export default function CreatorProfileSheet({
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-neutral-900">About / highlights</h3>
               <p className="mt-2 text-sm text-neutral-500">
-                UGC-first creator focused on lifestyle campaigns, venue launches, and authentic short
-                form videos.
+                {isVic
+                  ? "Curated profile focused on exclusive experiences and standout collaborations."
+                  : "UGC-first creator focused on lifestyle campaigns, venue launches, and authentic short form videos."}
               </p>
             </div>
 
@@ -154,22 +175,69 @@ export default function CreatorProfileSheet({
               </div>
             )}
 
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
-                onClick={() => console.log("Invite creator", creator)}
-              >
-                Invite
-              </button>
-              <button
-                type="button"
-                className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
-                onClick={() => console.log("Request collaboration", creator)}
-              >
-                Request collaboration
-              </button>
-            </div>
+            {isVic ? (
+              <>
+                <div className="mt-6 flex gap-3">
+                  <button
+                    type="button"
+                    className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
+                    onClick={() => window.alert("Coming soon")}
+                  >
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Gift className="h-4 w-4" />
+                      Gift
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
+                    onClick={() => window.alert("Coming soon")}
+                  >
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Ticket className="h-4 w-4" />
+                      Invite
+                    </span>
+                  </button>
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <button
+                    type="button"
+                    className="flex-1 rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700"
+                    onClick={() => window.alert("Coming soon")}
+                  >
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Bookmark className="h-3 w-3" />
+                      Save to list
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-full border border-neutral-200 p-2 text-neutral-700"
+                    onClick={() => window.alert("Coming soon")}
+                    aria-label="Favourite"
+                  >
+                    <Heart className="h-4 w-4" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
+                  onClick={() => console.log("Invite creator", creator)}
+                >
+                  Invite
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
+                  onClick={() => console.log("Request collaboration", creator)}
+                >
+                  Request collaboration
+                </button>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}
