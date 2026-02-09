@@ -227,7 +227,7 @@ export default function CreatorProfileSheet({
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="flex items-center gap-2 rounded-full bg-white/20 backdrop-blur-md px-4 py-2 text-xs font-semibold text-white shadow-lg border border-white/20">
                               <Lock className="h-3.5 w-3.5" />
-                              Close Friends
+                              Locked for Close Friends
                             </div>
                           </div>
                         </div>
