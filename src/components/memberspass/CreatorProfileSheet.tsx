@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Bookmark, Gift, Instagram, Lock, Music2, Share2, Star, Ticket, X } from "lucide-react";
+import { Bookmark, Gift, Grid3X3, Instagram, Lock, Music2, Share2, Star, Ticket, X } from "lucide-react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 const backdrop = {
@@ -147,7 +147,30 @@ export default function CreatorProfileSheet({
                     </span>
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto px-6 pb-10 pt-6">
+                {/* Action strip under the hero image */}
+                <div className="flex items-center justify-between px-6 py-3 border-b border-neutral-100">
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100"
+                    onClick={() => {
+                      const galleryEl = document.getElementById("vic-gallery");
+                      galleryEl?.scrollIntoView({ behavior: "smooth" });
+                    }}
+                  >
+                    <Grid3X3 className="h-3.5 w-3.5" />
+                    Gallery
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-50"
+                    onClick={() => window.alert("Saved to list")}
+                  >
+                    <Bookmark className="h-3.5 w-3.5" />
+                    Save
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-6 pb-32 pt-6">
                   <p className="text-sm leading-relaxed text-neutral-600">{bioText}</p>
 
                   {locked && (
@@ -168,29 +191,6 @@ export default function CreatorProfileSheet({
                     </div>
                   )}
 
-                  <div className="mt-6 flex gap-3">
-                    <button
-                      type="button"
-                      className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
-                      onClick={() => window.alert("Gift coming soon")}
-                    >
-                      <span className="inline-flex items-center justify-center gap-2">
-                        <Gift className="h-4 w-4" />
-                        Gift
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
-                      onClick={() => window.alert("Invite coming soon")}
-                    >
-                      <span className="inline-flex items-center justify-center gap-2">
-                        <Ticket className="h-4 w-4" />
-                        Invite
-                      </span>
-                    </button>
-                  </div>
-
                   <div className="mt-6">
                     <h3 className="text-sm font-semibold text-neutral-900">Interests</h3>
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -205,7 +205,7 @@ export default function CreatorProfileSheet({
                     </div>
                   </div>
 
-                  <div className="mt-6">
+                  <div className="mt-6" id="vic-gallery">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-neutral-900">Gallery</h3>
                       <span className="text-xs text-neutral-400">6 shots</span>
@@ -276,21 +276,35 @@ export default function CreatorProfileSheet({
 
                   <button
                     type="button"
-                    className="mt-6 w-full rounded-full border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700"
-                    onClick={() => window.alert("Saved to list")}
-                  >
-                    <span className="inline-flex items-center justify-center gap-2">
-                      <Bookmark className="h-4 w-4" />
-                      Save to list
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-semibold text-neutral-600"
+                    className="mt-6 flex w-full items-center justify-center gap-2 text-sm font-semibold text-neutral-600"
                     onClick={() => window.alert("Share profile")}
                   >
                     <Share2 className="h-4 w-4" />
                     Share profile
+                  </button>
+                </div>
+
+                {/* Fixed bottom bar with Gift & Invite */}
+                <div className="absolute bottom-0 left-0 right-0 flex gap-3 border-t border-neutral-100 bg-white px-6 py-4">
+                  <button
+                    type="button"
+                    className="flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
+                    onClick={() => window.alert("Gift coming soon")}
+                  >
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Gift className="h-4 w-4" />
+                      Gift
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
+                    onClick={() => window.alert("Invite coming soon")}
+                  >
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Ticket className="h-4 w-4" />
+                      Invite
+                    </span>
                   </button>
                 </div>
               </>
