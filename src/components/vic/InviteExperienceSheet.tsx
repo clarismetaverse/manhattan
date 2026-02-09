@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, ChevronRight, Gift, Sparkles, Ticket, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 type InviteExperienceSheetProps = {
@@ -94,13 +94,22 @@ const formatTripDate = (value?: string) => {
 
 export default function InviteExperienceSheet({ open, onClose, creator }: InviteExperienceSheetProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [proposalText, setProposalText] = useState("");
   const [budget, setBudget] = useState<string | null>(null);
   const [proposalOpen, setProposalOpen] = useState(false);
   const [upcomingItems, setUpcomingItems] = useState<ExperienceItem[]>(upcomingExperiences);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
+  const [eventMode, setEventMode] = useState<"cta" | "create">("cta");
+  const [tripType, setTripType] = useState<"single" | "girls">("single");
+  const [scrolledPastHero, setScrolledPastHero] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const creatorName = creator?.name || "Creator";
+  const activeEvent = useMemo(
+    () => upcomingItems.find((item) => item.id === activeEventId) ?? null,
+    [activeEventId, upcomingItems]
+  );
   useEffect(() => {
     let isMounted = true;
 
@@ -154,6 +163,24 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     };
   }, []);
 
+  useEffect(() => {
+    const node = scrollRef.current;
+    if (!node) {
+      return;
+    }
+
+    const handleScroll = () => {
+      setScrolledPastHero(node.scrollTop > 120);
+    };
+
+    handleScroll();
+    node.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      node.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   const selectedExperience = useMemo(
     () =>
       [upcomingItems, recommendedExperiences, allExperiences]
@@ -201,21 +228,72 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
             aria-label="Close invite experience"
           />
           <motion.div
+            ref={scrollRef}
             className="relative z-10 w-full max-w-md max-h-[92vh] overflow-y-auto overscroll-y-contain rounded-t-[28px] bg-white shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             variants={sheet}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
-            <div className="bg-gradient-to-b from-neutral-50 to-white px-5 pb-5 pt-6">
+            <AnimatePresence>
+              {(scrolledPastHero || activeEventId) && (
+                <motion.div
+                  className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200 bg-white/80 px-5 py-3 backdrop-blur"
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="flex items-center gap-3">
+                    {creator?.Profile_pic?.url ? (
+                      <img
+                        src={creator.Profile_pic.url}
+                        alt={creatorName}
+                        className="h-9 w-9 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="h-9 w-9 rounded-xl bg-neutral-200" />
+                    )}
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">{creatorName}</p>
+                      {activeEvent?.title && (
+                        <p className="text-xs text-neutral-500">{activeEvent.title}</p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-full bg-white/90 p-2 text-neutral-700 shadow-sm"
+                    onClick={onClose}
+                    aria-label="Close"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <motion.div
+              className={`bg-gradient-to-b from-neutral-50 to-white px-5 ${
+                activeEventId ? "pb-4 pt-4" : "pb-5 pt-6"
+              }`}
+              animate={{ y: activeEventId ? -6 : 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   {creator?.Profile_pic?.url ? (
                     <img
                       src={creator.Profile_pic.url}
                       alt={creatorName}
-                      className="h-12 w-12 rounded-2xl object-cover"
+                      className={`object-cover transition-all ${
+                        activeEventId ? "h-10 w-10 rounded-xl" : "h-12 w-12 rounded-2xl"
+                      }`}
                     />
                   ) : (
-                    <div className="h-12 w-12 rounded-2xl bg-neutral-200" />
+                    <div
+                      className={`bg-neutral-200 transition-all ${
+                        activeEventId ? "h-10 w-10 rounded-xl" : "h-12 w-12 rounded-2xl"
+                      }`}
+                    />
                   )}
                   <div>
                     <p className="text-lg font-semibold text-neutral-900">Invite {creatorName}</p>
@@ -234,187 +312,362 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                   <X className="h-4 w-4" />
                 </button>
               </div>
-            </div>
+            </motion.div>
 
             <div className="space-y-8 px-5 pb-24">
-              <section className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Upcoming</p>
-                  <p className="text-xs text-neutral-500">Community highlights this month</p>
-                </div>
-                <div className="space-y-4">
-                  {upcomingLoading
-                    ? Array.from({ length: 3 }).map((_, index) => (
-                        <div
-                          key={`upcoming-skeleton-${index}`}
-                          className="h-60 w-full animate-pulse rounded-3xl bg-neutral-200/80"
-                        />
-                      ))
-                    : upcomingItems.map((item) => {
-                        const isSelected = selectedId === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => setSelectedId(item.id)}
-                            className={`relative w-full overflow-hidden rounded-3xl bg-neutral-900 text-left text-white shadow-lg transition active:scale-[0.99] ${
-                              isSelected ? "ring-2 ring-[#FF5A7A]/40" : ""
-                            }`}
-                          >
-                            {item.imageUrl ? (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.title}
-                                className="absolute inset-0 h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="absolute inset-0 bg-neutral-900" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/60 via-neutral-900/30 to-black/70" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                            <div className="relative flex h-60 flex-col justify-end p-5">
-                              {isSelected && (
-                                <span className="mb-2 inline-flex w-fit items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-neutral-900">
-                                  Selected
-                                </span>
-                              )}
-                              <p className="text-xl font-semibold">{item.title}</p>
-                              {item.subtitle && <p className="text-xs text-white/70">{item.subtitle}</p>}
-                            </div>
-                          </button>
-                        );
-                      })}
-                </div>
-              </section>
-
-              <section className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Best for you & her</p>
-                </div>
-                <div className="space-y-3">
-                  {recommendedExperiences.map((item) => {
-                    const isSelected = selectedId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedId(item.id)}
-                        className={`w-full rounded-3xl border bg-white p-6 text-left shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition active:scale-[0.99] ${
-                          isSelected
-                            ? "border-[#FF5A7A]/50 ring-2 ring-[#FF5A7A]/40"
-                            : "border-neutral-200/80"
-                        }`}
+              <AnimatePresence>
+                {activeEvent && (
+                  <motion.section
+                    className="space-y-6"
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 18 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <div className="relative overflow-hidden rounded-[32px] bg-neutral-900 text-white shadow-xl">
+                      <motion.div
+                        layoutId={`event-hero-${activeEvent.id}`}
+                        className="relative h-[280px] w-full"
                       >
-                        <div className="flex items-start gap-3">
-                          <span className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF1F4] text-[#FF5A7A]">
-                            <Sparkles className="h-5 w-5" />
-                          </span>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <p className="text-sm font-semibold text-neutral-900">{item.title}</p>
-                              {isSelected && (
-                                <span className="rounded-full bg-[#FFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#FF5A7A]">
-                                  Selected
-                                </span>
-                              )}
-                            </div>
-                            {item.subtitle && <p className="mt-1 text-xs text-neutral-500">{item.subtitle}</p>}
-                            {item.tags && (
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                {item.tags.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => window.alert("Concierge request flow coming soon.")}
-                  className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-semibold text-neutral-800 shadow-sm transition active:scale-[0.99]"
-                >
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-neutral-700" />
-                    Ask concierge for curation
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-neutral-400" />
-                </button>
-              </section>
-
-              <section className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">Browse experiences</p>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {allExperiences.map((item) => {
-                    const isSelected = selectedId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedId(item.id)}
-                        className={`rounded-2xl border bg-white p-3 text-left text-sm font-semibold text-neutral-800 shadow-sm transition active:scale-[0.99] ${
-                          isSelected
-                            ? "border-[#FF5A7A]/50 ring-2 ring-[#FF5A7A]/40"
-                            : "border-neutral-200"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <span>{item.title}</span>
-                          {isSelected && (
-                            <span className="rounded-full bg-[#FFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#FF5A7A]">
-                              Selected
-                            </span>
-                          )}
-                        </div>
-                        {item.tags && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {item.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
+                        {activeEvent.imageUrl ? (
+                          <img
+                            src={activeEvent.imageUrl}
+                            alt={activeEvent.title}
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 bg-neutral-900" />
                         )}
+                        <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/50 via-neutral-900/20 to-black/70" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      </motion.div>
+                      <button
+                        type="button"
+                        className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-neutral-800 shadow-md transition active:scale-[0.99]"
+                        onClick={() => setActiveEventId(null)}
+                        aria-label="Close event view"
+                      >
+                        <X className="h-4 w-4" />
                       </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => window.alert("Community browse coming soon.")}
-                  className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-semibold text-neutral-800 shadow-md transition active:scale-[0.99]"
-                >
-                  Browse more activities from the community
-                  <ChevronRight className="h-4 w-4 text-neutral-500" />
-                </button>
-              </section>
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <p className="text-2xl font-semibold">{activeEvent.title}</p>
+                        {activeEvent.subtitle && (
+                          <p className="mt-1 text-xs text-white/80">{activeEvent.subtitle}</p>
+                        )}
+                      </div>
+                    </div>
 
-              <section className="space-y-4">
-                <button
-                  type="button"
-                  onClick={() => setProposalOpen(true)}
-                  className="flex w-full items-center justify-between rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left shadow-sm transition active:scale-[0.99]"
-                >
-                  <span>
-                    <p className="text-sm font-semibold text-neutral-900">Propose your own experience</p>
-                    <p className="text-xs text-neutral-500">Share the moment you want to create together.</p>
-                  </span>
-                  <ChevronRight className="h-4 w-4 text-neutral-400" />
-                </button>
-              </section>
+                    <div className="space-y-6 rounded-[32px] bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-neutral-900">Event modality</p>
+                        <div className="inline-flex rounded-full bg-neutral-100 p-1">
+                          {[
+                            { id: "cta", label: "Join this event" },
+                            { id: "create", label: "Create an activity" },
+                          ].map((mode) => (
+                            <button
+                              key={mode.id}
+                              type="button"
+                              onClick={() => setEventMode(mode.id as "cta" | "create")}
+                              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                                eventMode === mode.id
+                                  ? "bg-neutral-900 text-white"
+                                  : "text-neutral-600"
+                              }`}
+                            >
+                              {mode.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-neutral-900">Trip type</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { id: "single", label: "Single date" },
+                            { id: "girls", label: "Girls trip" },
+                          ].map((type) => (
+                            <button
+                              key={type.id}
+                              type="button"
+                              onClick={() => setTripType(type.id as "single" | "girls")}
+                              className={`rounded-full border px-3 py-1 text-xs font-semibold transition active:scale-[0.99] ${
+                                tripType === type.id
+                                  ? "border-neutral-900 bg-neutral-900 text-white"
+                                  : "border-neutral-200 text-neutral-600"
+                              }`}
+                            >
+                              {type.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-neutral-900">Dates</p>
+                        <button
+                          type="button"
+                          onClick={() => window.alert("Date request coming soon.")}
+                          className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 px-4 py-3 text-left text-xs font-semibold text-neutral-700 transition active:scale-[0.99]"
+                        >
+                          <span className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-neutral-500" />
+                            {activeEvent.subtitle ?? "Dates TBD"}
+                          </span>
+                          <ChevronRight className="h-4 w-4 text-neutral-400" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-neutral-900">Flight covered from</p>
+                        <div className="flex flex-wrap gap-2">
+                          {["EU", "UK", "UAE", "US"].map((region) => (
+                            <span
+                              key={region}
+                              className="rounded-full bg-neutral-100 px-3 py-1 text-[11px] font-semibold text-neutral-600"
+                            >
+                              {region}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-xs text-neutral-500">Coverage depends on availability.</p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold text-neutral-900">Program</p>
+                        <div className="space-y-2 text-xs text-neutral-600">
+                          {[
+                            "Arrival + check-in",
+                            "Golden hour shoot",
+                            "VIP access / main event",
+                            "Afterparty",
+                            "Return",
+                          ].map((line) => (
+                            <div key={line} className="flex items-center justify-between border-b border-neutral-100 pb-2 last:border-b-0 last:pb-0">
+                              <span>{line}</span>
+                              <span className="text-neutral-300">•</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => window.alert("Concierge flow coming soon.")}
+                        className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-semibold text-neutral-800 shadow-sm transition active:scale-[0.99]"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-neutral-700" />
+                          Get options from concierge
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-neutral-400" />
+                      </button>
+                    </div>
+                  </motion.section>
+                )}
+              </AnimatePresence>
+
+              <motion.div
+                className="space-y-8"
+                animate={{ y: activeEventId ? 12 : 0, opacity: activeEventId ? 0.95 : 1 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {!activeEventId && (
+                  <section className="space-y-4">
+                    <div>
+                      <p className="text-sm font-semibold text-neutral-900">Upcoming</p>
+                      <p className="text-xs text-neutral-500">Community highlights this month</p>
+                    </div>
+                    <div className="space-y-4">
+                      {upcomingLoading
+                        ? Array.from({ length: 3 }).map((_, index) => (
+                            <div
+                              key={`upcoming-skeleton-${index}`}
+                              className="h-60 w-full animate-pulse rounded-3xl bg-neutral-200/80"
+                            />
+                          ))
+                        : upcomingItems.map((item) => {
+                            const isSelected = selectedId === item.id;
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedId(item.id);
+                                  setActiveEventId(item.id);
+                                }}
+                                className={`relative w-full overflow-hidden rounded-3xl bg-neutral-900 text-left text-white shadow-lg transition active:scale-[0.99] ${
+                                  isSelected ? "ring-2 ring-[#FF5A7A]/40" : ""
+                                }`}
+                              >
+                                <motion.div
+                                  layoutId={`event-hero-${item.id}`}
+                                  className="absolute inset-0"
+                                >
+                                  {item.imageUrl ? (
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.title}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="h-full w-full bg-neutral-900" />
+                                  )}
+                                </motion.div>
+                                <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/60 via-neutral-900/30 to-black/70" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                                <div className="relative flex h-60 flex-col justify-end p-5">
+                                  {isSelected && (
+                                    <span className="mb-2 inline-flex w-fit items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-neutral-900">
+                                      Selected
+                                    </span>
+                                  )}
+                                  <p className="text-xl font-semibold">{item.title}</p>
+                                  {item.subtitle && (
+                                    <p className="text-xs text-white/70">{item.subtitle}</p>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                    </div>
+                  </section>
+                )}
+
+                <section className="space-y-4">
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">Best for you & her</p>
+                  </div>
+                  <div className="space-y-3">
+                    {recommendedExperiences.map((item) => {
+                      const isSelected = selectedId === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setSelectedId(item.id)}
+                          className={`w-full rounded-3xl border bg-white p-6 text-left shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition active:scale-[0.99] ${
+                            isSelected
+                              ? "border-[#FF5A7A]/50 ring-2 ring-[#FF5A7A]/40"
+                              : "border-neutral-200/80"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <span className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#FFF1F4] text-[#FF5A7A]">
+                              <Sparkles className="h-5 w-5" />
+                            </span>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <p className="text-sm font-semibold text-neutral-900">{item.title}</p>
+                                {isSelected && (
+                                  <span className="rounded-full bg-[#FFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#FF5A7A]">
+                                    Selected
+                                  </span>
+                                )}
+                              </div>
+                              {item.subtitle && (
+                                <p className="mt-1 text-xs text-neutral-500">{item.subtitle}</p>
+                              )}
+                              {item.tags && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  {item.tags.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.alert("Concierge request flow coming soon.")}
+                    className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-semibold text-neutral-800 shadow-sm transition active:scale-[0.99]"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-neutral-700" />
+                      Ask concierge for curation
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-neutral-400" />
+                  </button>
+                </section>
+
+                <section className="space-y-4">
+                  <div>
+                    <p className="text-sm font-semibold text-neutral-900">Browse experiences</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {allExperiences.map((item) => {
+                      const isSelected = selectedId === item.id;
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setSelectedId(item.id)}
+                          className={`rounded-2xl border bg-white p-3 text-left text-sm font-semibold text-neutral-800 shadow-sm transition active:scale-[0.99] ${
+                            isSelected
+                              ? "border-[#FF5A7A]/50 ring-2 ring-[#FF5A7A]/40"
+                              : "border-neutral-200"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <span>{item.title}</span>
+                            {isSelected && (
+                              <span className="rounded-full bg-[#FFF1F4] px-2 py-0.5 text-[10px] font-semibold text-[#FF5A7A]">
+                                Selected
+                              </span>
+                            )}
+                          </div>
+                          {item.tags && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {item.tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.alert("Community browse coming soon.")}
+                    className="flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-semibold text-neutral-800 shadow-md transition active:scale-[0.99]"
+                  >
+                    Browse more activities from the community
+                    <ChevronRight className="h-4 w-4 text-neutral-500" />
+                  </button>
+                </section>
+
+                <section className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setProposalOpen(true)}
+                    className="flex w-full items-center justify-between rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left shadow-sm transition active:scale-[0.99]"
+                  >
+                    <span>
+                      <p className="text-sm font-semibold text-neutral-900">Propose your own experience</p>
+                      <p className="text-xs text-neutral-500">
+                        Share the moment you want to create together.
+                      </p>
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-neutral-400" />
+                  </button>
+                </section>
+              </motion.div>
 
               <div className="sticky bottom-0 z-10 -mx-5 mt-6 border-t border-neutral-200 bg-white/95 px-5 pb-4 pt-4 backdrop-blur">
                 <div className="flex gap-3">
