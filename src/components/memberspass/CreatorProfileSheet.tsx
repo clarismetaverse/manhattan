@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Gift, Instagram, Lock, Music2, Share2, Star, Ticket, X } from "lucide-react";
+import { useState } from "react";
 import type { CreatorLite } from "@/services/creatorSearch";
+import InviteExperienceSheet from "@/components/vic/InviteExperienceSheet";
 
 const backdrop = {
   hidden: { opacity: 0 },
@@ -51,6 +53,7 @@ export default function CreatorProfileSheet({
   onToggleFavorite,
   onClose,
 }: CreatorProfileSheetProps) {
+  const [inviteOpen, setInviteOpen] = useState(false);
   const instagramUrl = buildSocialLink("instagram", creator?.IG_account);
   const tiktokUrl = buildSocialLink("tiktok", creator?.Tiktok_account);
   const hasTikTok = Boolean(creator?.Tiktok_account);
@@ -293,7 +296,7 @@ export default function CreatorProfileSheet({
                   <button
                     type="button"
                     className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
-                    onClick={() => window.alert("Coming soon")}
+                    onClick={() => setInviteOpen(true)}
                   >
                     <span className="inline-flex items-center justify-center gap-2">
                       <Ticket className="h-4 w-4" />
@@ -413,6 +416,11 @@ export default function CreatorProfileSheet({
               </>
             )}
           </motion.div>
+          <InviteExperienceSheet
+            open={inviteOpen}
+            onClose={() => setInviteOpen(false)}
+            creator={creator}
+          />
         </motion.div>
       )}
     </AnimatePresence>
