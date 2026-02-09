@@ -205,26 +205,6 @@ export default function CreatorProfileSheet({
                     </div>
                   </div>
 
-                  <div className="mt-6" id="vic-gallery">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-neutral-900">Gallery</h3>
-                      <span className="text-xs text-neutral-400">6 shots</span>
-                    </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2">
-                      {galleryImages.map((image) => (
-                        <div
-                          key={image.id}
-                          className="relative h-24 w-full overflow-hidden rounded-2xl bg-neutral-100"
-                        >
-                          {image.src ? (
-                            <img src={image.src} alt="Creator gallery" className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="h-full w-full bg-gradient-to-br from-neutral-200 to-neutral-50" />
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
                   <div className="mt-6">
                     <h3 className="text-sm font-semibold text-neutral-900">Close Friends Gallery</h3>
