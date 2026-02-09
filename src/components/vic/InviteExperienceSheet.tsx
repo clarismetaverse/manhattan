@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, ChevronRight, Gift, Sparkles, Ticket, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 type InviteExperienceSheetProps = {
@@ -79,19 +79,87 @@ const allExperiences: ExperienceItem[] = [
 
 const budgetOptions = ["€", "€€", "€€€"];
 
+const tripsEndpoint = "https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/motherboard/trips";
+
+const formatTripDate = (value?: string) => {
+  if (!value) {
+    return "TBD";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "TBD";
+  }
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
 export default function InviteExperienceSheet({ open, onClose, creator }: InviteExperienceSheetProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [proposalText, setProposalText] = useState("");
   const [budget, setBudget] = useState<string | null>(null);
   const [proposalOpen, setProposalOpen] = useState(false);
+  const [upcomingItems, setUpcomingItems] = useState<ExperienceItem[]>(upcomingExperiences);
+  const [upcomingLoading, setUpcomingLoading] = useState(true);
 
   const creatorName = creator?.name || "Creator";
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadTrips = async () => {
+      setUpcomingLoading(true);
+      try {
+        const response = await fetch(tripsEndpoint);
+        if (!response.ok) {
+          throw new Error("Failed to load trips");
+        }
+        const trips = (await response.json()) as Array<{
+          Name?: string;
+          Destination?: string;
+          Starting_Day?: string;
+          Return?: string;
+          Tripcover?: { url?: string | null } | null;
+        }>;
+        const mapped = trips.map((trip, index) => {
+          const title = trip.Name ?? "Upcoming trip";
+          const start = formatTripDate(trip.Starting_Day);
+          const end = formatTripDate(trip.Return);
+          const subtitle = trip.Destination
+            ? `${trip.Destination} • ${start} → ${end}`
+            : `${start} → ${end}`;
+          return {
+            id: `trip-${trip.Name ?? "trip"}-${trip.Starting_Day ?? index}`,
+            title,
+            subtitle,
+            imageUrl: trip.Tripcover?.url ?? undefined,
+            tags: trip.Destination ? ["Trip", trip.Destination] : ["Trip"],
+          } satisfies ExperienceItem;
+        });
+        if (isMounted) {
+          setUpcomingItems(mapped.length ? mapped : upcomingExperiences);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setUpcomingItems(upcomingExperiences);
+        }
+      } finally {
+        if (isMounted) {
+          setUpcomingLoading(false);
+        }
+      }
+    };
+
+    loadTrips();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const selectedExperience = useMemo(
     () =>
-      [upcomingExperiences, recommendedExperiences, allExperiences]
+      [upcomingItems, recommendedExperiences, allExperiences]
         .flat()
         .find((item) => item.id === selectedId),
-    [selectedId]
+    [selectedId, upcomingItems]
   );
 
   const canInvite = Boolean(selectedId) || proposalText.trim().length > 10;
@@ -133,7 +201,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
             aria-label="Close invite experience"
           />
           <motion.div
-            className="relative z-10 w-full max-w-md max-h-[92vh] overflow-y-auto rounded-t-[28px] bg-white shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="relative z-10 w-full max-w-md max-h-[92vh] overflow-y-auto overscroll-y-contain rounded-t-[28px] bg-white shadow-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             variants={sheet}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
@@ -175,31 +243,47 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                   <p className="text-xs text-neutral-500">Community highlights this month</p>
                 </div>
                 <div className="space-y-4">
-                  {upcomingExperiences.map((item) => {
-                    const isSelected = selectedId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => setSelectedId(item.id)}
-                        className={`relative w-full overflow-hidden rounded-3xl bg-neutral-900 text-left text-white shadow-lg transition active:scale-[0.99] ${
-                          isSelected ? "ring-2 ring-[#FF5A7A]/40" : ""
-                        }`}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-neutral-900 via-neutral-800 to-black" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="relative flex h-56 flex-col justify-end p-5">
-                          {isSelected && (
-                            <span className="mb-2 inline-flex w-fit items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-neutral-900">
-                              Selected
-                            </span>
-                          )}
-                          <p className="text-xl font-semibold">{item.title}</p>
-                          {item.subtitle && <p className="text-xs text-white/70">{item.subtitle}</p>}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {upcomingLoading
+                    ? Array.from({ length: 3 }).map((_, index) => (
+                        <div
+                          key={`upcoming-skeleton-${index}`}
+                          className="h-60 w-full animate-pulse rounded-3xl bg-neutral-200/80"
+                        />
+                      ))
+                    : upcomingItems.map((item) => {
+                        const isSelected = selectedId === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => setSelectedId(item.id)}
+                            className={`relative w-full overflow-hidden rounded-3xl bg-neutral-900 text-left text-white shadow-lg transition active:scale-[0.99] ${
+                              isSelected ? "ring-2 ring-[#FF5A7A]/40" : ""
+                            }`}
+                          >
+                            {item.imageUrl ? (
+                              <img
+                                src={item.imageUrl}
+                                alt={item.title}
+                                className="absolute inset-0 h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-neutral-900" />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/60 via-neutral-900/30 to-black/70" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                            <div className="relative flex h-60 flex-col justify-end p-5">
+                              {isSelected && (
+                                <span className="mb-2 inline-flex w-fit items-center rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-neutral-900">
+                                  Selected
+                                </span>
+                              )}
+                              <p className="text-xl font-semibold">{item.title}</p>
+                              {item.subtitle && <p className="text-xs text-white/70">{item.subtitle}</p>}
+                            </div>
+                          </button>
+                        );
+                      })}
                 </div>
               </section>
 
@@ -215,7 +299,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                         key={item.id}
                         type="button"
                         onClick={() => setSelectedId(item.id)}
-                        className={`w-full rounded-3xl border bg-white p-5 text-left shadow-md transition active:scale-[0.99] ${
+                        className={`w-full rounded-3xl border bg-white p-6 text-left shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition active:scale-[0.99] ${
                           isSelected
                             ? "border-[#FF5A7A]/50 ring-2 ring-[#FF5A7A]/40"
                             : "border-neutral-200/80"
