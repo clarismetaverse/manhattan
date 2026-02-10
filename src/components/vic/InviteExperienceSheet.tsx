@@ -149,9 +149,12 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
   const [upcomingItems, setUpcomingItems] = useState<ExperienceItem[]>(upcomingExperiences);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
   const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
+  const [selectedActivities, setSelectedActivities] = useState<ActivityItem["id"][]>([]);
   const [activityRequests, setActivityRequests] = useState<Record<string, string>>({});
+  const [highlightActivities, setHighlightActivities] = useState(false);
   const [isStickyHeader, setIsStickyHeader] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const activitiesSectionRef = useRef<HTMLElement | null>(null);
 
   const creatorName = creator?.name || "Creator";
 
@@ -210,6 +213,25 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     [activeTripId, upcomingItems]
   );
 
+  const selectedActivityDetails = useMemo(
+    () => activityItems.filter((item) => selectedActivities.includes(item.id)),
+    [selectedActivities]
+  );
+
+  const isTopCreator = useMemo(() => {
+    const creatorWithTier = creator as (CreatorLite & { tier?: string; vip?: boolean }) | null;
+    if (!creatorWithTier) {
+      return false;
+    }
+    if (creatorWithTier.tier === "top" || creatorWithTier.vip === true) {
+      return true;
+    }
+    // TODO: replace this heuristic with a backend-driven signal.
+    const normalizedName = creatorWithTier.name?.toLowerCase() ?? "";
+    const account = creatorWithTier.IG_account?.toLowerCase() ?? "";
+    return normalizedName.includes("top") || account.includes("verified") || creatorWithTier.id % 7 === 0;
+  }, [creator]);
+
   useEffect(() => {
     const node = scrollRef.current;
     if (!node) {
@@ -234,6 +256,20 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
 
   const canSubmitProposal = proposalText.trim().length > 10;
   const canInvite = Boolean(selectedId) || canSubmitProposal;
+
+  const handleToggleSelectedActivity = (activityId: ActivityItem["id"]) => {
+    setSelectedActivities((prev) =>
+      prev.includes(activityId) ? prev.filter((id) => id !== activityId) : [...prev, activityId]
+    );
+  };
+
+  const handleHighlightActivities = () => {
+    activitiesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setHighlightActivities(true);
+    window.setTimeout(() => {
+      setHighlightActivities(false);
+    }, 1500);
+  };
 
   const handleInvite = () => {
     const selectedTrip = upcomingItems.find((item) => item.id === selectedId);
@@ -326,111 +362,208 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                     </motion.div>
                   </section>
 
-                  <section className="space-y-4 rounded-3xl bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+                  {isTopCreator && (
+                    <section className="relative overflow-hidden rounded-3xl border border-[#FF5A7A]/20 bg-gradient-to-br from-[#1f1022] via-[#3b1a39] to-[#7A1E54] p-5 text-white shadow-[0_20px_40px_rgba(122,30,84,0.35)]">
+                      <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/20 blur-3xl" />
+                      <div className="relative">
+                        <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Top creator signal
+                        </p>
+                        <p className="mt-3 text-xl font-semibold">Prepare a top-level handcrafted plan</p>
+                        <p className="mt-1 text-sm text-white/80">
+                          Maximize your acceptance rate with a curated itinerary and VIC picks.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleHighlightActivities}
+                          className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-neutral-900"
+                        >
+                          Build handcrafted plan
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </section>
+                  )}
+
+                  <section
+                    ref={activitiesSectionRef}
+                    className={`space-y-4 rounded-3xl bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] transition ${
+                      highlightActivities ? "ring-2 ring-[#FF5A7A]/50 ring-offset-2" : ""
+                    }`}
+                  >
                     <div>
-                      <p className="text-xl font-semibold text-neutral-900">Plan activities for your trip with {creatorName}</p>
-                      <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let concierge curate every detail.</p>
+                      <p className="text-xl font-semibold text-neutral-900">Pre-plan an activity program with {creatorName}</p>
+                      <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let VIC curate every detail.</p>
                     </div>
 
-                    <div className="space-y-3">
-                      <p className="text-sm font-semibold text-neutral-900">Select your activities plan</p>
-                      {activityItems.map((activity) => {
-                        const isOpen = expandedActivityId === activity.id;
-                        const Icon = activityIcons[activity.id as keyof typeof activityIcons] || Sparkles;
-                        return (
-                          <div key={activity.id} className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedActivityId((prev) => (prev === activity.id ? null : activity.id))}
-                              className="flex w-full items-center justify-between px-4 py-4 text-left"
-                            >
-                              <span className="inline-flex items-center gap-3 text-sm font-semibold text-neutral-900">
-                                <span className="rounded-xl bg-neutral-100 p-2 text-neutral-600">
-                                  <Icon className="h-4 w-4" />
-                                </span>
-                                {activity.title}
-                              </span>
-                              <ChevronRight className={`h-4 w-4 text-neutral-500 transition ${isOpen ? "rotate-90" : ""}`} />
-                            </button>
-                            <AnimatePresence initial={false}>
-                              {isOpen && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.25, ease: "easeOut" }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="space-y-3 border-t border-neutral-200 px-4 pb-4 pt-3">
-                                    <img src={activity.imageUrl} alt={activity.title} className="h-28 w-full rounded-2xl object-cover" />
-                                    <p className="text-xs text-neutral-600">{activity.description}</p>
-                                    <textarea
-                                      rows={3}
-                                      value={activityRequests[activity.id] ?? ""}
-                                      onChange={(event) =>
-                                        setActivityRequests((prev) => ({ ...prev, [activity.id]: event.target.value }))
-                                      }
-                                      placeholder="Request concierge details..."
-                                      className="w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700 focus:border-[#FF5A7A]/60 focus:outline-none"
-                                    />
+                    <div className="rounded-3xl border border-neutral-200 bg-neutral-50/70 p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-neutral-900">Program builder</p>
+                        {activeTrip.subtitle && <p className="text-xs font-medium text-neutral-500">{activeTrip.subtitle}</p>}
+                      </div>
+                      <div className="mt-4 space-y-4">
+                        <div className="border-b border-neutral-200 pb-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">1. Check-in</p>
+                          <p className="mt-1 text-xs text-neutral-500">Arrival, welcome setup and first-touch coordination.</p>
+                        </div>
+
+                        <div className="space-y-3 border-b border-neutral-200 pb-4">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">2. Main days</p>
+                            <p className="mt-1 text-xs text-neutral-500">Build your handcrafted activity flow for the core stay.</p>
+                          </div>
+                          {activityItems.map((activity) => {
+                            const isOpen = expandedActivityId === activity.id;
+                            const isSelected = selectedActivities.includes(activity.id);
+                            const Icon = activityIcons[activity.id as keyof typeof activityIcons] || Sparkles;
+                            return (
+                              <article
+                                key={activity.id}
+                                className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
+                              >
+                                <div className="relative h-44 w-full">
+                                  <img src={activity.imageUrl} alt={activity.title} className="h-full w-full object-cover" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                                  <div className="absolute bottom-4 left-4 right-4">
+                                    <p className="inline-flex items-center gap-2 text-xs font-semibold text-white/80">
+                                      <Icon className="h-4 w-4" />
+                                      Signature moment
+                                    </p>
+                                    <p className="mt-1 text-lg font-semibold text-white">{activity.title}</p>
+                                  </div>
+                                </div>
+                                <div className="space-y-3 px-4 pb-4 pt-3">
+                                  <p className="text-xs text-neutral-600">{activity.description}</p>
+                                  <div className="flex flex-wrap gap-2">
                                     <button
                                       type="button"
-                                      onClick={() => window.alert("Request sent")}
-                                      className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
+                                      onClick={() => handleToggleSelectedActivity(activity.id)}
+                                      className={`rounded-full px-4 py-2 text-xs font-semibold text-white ${
+                                        isSelected ? "bg-[#FF5A7A]" : "bg-neutral-900"
+                                      }`}
                                     >
-                                      Send request
+                                      {isSelected ? "Added to plan" : "Add to plan"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setExpandedActivityId((prev) => (prev === activity.id ? null : activity.id))}
+                                      className="rounded-full border border-neutral-200 px-4 py-2 text-xs font-semibold text-neutral-700"
+                                    >
+                                      Request concierge
                                     </button>
                                   </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
+                                  <AnimatePresence initial={false}>
+                                    {isOpen && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.25, ease: "easeOut" }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="space-y-2 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
+                                          <textarea
+                                            rows={3}
+                                            value={activityRequests[activity.id] ?? ""}
+                                            onChange={(event) =>
+                                              setActivityRequests((prev) => ({ ...prev, [activity.id]: event.target.value }))
+                                            }
+                                            placeholder="Share the concierge details you need..."
+                                            className="w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700 focus:border-[#FF5A7A]/60 focus:outline-none"
+                                          />
+                                          <button
+                                            type="button"
+                                            onClick={() => window.alert("Request sent")}
+                                            className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
+                                          >
+                                            Send request
+                                          </button>
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              </article>
+                            );
+                          })}
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">3. Return</p>
+                          <p className="mt-1 text-xs text-neutral-500">Departure, checkout timing and final transport plan.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-3xl border border-neutral-200 bg-white p-4">
+                      <p className="text-sm font-semibold text-neutral-900">Your plan</p>
+                      {selectedActivityDetails.length ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {selectedActivityDetails.map((activity) => (
+                            <span
+                              key={activity.id}
+                              className="inline-flex items-center gap-2 rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700"
+                            >
+                              {activity.title}
+                              <button
+                                type="button"
+                                onClick={() => handleToggleSelectedActivity(activity.id)}
+                                className="rounded-full bg-white p-0.5 text-neutral-500"
+                                aria-label={`Remove ${activity.title}`}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-2 text-xs text-neutral-500">Add activities to build a handcrafted itinerary.</p>
+                      )}
                     </div>
                   </section>
 
                   <section className="space-y-3">
                     <div>
-                      <p className="text-sm font-semibold text-neutral-900">Concierge picks (bookable)</p>
+                      <p className="text-sm font-semibold text-neutral-900">VIC picks (bookable)</p>
                       <p className="text-xs text-neutral-500">Restaurants, beach clubs & yachts available for this trip.</p>
                     </div>
                     {bookableItems.map((item) => (
                       <article
                         key={item.id}
-                        className="flex items-center gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
+                        className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
                       >
-                        <img src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-base font-semibold text-neutral-900">{item.name}</p>
-                          <p className="text-xs text-neutral-500">{item.location}</p>
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {item.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600"
-                              >
-                                {tag}
-                              </span>
-                            ))}
+                        <div className="relative h-44 w-full">
+                          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                          <div className="absolute bottom-4 left-4 right-4">
+                            <p className="text-lg font-semibold text-white">{item.name}</p>
+                            <p className="text-xs text-white/75">{item.location}</p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {item.tags.map((tag) => (
+                                <span key={tag} className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => window.alert("Booking flow coming soon.")}
-                          className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
-                        >
-                          Book
-                        </button>
+                        <div className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => window.alert("Booking flow coming soon.")}
+                            className="ml-auto flex rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
+                          >
+                            Book
+                          </button>
+                        </div>
                       </article>
                     ))}
                   </section>
 
                   <section className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5 shadow-sm">
-                    <p className="text-base font-semibold text-neutral-900">Create your proposal</p>
-                    <p className="mt-1 text-sm text-neutral-500">
-                      Select activities and ask the concierge to curate the perfect plan.
-                    </p>
+                    <p className="text-base font-semibold text-neutral-900">Create trip request</p>
+                    <p className="mt-1 text-sm text-neutral-500">Select activities and send a plan proposal. VIC will refine it.</p>
                     <button
                       type="button"
                       onClick={() => setProposalOpen(true)}
@@ -565,7 +698,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-base font-semibold text-neutral-900">Build your proposal</p>
+                      <p className="text-base font-semibold text-neutral-900">Build proposal</p>
                       <p className="text-xs text-neutral-500">Share the moment you want to create together.</p>
                     </div>
                     <button
@@ -576,6 +709,20 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                     >
                       <X className="h-4 w-4" />
                     </button>
+                  </div>
+                  <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
+                    <p className="text-xs font-semibold text-neutral-700">Selected activities</p>
+                    {selectedActivityDetails.length ? (
+                      <ul className="mt-2 space-y-1">
+                        {selectedActivityDetails.map((activity) => (
+                          <li key={`proposal-${activity.id}`} className="text-xs text-neutral-600">
+                            • {activity.title}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-1 text-xs text-neutral-500">No activities selected yet.</p>
+                    )}
                   </div>
                   <textarea
                     rows={5}
