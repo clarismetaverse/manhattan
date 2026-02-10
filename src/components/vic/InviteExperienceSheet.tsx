@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, ChevronRight, Gift, MoonStar, Ship, Sparkles, Ticket, Utensils, Waves, X } from "lucide-react";
+import { Calendar, ChevronRight, MoonStar, Ship, Sparkles, Utensils, Waves, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
@@ -23,15 +23,6 @@ type ActivityItem = {
   imageUrl: string;
 };
 
-type BookableItem = {
-  id: string;
-  name: string;
-  category: string;
-  imageUrl: string;
-  location: string;
-  tags: string[];
-};
-
 const backdrop = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -49,8 +40,6 @@ const upcomingExperiences: ExperienceItem[] = [
   { id: "upcoming-f1", title: "F1", subtitle: "VIP access" },
   { id: "upcoming-festival", title: "Festival", subtitle: "Community favorite" },
 ];
-
-const budgetOptions = ["€", "€€", "€€€"];
 
 const tripsEndpoint = "https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/motherboard/trips";
 
@@ -93,33 +82,6 @@ const activityItems: ActivityItem[] = [
   },
 ];
 
-const bookableItems: BookableItem[] = [
-  {
-    id: "book-restaurant-1",
-    name: "Luma Rooftop",
-    category: "Restaurant",
-    location: "Cannes Croisette",
-    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=80",
-    tags: ["Restaurant", "Sea view"],
-  },
-  {
-    id: "book-beach-1",
-    name: "Azure House",
-    category: "Beach club",
-    location: "Pampelonne Beach",
-    imageUrl: "https://images.unsplash.com/photo-1493558103817-58b2924bce98?auto=format&fit=crop&w=700&q=80",
-    tags: ["Beach club", "Sunset"],
-  },
-  {
-    id: "book-yacht-1",
-    name: "Velvet Horizon",
-    category: "Yacht",
-    location: "Port Pierre Canto",
-    imageUrl: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=700&q=80",
-    tags: ["Yacht", "Full day"],
-  },
-];
-
 const formatTripDate = (value?: string) => {
   if (!value) {
     return "TBD";
@@ -144,8 +106,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTripId, setActiveTripId] = useState<string | null>(null);
   const [proposalText, setProposalText] = useState("");
-  const [budget, setBudget] = useState<string | null>(null);
-  const [proposalOpen, setProposalOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [upcomingItems, setUpcomingItems] = useState<ExperienceItem[]>(upcomingExperiences);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
   const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
@@ -255,7 +216,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
   }, [activeTripId]);
 
   const canSubmitProposal = proposalText.trim().length > 10;
-  const canInvite = Boolean(selectedId) || canSubmitProposal;
+  const canSendInvitation = Boolean(activeTrip) && (selectedActivities.length > 0 || canSubmitProposal);
 
   const handleToggleSelectedActivity = (activityId: ActivityItem["id"]) => {
     setSelectedActivities((prev) =>
@@ -272,21 +233,28 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
   };
 
   const handleInvite = () => {
-    const selectedTrip = upcomingItems.find((item) => item.id === selectedId);
-    const summary = selectedTrip
-      ? `Selected trip: ${selectedTrip.title}`
-      : `Proposal: ${proposalText.trim() || "No proposal"}`;
-    window.alert(`Invite ${creatorName}\n${summary}`);
-  };
-
-  const handleSubmitProposal = () => {
-    if (!canSubmitProposal) {
+    if (!canSendInvitation) {
       return;
     }
-    const summaryLines = [`Proposal: ${proposalText.trim()}`, budget ? `Budget: ${budget}` : "Budget: TBD"];
-    window.alert(`Proposal submitted\n${summaryLines.join("\n")}`);
-    setProposalOpen(false);
+    setConfirmationOpen(true);
   };
+
+  const handleConfirmSend = () => {
+    if (!activeTrip) {
+      return;
+    }
+    const selectedTitles = selectedActivityDetails.map((activity) => activity.title);
+    window.alert(
+      [
+        `Creator: ${creatorName}`,
+        `Trip: ${activeTrip.title}`,
+        `Activities: ${selectedTitles.length ? selectedTitles.join(", ") : "None selected"}`,
+      ].join("\n")
+    );
+    setConfirmationOpen(false);
+  };
+
+  const creatorAvatar = (creator as (CreatorLite & { Profile_pic?: { url?: string | null } }) | null)?.Profile_pic?.url;
 
   return (
     <AnimatePresence>
@@ -372,7 +340,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                         </p>
                         <p className="mt-3 text-xl font-semibold">Prepare a top-level handcrafted plan</p>
                         <p className="mt-1 text-sm text-white/80">
-                          Maximize your acceptance rate with a curated itinerary and VIC picks.
+                          Maximize your acceptance rate with a curated itinerary.
                         </p>
                         <button
                           type="button"
@@ -410,7 +378,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
 
                         <div className="space-y-3 border-b border-neutral-200 pb-4">
                           <div>
-                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">2. Main days</p>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">2. Choose the moments you want to include</p>
                             <p className="mt-1 text-xs text-neutral-500">Build your handcrafted activity flow for the core stay.</p>
                           </div>
                           {activityItems.map((activity) => {
@@ -443,7 +411,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                                         isSelected ? "bg-[#FF5A7A]" : "bg-neutral-900"
                                       }`}
                                     >
-                                      {isSelected ? "Added to plan" : "Add to plan"}
+                                      {isSelected ? "Added" : "Add to plan"}
                                     </button>
                                     <button
                                       type="button"
@@ -518,60 +486,23 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                           ))}
                         </div>
                       ) : (
-                        <p className="mt-2 text-xs text-neutral-500">Add activities to build a handcrafted itinerary.</p>
+                        <p className="mt-2 text-xs text-neutral-500">No moments selected yet.</p>
                       )}
                     </div>
-                  </section>
 
-                  <section className="space-y-3">
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-900">VIC picks (bookable)</p>
-                      <p className="text-xs text-neutral-500">Restaurants, beach clubs & yachts available for this trip.</p>
+                    <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-4">
+                      <p className="text-sm font-semibold text-neutral-900">Optional proposal note</p>
+                      <textarea
+                        rows={3}
+                        value={proposalText}
+                        onChange={(event) => setProposalText(event.target.value)}
+                        placeholder="Share what kind of experience you want..."
+                        className="mt-3 w-full resize-none rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 shadow-sm focus:border-[#FF5A7A]/60 focus:outline-none"
+                      />
+                      <p className="mt-2 text-xs text-neutral-500">
+                        {canSubmitProposal ? "Proposal text is valid." : "Write at least 11 characters to enable invitation by proposal text."}
+                      </p>
                     </div>
-                    {bookableItems.map((item) => (
-                      <article
-                        key={item.id}
-                        className="overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
-                      >
-                        <div className="relative h-44 w-full">
-                          <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                          <div className="absolute bottom-4 left-4 right-4">
-                            <p className="text-lg font-semibold text-white">{item.name}</p>
-                            <p className="text-xs text-white/75">{item.location}</p>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {item.tags.map((tag) => (
-                                <span key={tag} className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-4">
-                          <button
-                            type="button"
-                            onClick={() => window.alert("Booking flow coming soon.")}
-                            className="ml-auto flex rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
-                          >
-                            Book
-                          </button>
-                        </div>
-                      </article>
-                    ))}
-                  </section>
-
-                  <section className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5 shadow-sm">
-                    <p className="text-base font-semibold text-neutral-900">Create trip request</p>
-                    <p className="mt-1 text-sm text-neutral-500">Select activities and send a plan proposal. VIC will refine it.</p>
-                    <button
-                      type="button"
-                      onClick={() => setProposalOpen(true)}
-                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
-                    >
-                      Build proposal
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
                   </section>
                 </motion.div>
               ) : (
@@ -645,36 +576,21 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                 </motion.div>
               )}
             </AnimatePresence>
-
             <div className="sticky bottom-0 z-20 -mx-0 mt-2 border-t border-neutral-200 bg-white/95 px-5 pb-4 pt-4 backdrop-blur">
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  className="flex-1 rounded-full border border-neutral-200 px-4 py-3 text-sm font-semibold text-neutral-700"
-                >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Gift className="h-4 w-4" />
-                    Gift
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold text-white transition ${
-                    canInvite ? "bg-neutral-900" : "bg-neutral-300"
-                  }`}
-                  disabled={!canInvite}
-                  onClick={handleInvite}
-                >
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <Ticket className="h-4 w-4" />
-                    {activeTrip ? "Create trip request" : "Invite"}
-                  </span>
-                </button>
-              </div>
               <button
                 type="button"
-                className={`mt-3 w-full text-xs font-semibold ${canInvite ? "text-neutral-700" : "text-neutral-400"}`}
-                disabled={!canInvite}
+                className={`w-full rounded-full px-4 py-3 text-sm font-semibold text-white transition ${
+                  canSendInvitation ? "bg-neutral-900" : "bg-neutral-300"
+                }`}
+                disabled={!canSendInvitation}
+                onClick={handleInvite}
+              >
+                Send invitation
+              </button>
+              <button
+                type="button"
+                className={`mt-3 w-full text-xs font-semibold ${canSendInvitation ? "text-neutral-700" : "text-neutral-400"}`}
+                disabled={!canSendInvitation}
               >
                 Share profile
               </button>
@@ -682,91 +598,82 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
           </motion.div>
 
           <AnimatePresence>
-            {proposalOpen && (
+            {confirmationOpen && activeTrip && (
               <motion.div className="fixed inset-0 z-[70] flex items-center justify-center px-5" initial="hidden" animate="visible" exit="exit">
                 <motion.button
                   type="button"
-                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                  className="absolute inset-0 bg-black/70 backdrop-blur-sm"
                   variants={backdrop}
-                  onClick={() => setProposalOpen(false)}
-                  aria-label="Close proposal modal"
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  onClick={() => setConfirmationOpen(false)}
+                  aria-label="Close invitation confirmation"
                 />
                 <motion.div
-                  variants={sheet}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl"
+                  initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 18, scale: 0.98 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="relative z-10 w-full max-w-md overflow-hidden rounded-[32px] border border-white/20 bg-neutral-950 p-4 text-white shadow-[0_40px_100px_rgba(0,0,0,0.45)]"
                 >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-base font-semibold text-neutral-900">Build proposal</p>
-                      <p className="text-xs text-neutral-500">Share the moment you want to create together.</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-full bg-neutral-100 p-2 text-neutral-600"
-                      onClick={() => setProposalOpen(false)}
-                      aria-label="Close proposal modal"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                  <div className="mb-4 flex items-center gap-2">
+                    {creatorAvatar ? (
+                      <img src={creatorAvatar} alt={creatorName} className="h-10 w-10 rounded-full border border-white/30 object-cover" />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/10 text-xs font-semibold">
+                        {creatorName.slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <p className="text-sm font-semibold text-white/90">{creatorName}</p>
                   </div>
-                  <div className="mt-4 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="text-xs font-semibold text-neutral-700">Selected activities</p>
+
+                  <div className="relative mb-4 h-56 w-full overflow-hidden rounded-3xl">
+                    {activeTrip.imageUrl ? (
+                      <img src={activeTrip.imageUrl} alt={activeTrip.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="h-full w-full bg-neutral-800" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <p className="text-2xl font-semibold">{activeTrip.title}</p>
+                      {activeTrip.subtitle && <p className="mt-1 text-sm text-white/75">{activeTrip.subtitle}</p>}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/15 bg-white/5 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Plan preview</p>
                     {selectedActivityDetails.length ? (
-                      <ul className="mt-2 space-y-1">
-                        {selectedActivityDetails.map((activity) => (
-                          <li key={`proposal-${activity.id}`} className="text-xs text-neutral-600">
-                            • {activity.title}
+                      <ul className="mt-2 space-y-1.5 text-sm text-white/90">
+                        {selectedActivityDetails.slice(0, 3).map((activity) => (
+                          <li key={`preview-${activity.id}`} className="flex items-center gap-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white/80" />
+                            {activity.title}
                           </li>
                         ))}
+                        {selectedActivityDetails.length > 3 && (
+                          <li className="text-xs text-white/70">+ {selectedActivityDetails.length - 3} more</li>
+                        )}
                       </ul>
                     ) : (
-                      <p className="mt-1 text-xs text-neutral-500">No activities selected yet.</p>
+                      <p className="mt-2 text-sm text-white/70">No activities selected.</p>
                     )}
                   </div>
-                  <textarea
-                    rows={5}
-                    value={proposalText}
-                    onChange={(event) => setProposalText(event.target.value)}
-                    placeholder="Describe your idea…"
-                    className="mt-4 w-full resize-none rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-700 shadow-sm focus:border-[#FF5A7A]/60 focus:outline-none"
-                  />
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {budgetOptions.map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => setBudget(option)}
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                          budget === option
-                            ? "border-[#FF5A7A]/50 bg-[#FFF1F4] text-[#FF5A7A]"
-                            : "border-neutral-200 text-neutral-600"
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
+
+                  <div className="mt-5 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmationOpen(false)}
+                      className="flex-1 rounded-full border border-white/30 px-4 py-2.5 text-sm font-semibold text-white/90"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleConfirmSend}
+                      className="flex-1 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-neutral-900"
+                    >
+                      Confirm &amp; send
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="mt-4 flex w-full items-center justify-between rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-600"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-neutral-400" />
-                      Add optional date
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-neutral-400" />
-                  </button>
-                  <button
-                    type="button"
-                    className={`mt-4 flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      canSubmitProposal ? "bg-neutral-900 text-white" : "bg-neutral-200 text-neutral-500"
-                    }`}
-                    disabled={!canSubmitProposal}
-                    onClick={handleSubmitProposal}
-                  >
-                    Submit proposal
-                  </button>
                 </motion.div>
               </motion.div>
             )}
