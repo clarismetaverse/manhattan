@@ -14,6 +14,8 @@ type ExperienceItem = {
   title: string;
   subtitle?: string;
   imageUrl?: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 type ActivityItem = {
@@ -131,6 +133,19 @@ const formatTripDate = (value?: string) => {
   return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
+const toValidDate = (value?: string) => {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+};
+
+const formatScheduleDate = (value: Date) => value.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
 const activityIcons = {
   "private-dinner": Utensils,
   "yacht-day": Ship,
@@ -150,6 +165,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
   const [upcomingLoading, setUpcomingLoading] = useState(true);
   const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
   const [activityRequests, setActivityRequests] = useState<Record<string, string>>({});
+  const [selectedActivitiesByDay, setSelectedActivitiesByDay] = useState<Record<string, string[]>>({});
   const [isStickyHeader, setIsStickyHeader] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -182,6 +198,8 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
             title,
             subtitle,
             imageUrl: trip.Tripcover?.url ?? undefined,
+            startDate: trip.Starting_Day,
+            endDate: trip.Return,
           } satisfies ExperienceItem;
         });
         if (isMounted) {
@@ -209,6 +227,44 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     () => upcomingItems.find((item) => item.id === activeTripId) ?? null,
     [activeTripId, upcomingItems]
   );
+
+  const scheduleDays = useMemo(() => {
+    const days: Array<{ id: string; label: string }> = [{ id: "checkin", label: "Check-in" }];
+    if (!activeTrip) {
+      return [...days, { id: "return", label: "Return" }];
+    }
+
+    const startDate = toValidDate(activeTrip.startDate);
+    const endDate = toValidDate(activeTrip.endDate);
+    if (startDate && endDate && startDate <= endDate) {
+      const cursor = new Date(startDate);
+      cursor.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      let dayIndex = 1;
+      while (cursor <= endDate) {
+        days.push({
+          id: `day-${cursor.toISOString().slice(0, 10)}`,
+          label: `Day ${dayIndex} • ${formatScheduleDate(cursor)}`,
+        });
+        cursor.setDate(cursor.getDate() + 1);
+        dayIndex += 1;
+      }
+    }
+
+    days.push({ id: "return", label: "Return" });
+    return days;
+  }, [activeTrip]);
+
+  const toggleActivitySelection = (dayId: string, activityId: string) => {
+    setSelectedActivitiesByDay((prev) => {
+      const daySelections = prev[dayId] ?? [];
+      const exists = daySelections.includes(activityId);
+      const nextDaySelections = exists
+        ? daySelections.filter((id) => id !== activityId)
+        : [...daySelections, activityId];
+      return { ...prev, [dayId]: nextDaySelections };
+    });
+  };
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -332,67 +388,102 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                       <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let concierge curate every detail.</p>
                     </div>
 
-                    <div className="space-y-3">
-                      <p className="text-sm font-semibold text-neutral-900">Select your activities plan</p>
-                      {activityItems.map((activity) => {
-                        const isOpen = expandedActivityId === activity.id;
-                        const Icon = activityIcons[activity.id as keyof typeof activityIcons] || Sparkles;
-                        return (
-                          <div key={activity.id} className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
-                            <button
-                              type="button"
-                              onClick={() => setExpandedActivityId((prev) => (prev === activity.id ? null : activity.id))}
-                              className="flex w-full items-center justify-between px-4 py-4 text-left"
-                            >
-                              <span className="inline-flex items-center gap-3 text-sm font-semibold text-neutral-900">
-                                <span className="rounded-xl bg-neutral-100 p-2 text-neutral-600">
-                                  <Icon className="h-4 w-4" />
-                                </span>
-                                {activity.title}
-                              </span>
-                              <ChevronRight className={`h-4 w-4 text-neutral-500 transition ${isOpen ? "rotate-90" : ""}`} />
-                            </button>
-                            <AnimatePresence initial={false}>
-                              {isOpen && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.25, ease: "easeOut" }}
-                                  className="overflow-hidden"
-                                >
-                                  <div className="space-y-3 border-t border-neutral-200 px-4 pb-4 pt-3">
-                                    <img src={activity.imageUrl} alt={activity.title} className="h-28 w-full rounded-2xl object-cover" />
-                                    <p className="text-xs text-neutral-600">{activity.description}</p>
-                                    <textarea
-                                      rows={3}
-                                      value={activityRequests[activity.id] ?? ""}
-                                      onChange={(event) =>
-                                        setActivityRequests((prev) => ({ ...prev, [activity.id]: event.target.value }))
-                                      }
-                                      placeholder="Request concierge details..."
-                                      className="w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700 focus:border-[#FF5A7A]/60 focus:outline-none"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={() => window.alert("Request sent")}
-                                      className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
-                                    >
-                                      Send request
-                                    </button>
+                    <div className="space-y-4">
+                      <p className="text-sm font-semibold text-neutral-900">Select activities for your trip</p>
+                      <div className="space-y-4">
+                        {scheduleDays.map((day) => (
+                          <div key={day.id} className="space-y-3 rounded-3xl bg-neutral-50 p-3">
+                            <div className="flex items-center justify-between px-1">
+                              <p className="text-sm font-semibold text-neutral-900">{day.label}</p>
+                            </div>
+                            <div className="space-y-3">
+                              {activityItems.map((activity) => {
+                                const rowId = `${day.id}:${activity.id}`;
+                                const requestKey = `${day.id}-${activity.id}`;
+                                const isOpen = expandedActivityId === rowId;
+                                const isSelected = selectedActivitiesByDay[day.id]?.includes(activity.id) ?? false;
+                                const Icon = activityIcons[activity.id as keyof typeof activityIcons] || Sparkles;
+                                return (
+                                  <div
+                                    key={rowId}
+                                    className={`overflow-hidden rounded-3xl border bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition ${
+                                      isSelected ? "border-[#FF5A7A]/40 ring-2 ring-[#FF5A7A]/20" : "border-neutral-200"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2 px-4 py-4">
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleActivitySelection(day.id, activity.id)}
+                                        className="flex min-h-[56px] flex-1 items-center justify-between text-left"
+                                      >
+                                        <span className="inline-flex items-center gap-3 text-sm font-semibold text-neutral-900">
+                                          <span className="rounded-xl bg-neutral-100 p-2 text-neutral-600">
+                                            <Icon className="h-4 w-4" />
+                                          </span>
+                                          {activity.title}
+                                        </span>
+                                        <span
+                                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                                            isSelected ? "bg-[#FFF1F4] text-[#FF5A7A]" : "bg-neutral-100 text-neutral-600"
+                                          }`}
+                                        >
+                                          {isSelected ? "Selected" : "Select"}
+                                        </span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setExpandedActivityId((prev) => (prev === rowId ? null : rowId))}
+                                        className="rounded-full p-2 text-neutral-500"
+                                        aria-label={`Toggle ${activity.title} details`}
+                                      >
+                                        <ChevronRight className={`h-4 w-4 transition ${isOpen ? "rotate-90" : ""}`} />
+                                      </button>
+                                    </div>
+                                    <AnimatePresence initial={false}>
+                                      {isOpen && (
+                                        <motion.div
+                                          initial={{ height: 0, opacity: 0 }}
+                                          animate={{ height: "auto", opacity: 1 }}
+                                          exit={{ height: 0, opacity: 0 }}
+                                          transition={{ duration: 0.25, ease: "easeOut" }}
+                                          className="overflow-hidden"
+                                        >
+                                          <div className="space-y-3 border-t border-neutral-200 px-4 pb-4 pt-3">
+                                            <img src={activity.imageUrl} alt={activity.title} className="h-28 w-full rounded-2xl object-cover" />
+                                            <p className="text-xs text-neutral-600">{activity.description}</p>
+                                            <textarea
+                                              rows={3}
+                                              value={activityRequests[requestKey] ?? ""}
+                                              onChange={(event) =>
+                                                setActivityRequests((prev) => ({ ...prev, [requestKey]: event.target.value }))
+                                              }
+                                              placeholder="Request concierge details..."
+                                              className="w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700 focus:border-[#FF5A7A]/60 focus:outline-none"
+                                            />
+                                            <button
+                                              type="button"
+                                              onClick={() => window.alert("Request sent")}
+                                              className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
+                                            >
+                                              Send request
+                                            </button>
+                                          </div>
+                                        </motion.div>
+                                      )}
+                                    </AnimatePresence>
                                   </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
+                                );
+                              })}
+                            </div>
                           </div>
-                        );
-                      })}
+                        ))}
+                      </div>
                     </div>
                   </section>
 
                   <section className="space-y-3">
                     <div>
-                      <p className="text-sm font-semibold text-neutral-900">Concierge picks (bookable)</p>
+                      <p className="text-sm font-semibold text-neutral-900">VIC picks</p>
                       <p className="text-xs text-neutral-500">Restaurants, beach clubs & yachts available for this trip.</p>
                     </div>
                     {bookableItems.map((item) => (
