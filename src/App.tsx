@@ -34,6 +34,7 @@ import BookingPreviewConfirm from "./pages/BookingPreviewConfirm";
 import VenueCreatorsHome from "./features/venues/VenueCreatorsHome";
 import MemberspassCreatorHome from "./pages/memberspass/MemberspassCreatorHome";
 import MemberspassVICHome from "./pages/memberspass/MemberspassVICHome";
+import InvitationSent from "./pages/InvitationSent";
 
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
               <Route path="/memberspass/creators" element={<VenueCreatorsHome />} />
               <Route path="/memberspass/creator" element={<MemberspassCreatorHome />} />
               <Route path="/memberspass/vic" element={<MemberspassVICHome />} />
+              <Route path="/memberspass/creators/invitation-sent" element={<InvitationSent />} />
               <Route path="/memberpass/venues" element={<VenuesPage />} />
               <Route path="/app/venues" element={<VenuesPage />} />
               <Route path="/booking/preview" element={<BookingPreview />} />

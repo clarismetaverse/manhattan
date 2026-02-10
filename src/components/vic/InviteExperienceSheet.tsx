@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, ChevronRight, MoonStar, Ship, Sparkles, Utensils, Waves, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { CreatorLite } from "@/services/creatorSearch";
 
 type InviteExperienceSheetProps = {
@@ -103,6 +104,7 @@ const activityIcons = {
 } as const;
 
 export default function InviteExperienceSheet({ open, onClose, creator }: InviteExperienceSheetProps) {
+  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeTripId, setActiveTripId] = useState<string | null>(null);
   const [proposalText, setProposalText] = useState("");
@@ -243,15 +245,13 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     if (!activeTrip) {
       return;
     }
-    const selectedTitles = selectedActivityDetails.map((activity) => activity.title);
-    window.alert(
-      [
-        `Creator: ${creatorName}`,
-        `Trip: ${activeTrip.title}`,
-        `Activities: ${selectedTitles.length ? selectedTitles.join(", ") : "None selected"}`,
-      ].join("\n")
-    );
     setConfirmationOpen(false);
+    onClose();
+    navigate("/memberspass/creators/invitation-sent", {
+      state: {
+        creatorName,
+      },
+    });
   };
 
   const creatorAvatar = (creator as (CreatorLite & { Profile_pic?: { url?: string | null } }) | null)?.Profile_pic?.url;
@@ -615,7 +615,13 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="relative z-10 w-full max-w-md overflow-hidden rounded-[32px] border border-white/20 bg-neutral-950 p-4 text-white shadow-[0_40px_100px_rgba(0,0,0,0.45)]"
                 >
-                  <div className="mb-4 flex items-center gap-2">
+                  <div className="mb-4 flex items-center gap-3">
+                    <button
+                      type="button"
+                      className="rounded-full border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 transition hover:border-[#FF385C] hover:text-[#FF385C]"
+                    >
+                      Invite {creatorName}
+                    </button>
                     {creatorAvatar ? (
                       <img src={creatorAvatar} alt={creatorName} className="h-10 w-10 rounded-full border border-white/30 object-cover" />
                     ) : (
