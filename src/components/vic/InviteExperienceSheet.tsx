@@ -1,16 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  Calendar,
-  ChevronRight,
-  Gift,
-  MoonStar,
-  Ship,
-  Sparkles,
-  Ticket,
-  Utensils,
-  Waves,
-  X,
-} from "lucide-react";
+import { Calendar, ChevronRight, Gift, MoonStar, Ship, Sparkles, Ticket, Utensils, Waves, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CreatorLite } from "@/services/creatorSearch";
 
@@ -25,7 +14,6 @@ type ExperienceItem = {
   title: string;
   subtitle?: string;
   imageUrl?: string;
-  tags?: string[];
 };
 
 type ActivityItem = {
@@ -40,6 +28,7 @@ type BookableItem = {
   name: string;
   category: string;
   imageUrl: string;
+  location: string;
   tags: string[];
 };
 
@@ -56,21 +45,9 @@ const sheet = {
 };
 
 const upcomingExperiences: ExperienceItem[] = [
-  {
-    id: "upcoming-cannes",
-    title: "Cannes",
-    subtitle: "Limited spots",
-  },
-  {
-    id: "upcoming-f1",
-    title: "F1",
-    subtitle: "VIP access",
-  },
-  {
-    id: "upcoming-festival",
-    title: "Festival",
-    subtitle: "Community favorite",
-  },
+  { id: "upcoming-cannes", title: "Cannes", subtitle: "Limited spots" },
+  { id: "upcoming-f1", title: "F1", subtitle: "VIP access" },
+  { id: "upcoming-festival", title: "Festival", subtitle: "Community favorite" },
 ];
 
 const budgetOptions = ["€", "€€", "€€€"];
@@ -79,40 +56,40 @@ const tripsEndpoint = "https://xbut-eryu-hhsg.f2.xano.io/api:bwh6Xc5O/motherboar
 
 const activityItems: ActivityItem[] = [
   {
-    id: "dinner",
-    title: "Dinner reservation",
-    description: "Secure a cinematic table with curated tasting and seamless arrivals.",
+    id: "private-dinner",
+    title: "Private dinner",
+    description: "Signature table placement, arrival coordination, and a curated tasting path for an intimate evening.",
     imageUrl: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "yacht-day",
+    title: "Yacht day",
+    description: "Departures timed to golden hour, premium onboard service, and custom swim or lunch stopovers.",
+    imageUrl: "https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "beach-club",
     title: "Beach club",
-    description: "Private beds, soundtrack curation, and concierge-managed beach moments.",
+    description: "Front-row loungers, soundtrack and bottle planning, and smooth concierge-managed flow.",
     imageUrl: "https://images.unsplash.com/photo-1473116763249-2faaef81ccda?auto=format&fit=crop&w=900&q=80",
   },
   {
-    id: "yacht",
-    title: "Yacht day",
-    description: "Golden hour routes, champagne service, and custom stopovers.",
-    imageUrl: "https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    id: "nightlife",
-    title: "VIP nightlife",
-    description: "After-dark itinerary with bottle service and expedited entry.",
-    imageUrl: "https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?auto=format&fit=crop&w=900&q=80",
-  },
-  {
-    id: "wellness",
-    title: "Wellness / spa",
-    description: "Recovery sessions, private suites, and personalized rituals.",
-    imageUrl: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=900&q=80",
+    id: "shopping-styling",
+    title: "Shopping & styling",
+    description: "Personalized store routing with stylist picks, fitting slots, and private appointment handling.",
+    imageUrl: "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=900&q=80",
   },
   {
     id: "photoshoot",
     title: "Photoshoot / content day",
-    description: "Direction, look planning, and locations aligned with your event mood.",
+    description: "Moodboard-aligned locations, shot planning, and timeline support from glam to golden hour.",
     imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80",
+  },
+  {
+    id: "night-out",
+    title: "Night out / club",
+    description: "A seamless after-dark route with priority entry, table booking, and trusted host support.",
+    imageUrl: "https://images.unsplash.com/photo-1566417713940-fe7c737a9ef2?auto=format&fit=crop&w=900&q=80",
   },
 ];
 
@@ -121,22 +98,25 @@ const bookableItems: BookableItem[] = [
     id: "book-restaurant-1",
     name: "Luma Rooftop",
     category: "Restaurant",
+    location: "Cannes Croisette",
     imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=700&q=80",
-    tags: ["VIP", "Sea view", "Late night"],
+    tags: ["Restaurant", "Sea view"],
   },
   {
     id: "book-beach-1",
     name: "Azure House",
-    category: "Beach Club",
+    category: "Beach club",
+    location: "Pampelonne Beach",
     imageUrl: "https://images.unsplash.com/photo-1493558103817-58b2924bce98?auto=format&fit=crop&w=700&q=80",
-    tags: ["Front row", "Sunset", "Bottle service"],
+    tags: ["Beach club", "Sunset"],
   },
   {
     id: "book-yacht-1",
     name: "Velvet Horizon",
     category: "Yacht",
+    location: "Port Pierre Canto",
     imageUrl: "https://images.unsplash.com/photo-1569263979104-865ab7cd8d13?auto=format&fit=crop&w=700&q=80",
-    tags: ["Captain included", "Full day", "Premium deck"],
+    tags: ["Yacht", "Full day"],
   },
 ];
 
@@ -151,23 +131,26 @@ const formatTripDate = (value?: string) => {
   return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 };
 
+const activityIcons = {
+  "private-dinner": Utensils,
+  "yacht-day": Ship,
+  "beach-club": Waves,
+  "shopping-styling": Sparkles,
+  photoshoot: Calendar,
+  "night-out": MoonStar,
+} as const;
+
 export default function InviteExperienceSheet({ open, onClose, creator }: InviteExperienceSheetProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedTrip, setSelectedTrip] = useState<ExperienceItem | null>(null);
+  const [activeTripId, setActiveTripId] = useState<string | null>(null);
   const [proposalText, setProposalText] = useState("");
   const [budget, setBudget] = useState<string | null>(null);
   const [proposalOpen, setProposalOpen] = useState(false);
   const [upcomingItems, setUpcomingItems] = useState<ExperienceItem[]>(upcomingExperiences);
   const [upcomingLoading, setUpcomingLoading] = useState(true);
-  const [tripType, setTripType] = useState<"single" | "girls">("single");
-  const [tripMode, setTripMode] = useState<"1:1" | "Group trip">("1:1");
-  const [flightAreas, setFlightAreas] = useState<string[]>([]);
   const [expandedActivityId, setExpandedActivityId] = useState<string | null>(null);
-  const [activityRequest, setActivityRequest] = useState("");
+  const [activityRequests, setActivityRequests] = useState<Record<string, string>>({});
   const [isStickyHeader, setIsStickyHeader] = useState(false);
-  const [bookingItem, setBookingItem] = useState<BookableItem | null>(null);
-  const [bookingDate, setBookingDate] = useState("Tonight");
-  const [bookingConcierge, setBookingConcierge] = useState(true);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const creatorName = creator?.name || "Creator";
@@ -193,15 +176,12 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
           const title = trip.Name ?? "Upcoming trip";
           const start = formatTripDate(trip.Starting_Day);
           const end = formatTripDate(trip.Return);
-          const subtitle = trip.Destination
-            ? `${trip.Destination} • ${start} → ${end}`
-            : `${start} → ${end}`;
+          const subtitle = trip.Destination ? `${trip.Destination} • ${start} → ${end}` : `${start} → ${end}`;
           return {
             id: `trip-${trip.Name ?? "trip"}-${trip.Starting_Day ?? index}`,
             title,
             subtitle,
             imageUrl: trip.Tripcover?.url ?? undefined,
-            tags: trip.Destination ? ["Trip", trip.Destination] : ["Trip"],
           } satisfies ExperienceItem;
         });
         if (isMounted) {
@@ -225,6 +205,11 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     };
   }, []);
 
+  const activeTrip = useMemo(
+    () => upcomingItems.find((item) => item.id === activeTripId) ?? null,
+    [activeTripId, upcomingItems]
+  );
+
   useEffect(() => {
     const node = scrollRef.current;
     if (!node) {
@@ -232,11 +217,11 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     }
 
     const handleScroll = () => {
-      if (!selectedTrip) {
+      if (!activeTripId) {
         setIsStickyHeader(false);
         return;
       }
-      setIsStickyHeader(node.scrollTop > 260);
+      setIsStickyHeader(node.scrollTop > 280);
     };
 
     handleScroll();
@@ -245,22 +230,16 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     return () => {
       node.removeEventListener("scroll", handleScroll);
     };
-  }, [selectedTrip]);
+  }, [activeTripId]);
 
   const canSubmitProposal = proposalText.trim().length > 10;
-  const canInvite = Boolean(selectedTrip) || proposalText.trim().length > 10;
-
-  const selectedExperience = useMemo(
-    () => upcomingItems.find((item) => item.id === selectedId) ?? null,
-    [selectedId, upcomingItems]
-  );
+  const canInvite = Boolean(selectedId) || canSubmitProposal;
 
   const handleInvite = () => {
+    const selectedTrip = upcomingItems.find((item) => item.id === selectedId);
     const summary = selectedTrip
-      ? `Selected event: ${selectedTrip.title}`
-      : selectedExperience
-        ? `Selected experience: ${selectedExperience.title}`
-        : `Proposal: ${proposalText.trim()}`;
+      ? `Selected trip: ${selectedTrip.title}`
+      : `Proposal: ${proposalText.trim() || "No proposal"}`;
     window.alert(`Invite ${creatorName}\n${summary}`);
   };
 
@@ -268,29 +247,15 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     if (!canSubmitProposal) {
       return;
     }
-    const summaryLines = [
-      `Proposal: ${proposalText.trim()}`,
-      budget ? `Budget: ${budget}` : "Budget: TBD",
-    ];
+    const summaryLines = [`Proposal: ${proposalText.trim()}`, budget ? `Budget: ${budget}` : "Budget: TBD"];
     window.alert(`Proposal submitted\n${summaryLines.join("\n")}`);
     setProposalOpen(false);
-  };
-
-  const handleFlightAreaToggle = (area: string) => {
-    setFlightAreas((prev) =>
-      prev.includes(area) ? prev.filter((item) => item !== area) : [...prev, area]
-    );
   };
 
   return (
     <AnimatePresence>
       {open && (
-        <motion.div
-          className="fixed inset-0 z-[60] flex items-end justify-center"
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-        >
+        <motion.div className="fixed inset-0 z-[60] flex items-end justify-center" initial="hidden" animate="visible" exit="exit">
           <motion.button
             type="button"
             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -305,225 +270,141 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
             transition={{ duration: 0.25, ease: "easeOut" }}
           >
             <AnimatePresence>
-              {selectedTrip && isStickyHeader && (
+              {activeTrip && isStickyHeader && (
                 <motion.div
-                  className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200 bg-white/80 px-4 py-3 backdrop-blur"
+                  className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200 bg-white/85 px-4 py-3 backdrop-blur"
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  <div className="flex items-center gap-3">
-                    {creator?.Profile_pic?.url ? (
-                      <img
-                        src={creator.Profile_pic.url}
-                        alt={creatorName}
-                        className="h-8 w-8 rounded-xl object-cover"
-                      />
-                    ) : (
-                      <div className="h-8 w-8 rounded-xl bg-neutral-200" />
-                    )}
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-900">{creatorName}</p>
-                      <p className="text-xs text-neutral-500">{selectedTrip.title}</p>
-                    </div>
-                  </div>
+                  <p className="text-sm font-semibold text-neutral-900">{activeTrip.title}</p>
                   <button
                     type="button"
-                    className="rounded-full bg-white/90 p-2 text-neutral-700 shadow-sm"
-                    onClick={() => setSelectedTrip(null)}
-                    aria-label="Close event view"
+                    className="rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-700 shadow-sm"
+                    onClick={() => setActiveTripId(null)}
                   >
-                    <X className="h-4 w-4" />
+                    Back to trips
                   </button>
                 </motion.div>
               )}
             </AnimatePresence>
 
             <AnimatePresence mode="wait">
-              {selectedTrip ? (
+              {activeTrip ? (
                 <motion.div
                   key="event-view"
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 18 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="px-5 pb-24"
+                  className="space-y-6 px-5 pb-24 pt-4"
                 >
-                  <section className="relative -mx-5 mb-6 overflow-hidden text-white">
-                    <motion.div layoutId={`trip-cover-${selectedTrip.id}`} className="relative h-[330px] w-full">
-                      {selectedTrip.imageUrl ? (
-                        <img
-                          src={selectedTrip.imageUrl}
-                          alt={selectedTrip.title}
-                          className="absolute inset-0 h-full w-full object-cover"
-                        />
+                  <section>
+                    <motion.div
+                      layoutId={`trip-card-${activeTrip.id}`}
+                      className="relative h-[360px] w-full overflow-hidden rounded-3xl text-white"
+                    >
+                      {activeTrip.imageUrl ? (
+                        <img src={activeTrip.imageUrl} alt={activeTrip.title} className="absolute inset-0 h-full w-full object-cover" />
                       ) : (
                         <div className="absolute inset-0 bg-neutral-900" />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
-                      <div className="absolute inset-0 bg-gradient-to-br from-black/50 via-transparent to-black/60" />
-                    </motion.div>
-                    <button
-                      type="button"
-                      className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-neutral-800 shadow-md"
-                      onClick={() => setSelectedTrip(null)}
-                      aria-label="Back to event list"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    <div className="absolute bottom-5 left-5 right-5">
-                      <p className="text-3xl font-semibold">{selectedTrip.title}</p>
-                      {selectedTrip.subtitle && <p className="mt-1 text-xs text-white/80">{selectedTrip.subtitle}</p>}
-                    </div>
-                  </section>
-
-                  <section className="space-y-5 rounded-3xl bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
-                    <div>
-                      <p className="text-lg font-semibold text-neutral-900">
-                        Plan activities for your trip with {creatorName}
-                      </p>
-                      <p className="mt-1 text-xs text-neutral-500">
-                        Build the experience together. Ask concierge to curate details.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Mode</p>
-                      <div className="inline-flex rounded-full bg-neutral-100 p-1">
-                        {(["1:1", "Group trip"] as const).map((mode) => (
-                          <button
-                            key={mode}
-                            type="button"
-                            onClick={() => setTripMode(mode)}
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                              tripMode === mode ? "bg-neutral-900 text-white" : "text-neutral-600"
-                            }`}
-                          >
-                            {mode}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Dates</p>
-                      <p className="text-sm font-semibold text-neutral-800">{selectedTrip.subtitle || "Start → Return"}</p>
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <button
                         type="button"
-                        onClick={() => window.alert("Date adjustment flow coming soon.")}
-                        className="flex items-center gap-2 text-xs font-semibold text-[#FF5A7A]"
+                        className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-neutral-800"
+                        onClick={() => setActiveTripId(null)}
                       >
-                        <Calendar className="h-3.5 w-3.5" />
-                        Adjust dates
+                        Back to trips
                       </button>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Flights covered from</p>
-                      <div className="flex flex-wrap gap-2">
-                        {["EU", "UK", "US", "ME"].map((area) => {
-                          const active = flightAreas.includes(area);
-                          return (
-                            <button
-                              key={area}
-                              type="button"
-                              onClick={() => handleFlightAreaToggle(area)}
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
-                                active
-                                  ? "border-[#FF5A7A]/60 bg-[#FFF1F4] text-[#FF5A7A]"
-                                  : "border-neutral-200 text-neutral-600"
-                              }`}
-                            >
-                              {area}
-                            </button>
-                          );
-                        })}
+                      <div className="absolute bottom-5 left-5 right-5">
+                        <p className="text-3xl font-semibold">{activeTrip.title}</p>
+                        {activeTrip.subtitle && <p className="mt-1 text-sm text-white/75">{activeTrip.subtitle}</p>}
                       </div>
+                    </motion.div>
+                  </section>
+
+                  <section className="space-y-4 rounded-3xl bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+                    <div>
+                      <p className="text-xl font-semibold text-neutral-900">Plan activities for your trip with {creatorName}</p>
+                      <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let concierge curate every detail.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <p className="text-sm font-semibold text-neutral-900">Select your activities plan</p>
+                      {activityItems.map((activity) => {
+                        const isOpen = expandedActivityId === activity.id;
+                        const Icon = activityIcons[activity.id as keyof typeof activityIcons] || Sparkles;
+                        return (
+                          <div key={activity.id} className="overflow-hidden rounded-3xl border border-neutral-200 bg-white">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedActivityId((prev) => (prev === activity.id ? null : activity.id))}
+                              className="flex w-full items-center justify-between px-4 py-4 text-left"
+                            >
+                              <span className="inline-flex items-center gap-3 text-sm font-semibold text-neutral-900">
+                                <span className="rounded-xl bg-neutral-100 p-2 text-neutral-600">
+                                  <Icon className="h-4 w-4" />
+                                </span>
+                                {activity.title}
+                              </span>
+                              <ChevronRight className={`h-4 w-4 text-neutral-500 transition ${isOpen ? "rotate-90" : ""}`} />
+                            </button>
+                            <AnimatePresence initial={false}>
+                              {isOpen && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.25, ease: "easeOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="space-y-3 border-t border-neutral-200 px-4 pb-4 pt-3">
+                                    <img src={activity.imageUrl} alt={activity.title} className="h-28 w-full rounded-2xl object-cover" />
+                                    <p className="text-xs text-neutral-600">{activity.description}</p>
+                                    <textarea
+                                      rows={3}
+                                      value={activityRequests[activity.id] ?? ""}
+                                      onChange={(event) =>
+                                        setActivityRequests((prev) => ({ ...prev, [activity.id]: event.target.value }))
+                                      }
+                                      placeholder="Request concierge details..."
+                                      className="w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700 focus:border-[#FF5A7A]/60 focus:outline-none"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => window.alert("Request sent")}
+                                      className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
+                                    >
+                                      Send request
+                                    </button>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })}
                     </div>
                   </section>
 
-                  <section className="mt-6 space-y-3 rounded-3xl bg-white p-4 shadow-[0_14px_35px_rgba(15,23,42,0.08)]">
-                    {activityItems.map((activity) => {
-                      const isOpen = expandedActivityId === activity.id;
-                      return (
-                        <div key={activity.id} className="rounded-2xl border border-neutral-200/90 bg-white">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setExpandedActivityId(isOpen ? null : activity.id);
-                              setSelectedId(activity.id);
-                            }}
-                            className="flex w-full items-center justify-between px-4 py-3 text-left"
-                          >
-                            <span className="flex items-center gap-3 text-sm font-semibold text-neutral-900">
-                              <span className="rounded-xl bg-[#FFF1F4] p-2 text-[#FF5A7A]">
-                                {activity.id === "dinner" && <Utensils className="h-4 w-4" />}
-                                {activity.id === "beach-club" && <Waves className="h-4 w-4" />}
-                                {activity.id === "yacht" && <Ship className="h-4 w-4" />}
-                                {activity.id === "nightlife" && <MoonStar className="h-4 w-4" />}
-                                {activity.id !== "dinner" && activity.id !== "beach-club" && activity.id !== "yacht" && activity.id !== "nightlife" && <Sparkles className="h-4 w-4" />}
-                              </span>
-                              {activity.title}
-                            </span>
-                            <ChevronRight className={`h-4 w-4 text-neutral-500 transition ${isOpen ? "rotate-90" : ""}`} />
-                          </button>
-                          <AnimatePresence initial={false}>
-                            {isOpen && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.28, ease: "easeOut" }}
-                                className="overflow-hidden"
-                              >
-                                <div className="space-y-3 border-t border-neutral-200 px-4 pb-4 pt-3">
-                                  <img
-                                    src={activity.imageUrl}
-                                    alt={activity.title}
-                                    className="h-28 w-full rounded-2xl object-cover"
-                                  />
-                                  <p className="text-xs text-neutral-600">{activity.description}</p>
-                                  <textarea
-                                    rows={3}
-                                    value={activityRequest}
-                                    onChange={(event) => setActivityRequest(event.target.value)}
-                                    placeholder="Request concierge details..."
-                                    className="w-full resize-none rounded-xl border border-neutral-200 px-3 py-2 text-xs text-neutral-700 focus:border-[#FF5A7A]/60 focus:outline-none"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      window.alert(`Request sent for ${activity.title}\n${activityRequest || "No extra details."}`)
-                                    }
-                                    className="w-full rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
-                                  >
-                                    Send request to concierge
-                                  </button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    })}
-                  </section>
-
-                  <section className="mt-6 space-y-3">
+                  <section className="space-y-3">
                     <div>
-                      <p className="text-sm font-semibold text-neutral-900">Bookable for this event</p>
-                      <p className="text-xs text-neutral-500">Dorsia-style reservations, curated for this trip.</p>
+                      <p className="text-sm font-semibold text-neutral-900">Concierge picks (bookable)</p>
+                      <p className="text-xs text-neutral-500">Restaurants, beach clubs & yachts available for this trip.</p>
                     </div>
                     {bookableItems.map((item) => (
                       <article
                         key={item.id}
-                        className="flex items-center gap-3 rounded-3xl border border-neutral-200 bg-white p-3 shadow-sm"
+                        className="flex items-center gap-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
                       >
                         <img src={item.imageUrl} alt={item.name} className="h-20 w-20 rounded-2xl object-cover" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-neutral-900">{item.name}</p>
-                          <p className="text-xs text-neutral-500">{item.category}</p>
-                          <div className="mt-2 flex flex-wrap gap-1">
+                          <p className="truncate text-base font-semibold text-neutral-900">{item.name}</p>
+                          <p className="text-xs text-neutral-500">{item.location}</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
                             {item.tags.map((tag) => (
                               <span
                                 key={tag}
@@ -536,7 +417,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                         </div>
                         <button
                           type="button"
-                          onClick={() => setBookingItem(item)}
+                          onClick={() => window.alert("Booking flow coming soon.")}
                           className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white"
                         >
                           Book
@@ -545,17 +426,20 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                     ))}
                   </section>
 
-                  <button
-                    type="button"
-                    onClick={() => setProposalOpen(true)}
-                    className="mt-6 flex w-full items-center justify-between rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left shadow-sm"
-                  >
-                    <span>
-                      <p className="text-sm font-semibold text-neutral-900">Propose custom plan</p>
-                      <p className="text-xs text-neutral-500">Share the moment you want to create together.</p>
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-neutral-400" />
-                  </button>
+                  <section className="rounded-3xl border border-neutral-200 bg-gradient-to-br from-neutral-50 to-white p-5 shadow-sm">
+                    <p className="text-base font-semibold text-neutral-900">Create your proposal</p>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      Select activities and ask the concierge to curate the perfect plan.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setProposalOpen(true)}
+                      className="mt-4 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
+                    >
+                      Build proposal
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </section>
                 </motion.div>
               ) : (
                 <motion.div
@@ -564,14 +448,11 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 20 }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="space-y-8 px-5 pb-24 pt-6"
+                  className="space-y-6 px-5 pb-24 pt-6"
                 >
                   <section className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-lg font-semibold text-neutral-900">Invite {creatorName}</p>
-                        <p className="text-xs text-neutral-500">Choose an upcoming event</p>
-                      </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-base font-semibold text-neutral-900">Upcoming trips</p>
                       <button
                         type="button"
                         className="rounded-full bg-neutral-100 p-2 text-neutral-700"
@@ -586,7 +467,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                         ? Array.from({ length: 3 }).map((_, index) => (
                             <div
                               key={`upcoming-skeleton-${index}`}
-                              className="h-60 w-full animate-pulse rounded-3xl bg-neutral-200/80"
+                              className="min-h-[280px] w-full animate-pulse rounded-3xl bg-neutral-200/80"
                             />
                           ))
                         : upcomingItems.map((item) => {
@@ -597,46 +478,37 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                                 type="button"
                                 onClick={() => {
                                   setSelectedId(item.id);
-                                  setSelectedTrip(item);
+                                  setActiveTripId(item.id);
                                 }}
-                                className={`relative w-full overflow-hidden rounded-3xl bg-neutral-900 text-left text-white shadow-lg transition active:scale-[0.99] ${
-                                  isSelected ? "ring-2 ring-[#FF5A7A]/40" : ""
+                                className={`relative min-h-[280px] w-full overflow-hidden rounded-3xl text-left text-white shadow-lg transition active:scale-[0.99] ${
+                                  isSelected ? "ring-2 ring-[#FF5A7A]/50" : ""
                                 }`}
                               >
-                                <motion.div layoutId={`trip-cover-${item.id}`} className="absolute inset-0">
+                                <motion.div layoutId={`trip-card-${item.id}`} className="absolute inset-0">
                                   {item.imageUrl ? (
-                                    <img
-                                      src={item.imageUrl}
-                                      alt={item.title}
-                                      className="h-full w-full object-cover"
-                                    />
+                                    <img src={item.imageUrl} alt={item.title} className="absolute inset-0 h-full w-full object-cover" />
                                   ) : (
-                                    <div className="h-full w-full bg-neutral-900" />
+                                    <div className="absolute inset-0 bg-neutral-900" />
                                   )}
+                                  <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-transparent" />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                 </motion.div>
-                                <div className="absolute inset-0 bg-gradient-to-br from-neutral-900/60 via-neutral-900/30 to-black/70" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-                                <div className="relative flex h-60 flex-col justify-end p-5">
-                                  <p className="text-xl font-semibold">{item.title}</p>
-                                  {item.subtitle && <p className="text-xs text-white/70">{item.subtitle}</p>}
+                                <div className="relative flex h-full flex-col justify-end p-6">
+                                  <div className="space-y-1">
+                                    <p className="text-2xl font-semibold text-white">{item.title}</p>
+                                    {item.subtitle && <p className="text-sm text-white/75">{item.subtitle}</p>}
+                                  </div>
+                                  {isSelected && (
+                                    <span className="mt-4 inline-flex w-fit rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-neutral-900">
+                                      Selected
+                                    </span>
+                                  )}
                                 </div>
                               </button>
                             );
                           })}
                     </div>
                   </section>
-
-                  <button
-                    type="button"
-                    onClick={() => setProposalOpen(true)}
-                    className="flex w-full items-center justify-between rounded-3xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-left shadow-sm"
-                  >
-                    <span>
-                      <p className="text-sm font-semibold text-neutral-900">Propose your own experience</p>
-                      <p className="text-xs text-neutral-500">Share the moment you want to create together.</p>
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-neutral-400" />
-                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -662,128 +534,23 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                 >
                   <span className="inline-flex items-center justify-center gap-2">
                     <Ticket className="h-4 w-4" />
-                    {selectedTrip ? "Create trip request" : "Invite"}
+                    {activeTrip ? "Create trip request" : "Invite"}
                   </span>
                 </button>
               </div>
-              <button type="button" className="mt-3 w-full text-xs font-semibold text-neutral-500">
+              <button
+                type="button"
+                className={`mt-3 w-full text-xs font-semibold ${canInvite ? "text-neutral-700" : "text-neutral-400"}`}
+                disabled={!canInvite}
+              >
                 Share profile
               </button>
             </div>
           </motion.div>
 
           <AnimatePresence>
-            {bookingItem && (
-              <motion.div
-                className="fixed inset-0 z-[80] flex items-center justify-center px-5"
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <motion.button
-                  type="button"
-                  className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                  variants={backdrop}
-                  onClick={() => setBookingItem(null)}
-                  aria-label="Close booking modal"
-                />
-                <motion.div
-                  variants={sheet}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="relative z-10 w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-base font-semibold text-neutral-900">Book {bookingItem.name}</p>
-                      <p className="text-xs text-neutral-500">{bookingItem.category}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-full bg-neutral-100 p-2 text-neutral-600"
-                      onClick={() => setBookingItem(null)}
-                      aria-label="Close booking modal"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    <div className="rounded-2xl border border-neutral-200 p-3">
-                      <p className="text-xs font-semibold text-neutral-500">Date</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {["Tonight", "Tomorrow", "This weekend"].map((value) => (
-                          <button
-                            key={value}
-                            type="button"
-                            onClick={() => setBookingDate(value)}
-                            className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                              bookingDate === value
-                                ? "border-[#FF5A7A]/60 bg-[#FFF1F4] text-[#FF5A7A]"
-                                : "border-neutral-200 text-neutral-600"
-                            }`}
-                          >
-                            {value}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-neutral-200 p-3">
-                      <p className="text-xs font-semibold text-neutral-500">Party size</p>
-                      <div className="mt-2 inline-flex rounded-full bg-neutral-100 p-1">
-                        {[
-                          { id: "single", label: "Single dating" },
-                          { id: "girls", label: "Multiple girls trip" },
-                        ].map((option) => (
-                          <button
-                            key={option.id}
-                            type="button"
-                            onClick={() => setTripType(option.id as "single" | "girls")}
-                            className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                              tripType === option.id ? "bg-neutral-900 text-white" : "text-neutral-600"
-                            }`}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setBookingConcierge((prev) => !prev)}
-                      className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-sm ${
-                        bookingConcierge
-                          ? "border-[#FF5A7A]/50 bg-[#FFF1F4] text-[#FF5A7A]"
-                          : "border-neutral-200 text-neutral-600"
-                      }`}
-                    >
-                      Concierge options
-                      <span className="text-xs font-semibold">{bookingConcierge ? "On" : "Off"}</span>
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.alert(
-                        `Booking sent for ${bookingItem.name}\nDate: ${bookingDate}\nParty: ${tripType}\nConcierge: ${bookingConcierge ? "Yes" : "No"}`
-                      );
-                      setBookingItem(null);
-                    }}
-                    className="mt-4 w-full rounded-full bg-neutral-900 px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Submit booking
-                  </button>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
             {proposalOpen && (
-              <motion.div
-                className="fixed inset-0 z-[70] flex items-center justify-center px-5"
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
+              <motion.div className="fixed inset-0 z-[70] flex items-center justify-center px-5" initial="hidden" animate="visible" exit="exit">
                 <motion.button
                   type="button"
                   className="absolute inset-0 bg-black/40 backdrop-blur-sm"
@@ -798,7 +565,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-base font-semibold text-neutral-900">Propose your own experience</p>
+                      <p className="text-base font-semibold text-neutral-900">Build your proposal</p>
                       <p className="text-xs text-neutral-500">Share the moment you want to create together.</p>
                     </div>
                     <button
