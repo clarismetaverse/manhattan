@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, ChevronRight, MoonStar, Ship, Sparkles, Utensils, Waves, X } from "lucide-react";
+import { Calendar, ChevronRight, MoonStar, Ship, Sparkles, User, Utensils, Waves, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CreatorLite } from "@/services/creatorSearch";
@@ -365,7 +365,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                     }`}
                   >
                     <div>
-                      <p className="text-xl font-semibold text-neutral-900">Pre-plan an activity program with {creatorName}</p>
+                      <p className="text-xl font-semibold text-neutral-900 flex items-center gap-2"><User className="h-5 w-5 text-neutral-500 shrink-0" />Pre-plan an activity program with {creatorName}</p>
                       <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let VIC curate every detail.</p>
                     </div>
 
