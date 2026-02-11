@@ -360,7 +360,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
 
                   <section
                     ref={activitiesSectionRef}
-                    className={`space-y-4 rounded-3xl bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)] transition ${
+                    className={`space-y-3 rounded-3xl bg-white p-3 shadow-[0_18px_40px_rgba(15,23,42,0.12)] transition ${
                       highlightActivities ? "ring-2 ring-[#FF5A7A]/50 ring-offset-2" : ""
                     }`}
                   >
@@ -369,12 +369,12 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                       <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let VIC curate every detail.</p>
                     </div>
 
-                    <div className="rounded-3xl border border-neutral-200 bg-neutral-50/70 p-4">
+                    <div>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-neutral-900">Program builder</p>
                         {activeTrip.subtitle && <p className="text-xs font-medium text-neutral-500">{activeTrip.subtitle}</p>}
                       </div>
-                      <div className="mt-4 space-y-4">
+                      <div className="mt-3 space-y-3">
                         <div className="border-b border-neutral-200 pb-3">
                           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">1. Check-in</p>
                           <p className="mt-1 text-xs text-neutral-500">Arrival, welcome setup and first-touch coordination.</p>
