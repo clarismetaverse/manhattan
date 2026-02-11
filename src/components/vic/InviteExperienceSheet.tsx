@@ -365,7 +365,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
                     }`}
                   >
                     <div>
-                      <p className="text-xl font-semibold text-neutral-900 flex items-center gap-2"><User className="h-5 w-5 text-neutral-500 shrink-0" />Pre-plan an activity program with {creatorName}</p>
+                      <p className="text-xl font-semibold text-neutral-900 flex items-center gap-2">{creatorAvatar ? <img src={creatorAvatar} alt={creatorName} className="h-7 w-7 rounded-full object-cover shrink-0" /> : <User className="h-5 w-5 text-neutral-500 shrink-0" />}Pre-plan an activity program with {creatorName}</p>
                       <p className="mt-1 text-sm text-neutral-500">Select your ideal moments and let VIC curate every detail.</p>
                     </div>
 
