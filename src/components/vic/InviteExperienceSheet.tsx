@@ -247,10 +247,13 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     }
     setConfirmationOpen(false);
     onClose();
-    navigate("/memberspass/creators/invitation-sent", {
+    navigate("/invite/accepted", {
       state: {
-        creatorName,
-        creatorAvatarUrl: creatorAvatar,
+        venueName: activeTrip.title,
+        collabTitle: selectedActivities.length
+          ? `${selectedActivities.length} selected activities`
+          : proposalText.trim() || "Curated collaboration",
+        coverUrl: activeTrip.imageUrl,
       },
     });
   };
