@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type ActivityTemplate = {
   title: string;
@@ -71,6 +71,7 @@ const sheetAnim = {
 
 export default function ActivitiesHome() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<ActivityFormState>({
     name: "",
@@ -80,6 +81,13 @@ export default function ActivitiesHome() {
   });
 
   const canContinue = useMemo(() => form.name.trim().length > 0 && form.city.trim().length > 0, [form]);
+  const inviteRoute = useMemo(
+    () =>
+      location.pathname.startsWith("/memberspass/vic/activities")
+        ? "/memberspass/vic/activities/invite"
+        : "/activities/invite",
+    [location.pathname]
+  );
 
   const openWithTemplate = (template: ActivityTemplate | null) => {
     if (template) {
@@ -283,7 +291,7 @@ export default function ActivitiesHome() {
                 type="button"
                 disabled={!canContinue}
                 onClick={() =>
-                  navigate("/activities/invite", {
+                  navigate(inviteRoute, {
                     state: {
                       activityName: form.name.trim(),
                       city: form.city.trim(),

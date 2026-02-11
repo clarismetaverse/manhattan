@@ -83,6 +83,8 @@ const App = () => (
               <Route path="/memberspass/creators" element={<VenueCreatorsHome />} />
               <Route path="/memberspass/creator" element={<MemberspassCreatorHome />} />
               <Route path="/memberspass/vic" element={<MemberspassVICHome />} />
+              <Route path="/memberspass/vic/activities" element={<ActivitiesHome />} />
+              <Route path="/memberspass/vic/activities/invite" element={<ActivitiesInvite />} />
               <Route path="/memberspass/creators/invitation-sent" element={<InvitationSent />} />
               <Route path="/invite/accepted" element={<InviteAcceptedCinematic />} />
               <Route path="/activities" element={<ActivitiesHome />} />
