@@ -5,6 +5,7 @@ import { MessageCircle } from "lucide-react";
 export interface GuestMatchProps {
   firstName?: string;
   venue?: string;
+  collabTitle?: string;
   hostName?: string;
   guestAvatar?: string;
   hostAvatar?: string;
@@ -14,6 +15,7 @@ export interface GuestMatchProps {
 const DEFAULTS: Required<GuestMatchProps> = {
   firstName: "Alexandra",
   venue: "Cipriani Milano",
+  collabTitle: "VIP guest experience",
   hostName: "Matteo Cipriani",
   guestAvatar:
     "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=640&auto=format&fit=crop",
@@ -27,6 +29,7 @@ export default function GuestMatch(props: GuestMatchProps) {
   const navigate = useNavigate();
   const firstName = props.firstName ?? DEFAULTS.firstName;
   const venue = props.venue ?? DEFAULTS.venue;
+  const collabTitle = props.collabTitle ?? DEFAULTS.collabTitle;
   const hostName = props.hostName ?? DEFAULTS.hostName;
   const guestAvatar = props.guestAvatar ?? DEFAULTS.guestAvatar;
   const hostAvatar = props.hostAvatar ?? DEFAULTS.hostAvatar;
@@ -145,10 +148,18 @@ export default function GuestMatch(props: GuestMatchProps) {
           </button>
           <button
             type="button"
-            onClick={() => navigate("/memberspass/tickets")}
+            onClick={() =>
+              navigate("/invite/accepted", {
+                state: {
+                  venueName: venue,
+                  collabTitle,
+                  coverUrl: venueImage,
+                },
+              })
+            }
             className="flex h-12 items-center justify-center rounded-full border border-white/25 bg-white/5 text-[13px] font-light uppercase tracking-[0.18em] text-white/90 backdrop-blur-lg transition-colors hover:bg-white/12"
           >
-            Open Guest Experiences
+            Accept Invite
           </button>
         </div>
 
