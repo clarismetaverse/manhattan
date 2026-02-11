@@ -66,15 +66,25 @@ export default function InvitationSent() {
             whileHover={{ rotateY: -2, rotateX: 1 }}
             className="w-full rounded-3xl border border-black/10 bg-white/70 p-7 text-center shadow-[0_30px_90px_rgba(0,0,0,0.18)] backdrop-blur-xl"
           >
-            <div className="mx-auto -mt-2 mb-5 flex items-center justify-center">
+            <div className="mx-auto -mt-2 mb-5 flex flex-col items-center justify-center">
+              {/* Checkmark badge above */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+                className="mb-3 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white bg-[#FF385C] text-white shadow-lg"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </motion.div>
+
               <div className="relative">
                 {/* Animated glow ring */}
                 <motion.div
-                  className="absolute -inset-2 rounded-full bg-gradient-to-tr from-[#FF385C] via-[#FF6B8A] to-[#FF385C] opacity-30 blur-md"
+                  className="absolute -inset-3 rounded-full bg-gradient-to-tr from-[#FF385C] via-[#FF6B8A] to-[#FF385C] opacity-30 blur-md"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                 />
-                <div className="relative z-10 h-28 w-28 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
+                <div className="relative z-10 h-36 w-36 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
                   {creatorAvatarUrl ? (
                     <img
                       src={creatorAvatarUrl}
@@ -83,20 +93,11 @@ export default function InvitationSent() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF385C] to-[#FF6B8A] text-3xl font-bold text-white">
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF385C] to-[#FF6B8A] text-4xl font-bold text-white">
                       {creatorName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
                 </div>
-                {/* Checkmark badge */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
-                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#FF385C] text-white shadow-lg"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                </motion.div>
               </div>
             </div>
 
