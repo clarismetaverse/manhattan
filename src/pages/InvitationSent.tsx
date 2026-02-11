@@ -74,7 +74,7 @@ export default function InvitationSent() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                 />
-                <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
+                <div className="relative h-28 w-28 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
                   {creatorAvatarUrl ? (
                     <img
                       src={creatorAvatarUrl}
@@ -83,7 +83,7 @@ export default function InvitationSent() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF385C] to-[#FF6B8A] text-xl font-bold text-white">
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF385C] to-[#FF6B8A] text-3xl font-bold text-white">
                       {creatorName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
@@ -93,9 +93,9 @@ export default function InvitationSent() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
-                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#FF385C] text-white shadow-lg"
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#FF385C] text-white shadow-lg"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </motion.div>
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function InvitationSent() {
             <button
               type="button"
               onClick={() => navigate("/memberspass/creators")}
-              className="mt-7 w-full rounded-2xl bg-[#FF385C] px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(255,56,92,0.28)] transition hover:bg-[#ff4f6f] active:scale-[0.99]"
+              className="mt-7 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(0,0,0,0.18)] transition hover:bg-neutral-800 active:scale-[0.99]"
             >
               Back to creators
             </button>
