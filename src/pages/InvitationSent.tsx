@@ -74,7 +74,7 @@ export default function InvitationSent() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                 />
-                <div className="relative h-28 w-28 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
+                <div className="relative z-10 h-28 w-28 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
                   {creatorAvatarUrl ? (
                     <img
                       src={creatorAvatarUrl}
