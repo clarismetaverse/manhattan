@@ -66,9 +66,15 @@ export default function InvitationSent() {
             whileHover={{ rotateY: -2, rotateX: 1 }}
             className="w-full rounded-3xl border border-black/10 bg-white/70 p-7 text-center shadow-[0_30px_90px_rgba(0,0,0,0.18)] backdrop-blur-xl"
           >
-            <div className="mx-auto -mt-2 mb-4 flex items-center justify-center">
+            <div className="mx-auto -mt-2 mb-5 flex items-center justify-center">
               <div className="relative">
-                <div className="h-16 w-16 overflow-hidden rounded-full border border-black/10 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+                {/* Animated glow ring */}
+                <motion.div
+                  className="absolute -inset-2 rounded-full bg-gradient-to-tr from-[#FF385C] via-[#FF6B8A] to-[#FF385C] opacity-30 blur-md"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                />
+                <div className="relative h-20 w-20 overflow-hidden rounded-full border-2 border-white/20 bg-white shadow-[0_12px_40px_rgba(255,56,92,0.25)]">
                   {creatorAvatarUrl ? (
                     <img
                       src={creatorAvatarUrl}
@@ -77,13 +83,20 @@ export default function InvitationSent() {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-lg font-semibold text-neutral-700">
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#FF385C] to-[#FF6B8A] text-xl font-bold text-white">
                       {creatorName.slice(0, 1).toUpperCase()}
                     </div>
                   )}
                 </div>
-
-                <div className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-[#FF385C]/25" />
+                {/* Checkmark badge */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+                  className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#FF385C] text-white shadow-lg"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </motion.div>
               </div>
             </div>
 
