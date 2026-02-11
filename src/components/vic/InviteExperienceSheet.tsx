@@ -250,6 +250,7 @@ export default function InviteExperienceSheet({ open, onClose, creator }: Invite
     navigate("/memberspass/creators/invitation-sent", {
       state: {
         creatorName,
+        creatorAvatarUrl: creatorAvatar,
       },
     });
   };
