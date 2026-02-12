@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { Check, ChevronLeft, Mail } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
-
+import { fetchTrips, type InviteLite, type TripActivity } from "@/services/activities";
 type ActivitySeed = {
   title: string;
   city?: string;
@@ -17,12 +17,6 @@ type ActivityFormState = {
   date: string;
   tags: string[];
 };
-
-const myActivities = [
-  { title: "Cannes Sunrise Session", status: "Draft" },
-  { title: "Monaco Rooftop Brunch", status: "Invites sent" },
-  { title: "Porto Cervo Sunset", status: "Confirmed" },
-];
 
 const availableTags = ["Fashion", "Nightlife", "Yachting", "Wellness", "Luxury", "Editorial"];
 
@@ -86,12 +80,35 @@ const suggestedLocalActivities: ActivitySeed[] = [
 
 const easeOut = { duration: 0.35, ease: "easeOut" };
 
+const getInvitePreview = (invites: InviteLite[]) => {
+  const accepted = invites.filter((invite) => invite.status === "accepted");
+  const invited = invites.filter((invite) => invite.status === "invited");
+  const hasAccepted = accepted.length > 0;
+  const source = hasAccepted ? accepted : invited;
+
+  return {
+    hasAccepted,
+    preview: source.slice(0, 4),
+    overflow: Math.max(source.length - 4, 0),
+  };
+};
+
 export default function ActivitiesHome() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState<ActivityFormState>({ name: "", city: "", date: "", tags: [] });
+  const [myActivities, setMyActivities] = useState<TripActivity[]>([]);
+
+  useEffect(() => {
+    const loadTrips = async () => {
+      const trips = await fetchTrips();
+      setMyActivities(trips);
+    };
+
+    void loadTrips();
+  }, []);
 
   const inviteRoute = useMemo(
     () =>
@@ -145,15 +162,72 @@ export default function ActivitiesHome() {
             <div className="mb-3 px-1">
               <h2 className="text-sm font-semibold text-neutral-900">Your activities</h2>
             </div>
-            <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+            <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 pt-1">
               {myActivities.map((activity) => (
-                <article
-                  key={activity.title}
-                  className="min-w-[180px] snap-start rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-[0_8px_22px_rgba(0,0,0,0.05)]"
+                <button
+                  key={activity.id}
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      location.pathname.startsWith("/memberspass/vic/activities")
+                        ? `/memberspass/vic/activities/${activity.id}`
+                        : `/activities/${activity.id}`
+                    )
+                  }
+                  className="relative h-52 w-[78%] shrink-0 snap-start overflow-hidden rounded-3xl border border-neutral-200 text-left shadow-[0_18px_38px_rgba(10,10,20,0.16)]"
                 >
-                  <p className="text-sm font-medium text-neutral-900">{activity.title}</p>
-                  <p className="mt-1 text-xs text-neutral-500">{activity.status}</p>
-                </article>
+                  <img src={activity.coverUrl} alt={activity.title} className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/55" />
+                  <div className="absolute left-4 top-4">
+                    {(() => {
+                      const statusAccepted = activity.invites.some((invite) => invite.status === "accepted");
+                      return (
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${
+                            statusAccepted
+                              ? "border-emerald-200 bg-emerald-50/95 text-emerald-700"
+                              : "border-neutral-200 bg-white/90 text-neutral-700"
+                          }`}
+                        >
+                          {statusAccepted ? "Accepted" : "Invited"}
+                        </span>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 space-y-2.5">
+                    <div>
+                      <p className="text-base font-semibold text-white">{activity.title}</p>
+                      <p className="text-xs text-white/80">{activity.subtitle}</p>
+                    </div>
+                    {(() => {
+                      const { hasAccepted, preview, overflow } = getInvitePreview(activity.invites);
+                      const StatusIcon = hasAccepted ? Check : Mail;
+                      return (
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full border border-white/40 bg-black/25 p-1 text-white">
+                            <StatusIcon className="h-3 w-3" />
+                          </span>
+                          <div className="flex items-center -space-x-2">
+                            {preview.map((invite) => (
+                              <img
+                                key={invite.id}
+                                src={invite.creator.avatarUrl}
+                                alt={invite.creator.name}
+                                className="h-7 w-7 rounded-full border border-white/80 object-cover"
+                              />
+                            ))}
+                            {overflow > 0 && (
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/70 bg-black/45 text-[10px] font-semibold text-white">
+                                +{overflow}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </button>
               ))}
             </div>
           </motion.section>
