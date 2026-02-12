@@ -8,7 +8,7 @@ import type { CreatorLite } from "@/services/creatorSearch";
 type ActivityInviteState = {
   activityName?: string;
   city?: string;
-  dateRange?: string;
+  date?: string;
   tags?: string[];
 };
 
@@ -72,6 +72,7 @@ export default function ActivitiesInvite() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state as ActivityInviteState | null) ?? null;
+
   const city = state?.city || "your city";
   const activityName = state?.activityName || "Your activity";
 
@@ -86,26 +87,33 @@ export default function ActivitiesInvite() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-[#0B0B0F]">
-      <div className="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between px-4 py-4">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-full border border-neutral-200 bg-white p-2 text-neutral-600 hover:text-neutral-900"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <h1 className="text-sm font-semibold text-neutral-900">Invite models</h1>
-          <div className="h-8 w-8" />
+      <div className="sticky top-0 z-20 border-b border-neutral-200 bg-[#FAFAFA]/95 backdrop-blur-sm">
+        <div className="mx-auto w-full max-w-md px-4 pb-3 pt-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="rounded-full border border-neutral-200 bg-white p-2 text-neutral-600"
+              aria-label="Go back"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <div>
+              <h1 className="text-sm font-semibold text-neutral-900">{activityName}</h1>
+              <p className="text-xs text-neutral-500">Invite models</p>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="mx-auto w-full max-w-md space-y-6 px-4 pb-16 pt-6">
         <section className="space-y-4 rounded-3xl border border-neutral-200 bg-white p-5 shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
           <div>
-            <h2 className="text-xl font-semibold text-neutral-900">{activityName}</h2>
-            <p className="mt-1 text-sm text-neutral-500">Start selecting profiles and send your first invites.</p>
+            <h2 className="text-xl font-semibold text-neutral-900">Select creators</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              {state?.date ? `${state.date} • ` : ""}
+              {state?.tags?.length ? state.tags.join(" • ") : "Start selecting profiles and send your first invites."}
+            </p>
           </div>
 
           <CreatorSearchSelect
@@ -145,7 +153,7 @@ export default function ActivitiesInvite() {
             <h2 className="text-base font-semibold text-neutral-900">New in {city}</h2>
             <span className="text-xs text-neutral-400">Swipe</span>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
             {displayCreators.map((creator) => (
               <div key={creator.id} className="w-[75%] shrink-0 snap-start">
                 <CreatorCard creator={creator} variant="vic" />
@@ -159,7 +167,7 @@ export default function ActivitiesInvite() {
             <h2 className="text-base font-semibold text-neutral-900">Featured profiles</h2>
             <span className="text-xs text-neutral-400">Swipe</span>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
             {featuredProfiles.map((item) => (
               <article
                 key={item.title}
