@@ -4,7 +4,7 @@ import { ChevronLeft, Search, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchTrips, type InviteLite, type InviteStatus, type TripActivity } from "@/services/activities";
 
-const easeOut = { duration: 0.3, ease: "easeOut" };
+const easeOut = { duration: 0.3, ease: "easeOut" as const };
 
 type EditableActivityFields = Pick<TripActivity, "title" | "dateLabel" | "locationLabel" | "notes">;
 

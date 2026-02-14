@@ -78,7 +78,7 @@ const suggestedLocalActivities: ActivitySeed[] = [
   },
 ];
 
-const easeOut = { duration: 0.35, ease: "easeOut" };
+const easeOut = { duration: 0.35, ease: "easeOut" as const };
 
 const getInvitePreview = (invites: InviteLite[]) => {
   const accepted = invites.filter((invite) => invite.status === "accepted");
