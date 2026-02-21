@@ -180,11 +180,11 @@ export default function MemberspassCreatorHome() {
             <h2 className="text-base font-semibold text-neutral-900">New in {cityName}</h2>
             <span className="text-xs text-neutral-400">Swipe</span>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
             {showNewInTownSkeletons
               ? Array.from({ length: 3 }).map((_, index) => (
                   <div key={`new-in-town-skeleton-${index}`} className="w-[75%] shrink-0 snap-start">
-                    <div className="h-[290px] w-full rounded-3xl border border-neutral-200 bg-neutral-100 shadow-[0_10px_30px_rgba(0,0,0,0.08)]" />
+                    <div className="h-[300px] w-full rounded-3xl border border-neutral-200 bg-neutral-100 shadow-[0_10px_30px_rgba(0,0,0,0.08)]" />
                   </div>
                 ))
               : displayCreators.map((creator) => (
@@ -204,11 +204,11 @@ export default function MemberspassCreatorHome() {
             {featuredContent.map((item) => (
               <div
                 key={item.title}
-                className="w-72 shrink-0 snap-start overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)]"
+                className="w-72 shrink-0 snap-start overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-transform duration-200 hover:scale-[1.02] hover:shadow-xl"
               >
                 <div className="relative h-48 w-full">
                   <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <div className="absolute bottom-4 left-4">
                     <p className="text-sm font-semibold text-white">{item.title}</p>
                     <p className="text-xs text-white/80">{item.creatorName}</p>
@@ -240,7 +240,7 @@ export default function MemberspassCreatorHome() {
               Unlock
             </button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
             {premiumCreators.map((creator) => (
               <div key={creator.id} className="w-[75%] shrink-0 snap-start">
                 <CreatorCard creator={creator} locked />
