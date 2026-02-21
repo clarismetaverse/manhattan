@@ -26,40 +26,35 @@ export default function CreatorCard({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group relative w-full overflow-hidden rounded-3xl border border-neutral-200 text-left shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-transform duration-200 ease-out hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+        className="group relative w-full overflow-hidden rounded-3xl text-left shadow-[0_12px_40px_rgba(0,0,0,0.16)] transition-transform duration-200 ease-out hover:scale-[1.01] active:scale-[0.98]"
       >
-        <div className="relative h-[300px] w-full overflow-hidden rounded-3xl">
+        <div className="relative h-[290px] w-full">
           {img ? (
-            <img
-              src={img}
-              alt={creator.name || "Creator"}
-              className={`h-full w-full object-cover ${locked ? "filter blur-[2px]" : ""}`}
-            />
+            <img src={img} alt={creator.name || "Creator"} className="h-full w-full object-cover" />
           ) : (
             <div className="h-full w-full bg-neutral-100" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          {locked && <div className="absolute inset-0 bg-black/40" />}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           {locked && (
-            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 text-xs font-semibold text-neutral-800">
+            <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-1 text-[10px] font-semibold text-neutral-900">
               <Lock className="h-3 w-3" />
               Premium
             </span>
           )}
-          <div className="absolute bottom-4 left-4 text-left text-white">
-            <div>
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="text-left">
               <p className="text-lg font-semibold text-white">
                 {creator.name || "Unnamed creator"}
               </p>
               {!isVic && (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {isUgcReady && (
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                    <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
                       UGC-ready
                     </span>
                   )}
                   {isUgcFirst && (
-                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                    <span className="rounded-full bg-white/85 px-2 py-1 text-[11px] font-medium text-neutral-900">
                       UGC first
                     </span>
                   )}
