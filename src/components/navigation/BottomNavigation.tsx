@@ -10,6 +10,10 @@ interface NavItem {
   path: string;
 }
 
+interface BottomNavigationProps {
+  forceVisible?: boolean;
+}
+
 const navItems: NavItem[] = [
   { id: 'explore', label: 'Explore', icon: Compass, path: '/' },
   { id: 'showcase', label: 'Showcase', icon: Users, path: '/ugc-tiktoker-profile' },
@@ -17,13 +21,14 @@ const navItems: NavItem[] = [
   { id: 'profile', label: 'Profile', icon: User, path: '/profile' },
 ];
 
-const BottomNavigation = () => {
+const BottomNavigation = ({ forceVisible = false }: BottomNavigationProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
 
-  // Don't show navigation if user is not logged in
-  if (!user) {
+  // Some member flows are accessible before auth context fully hydrates; allow
+  // those screens to opt into showing the shared tab bar immediately.
+  if (!forceVisible && !user) {
     return null;
   }
   
