@@ -11,7 +11,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token on mount and fetch user profile
+    // Restore the cached user first. The login endpoint already returns the full
+    // user object, and that token is not compatible with /user_turbo.
+    const cachedUser = localStorage.getItem('user_data');
+    if (cachedUser) {
+      try {
+        setUser(JSON.parse(cachedUser));
+        setIsLoading(false);
+        return;
+      } catch {
+        localStorage.removeItem('user_data');
+      }
+    }
+
+    // Check for existing token on mount and fetch user profile when no cached
+    // user payload is available.
     const token = localStorage.getItem('auth_token');
     if (!token) {
       setIsLoading(false);
