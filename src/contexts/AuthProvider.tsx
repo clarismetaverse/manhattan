@@ -74,18 +74,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store auth token locally
       localStorage.setItem('auth_token', authToken);
 
-      // Try to get user profile from the login response first
-      let profile: XanoUser | null = null;
-      if (data.user) {
-        profile = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name
-        };
-      } else {
-        // Fall back to fetching the profile from Xano
-        profile = await fetchCurrentUser(authToken);
-      }
+      // The login response already contains the full user object (Xano user_login_Upgrade
+      // returns user fields at the top level). The /user_turbo endpoint uses a different
+      // auth object type and will reject this token, so use the login payload directly.
+      const source = data.user ?? data;
+      let profile: XanoUser | null = source && source.id ? {
+        id: source.id,
+        email: source.email,
+        name: source.name ?? source.NickName,
+      } : null;
 
       if (profile) {
         localStorage.setItem('user_data', JSON.stringify(profile));
