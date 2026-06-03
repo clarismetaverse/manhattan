@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, ChevronLeft, Mail } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { fetchTrips, type InviteLite, type TripActivity } from "@/services/activities";
+import BottomNavigation from "@/components/navigation/BottomNavigation";
 type ActivitySeed = {
   title: string;
   city?: string;
@@ -410,6 +411,7 @@ export default function ActivitiesHome() {
           </>
         )}
       </AnimatePresence>
+      <BottomNavigation />
     </div>
   );
 }
