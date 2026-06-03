@@ -411,6 +411,7 @@ export default function ActivitiesHome() {
           </>
         )}
       </AnimatePresence>
+      <BottomNavigation />
     </div>
   );
 }
